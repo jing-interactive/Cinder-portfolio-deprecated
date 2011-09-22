@@ -1,0 +1,7 @@
+#include "..\include\Resources.h"
+
+ID ICON "cinder_app_icon.ico"
+
+RES_LAX_JPG
+//RES_SPLASHSCREEN_ID     IMAGE           "..\\resources\\Splashscreen.png"
+//RES_THEME_MUSIC_ID      MP3             "..\\resources\\Theme.mp3"
