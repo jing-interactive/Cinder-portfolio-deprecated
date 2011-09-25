@@ -6,6 +6,17 @@
 #include "cinder/ip/EdgeDetect.h"
 #include "CinderOpenCV.h"
 
+#if defined _DEBUG
+#pragma comment(lib,"opencv_core231d.lib")
+#pragma comment(lib,"opencv_imgproc231d.lib")
+#pragma comment(lib,"opencv_highgui231d.lib")
+#else
+#pragma comment(lib,"opencv_core231.lib")
+#pragma comment(lib,"opencv_imgproc231.lib")
+#pragma comment(lib,"opencv_highgui231.lib")
+#endif
+
+
 //#include "Resources.h"
 
 using namespace ci;
@@ -76,8 +87,8 @@ void CameraBoothApp::update()
 		cv::Mat input( toOcv( mCap.getSurface() ) ), output;
 // 		frame =  fromOcv( input );		
 // 
-// 		frame = mCap.getSurface().clone();
-// 		twirl(&frame, focusArea, max_angle);
+ 		frame = mCap.getSurface().clone();
+ 		twirl(&frame, focusArea, max_angle);
 //		cv::fi
 
 		if (mTexture == NULL)
@@ -111,4 +122,4 @@ void CameraBoothApp::keyDown( KeyEvent event )
 
 
 
-CINDER_APP_CONSOLE( CameraBoothApp, RendererGl )
+CINDER_APP_BASIC( CameraBoothApp, RendererGl )
