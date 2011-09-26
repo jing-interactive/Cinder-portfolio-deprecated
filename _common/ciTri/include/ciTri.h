@@ -21,8 +21,8 @@ typedef struct
 	ci::Vec2f b;
 	ci::Vec2f c;
 	
+	int idx[3];
 	// Properties
-	int32_t id;
 	float area;
 	ci::Vec2f centroid;
 	ci::Vec2f prevCentroid;
@@ -36,7 +36,7 @@ class ciTri
 public:
 
 	// Triangulate a shape
-	static vector<TriangleData> triangulate(const vector<ci::Vec2f> & points, float resolution = 50.0f);
+	static vector<TriangleData> triangulate(const vector<ci::Vec2f> & points, float resolution = 50.0f, bool clipping = true);
 
 };
 

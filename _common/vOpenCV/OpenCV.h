@@ -97,12 +97,12 @@ CvScalar vDefaultColor(int idx);
 
 #define show_image2(img_name) do{\
 	cvNamedWindow(#img_name, 0);\
-	cvShowImage(#img_name, img_name);\
+	cvShowImage(#img_name, img_name);}\
 	while(0);
 
 #define show_mat(img_name) do{\
-	cv::namedWindow(#img_name, 0);\
-	cv::imshow(#img_name, img_name);\
+	cv::namedWindow(#img_name);\
+	cv::imshow(#img_name, img_name);}\
 	while(0);
 
 //mask is 8bit，掩板图片，mask中像素的值 > thresh，则img对应位置为原色，否则为0
