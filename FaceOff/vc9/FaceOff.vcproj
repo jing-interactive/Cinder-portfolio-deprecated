@@ -63,6 +63,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="cinder_d.lib"
+				OutputFile="bin\$(ProjectName)_d.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\cinder_0.8.3_vc2008\lib;..\..\cinder_0.8.3_vc2008\lib\msw"
 				GenerateDebugInformation="true"
@@ -138,6 +139,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="cinder.lib"
+				OutputFile="bin\$(ProjectName).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\cinder_0.8.3_vc2008\lib;..\..\cinder_0.8.3_vc2008\lib\msw"
 				GenerateDebugInformation="true"
@@ -193,6 +195,10 @@
 				RelativePath="..\include\Resources.h"
 				>
 			</File>
+			<File
+				RelativePath="..\..\_common\SimpleMutex.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -237,6 +243,38 @@
 			</File>
 			<File
 				RelativePath="..\..\_common\asmlibrary\asmlibrary.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="tri"
+			>
+			<File
+				RelativePath="..\..\_common\ciTri\src\ciTri.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\_common\ciTri\include\ciTri.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\_common\ciTri\src\lib\del_impl.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\_common\ciTri\include\lib\del_interface.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\_common\ciTri\include\lib\dpoint.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\_common\ciTri\include\lib\triangle.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\_common\ciTri\include\lib\triangle_impl.hpp"
 				>
 			</File>
 		</Filter>
