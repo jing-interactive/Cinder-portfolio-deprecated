@@ -74,7 +74,7 @@ public:
 	//rendering
 	gl::Texture		tex_frame;
 	bool running;
-	ci::TriMesh2d triMesh;
+	ci::TriMesh triMesh;
 	gl::VboMesh vboMesh;
 };
 
@@ -111,17 +111,14 @@ void FaceOffApp::update()
 	triMesh.clear();
 	for (int i=0;i<face_vertices.size();i++)
 	{
-		triMesh.appendVertex(face_vertices[i]);
-		triMesh.appendColorRGB( Color( 1, 0, 0 ) );
+		triMesh.appendVertex(ci::Vec3f(face_vertices[i],0));
+		triMesh.appendColorRGB( Color( 0.1, 0.7, 0.5 ) );
 	}
 	for (int i=0;i<face_indices.size();i++)
 	{
 		const TriangleData& tri = face_indices[i];
-		triMesh.appendTriangle( vIdx0, vIdx1, vIdx2 );
+		triMesh.appendTriangle(tri.idx[0], tri.idx[1], tri.idx[2]);
 	}
-	// Two triangles to create our square
-	triMesh.appendTriangle( vIdx0, vIdx1, vIdx2 );
-	triMesh.appendTriangle( vIdx0, vIdx2, vIdx3 );
 	LOCK_END();
 }
 
@@ -141,13 +138,21 @@ void FaceOffApp::draw()
 	tex_frame.disable();
 
 	// draw the faces as transparent yellow rectangles
-	gl::color( ColorA( 1, 1, 0, 0.45f ) );
+	gl::color( ColorA( 1, 1, 0, 0.25f ) );
 	LOCK_START(mtx_mFaces);
-	for( vector<Rectf>::const_iterator faceIter = mFaces.begin(); faceIter != mFaces.end(); ++faceIter )
-		gl::drawSolidRect( *faceIter );
+	for (int i=1;i<mFaces.size();i++) //<--- i begins with 1
+	{
+		const Rectf& r = mFaces[i];
+		gl::drawSolidCircle( r.getCenter(),  (r.getWidth()+r.getHeight())/4);
+	}
 	LOCK_END();
 
-	gl::draw(triMesh);
+	if (triMesh.hasColorsRGB())//test if..
+	{
+		gl::enableWireframe();
+		gl::draw(triMesh);
+		gl::disableWireframe();
+	}
 }
 
 void FaceOffApp::shutdown()
@@ -224,7 +229,7 @@ void FaceOffApp::detectFace()
 void FaceOffApp::runASM()
 {
 	std::string model = getAppPath() + "../../resources/my68-1d.amf";
-	if(!fit_asm.Read(model.c_str()))
+	if (!fit_asm.Read(model.c_str()))
 		return;
 	std::vector<asm_shape> shape_list;//fitting shapes
 	std::vector<asm_shape> detected_list;//detected shapes
@@ -263,9 +268,10 @@ void FaceOffApp::runASM()
 		bool flag = fit_asm.ASMSeqSearch(shape_list[0], &ipl_img, fr_asm_frame, true, n_iterations);
 		if(flag) fit_asm.Draw(&ipl_img, shape_list[0]);
 
+#ifdef _DEBUG
 		show_mat(frame);
 		cv::waitKey(1);
-
+#endif
 		int n_pts = shape_list[0].NPoints();
 		facePoints.resize(n_pts);
 		for (int i=0;i<n_pts;i++)
@@ -276,12 +282,12 @@ void FaceOffApp::runASM()
 		}
 
 		//why i use temp_tri ? for sake of multi-thread latency time
-		std::vector<TriangleData> temp_tri = ciTri::triangulate(facePoints, facePoints.size());
+		std::vector<TriangleData> temp_tri = ciTri::triangulate(facePoints, facePoints.size(), false);
 
 		LOCK_START(mtx_triList);
 		face_indices = temp_tri;
 		face_vertices = facePoints;
-		LOCK_END(mtx_triList);
+		LOCK_END();
 
 		runASMThread.yield();
 	}
