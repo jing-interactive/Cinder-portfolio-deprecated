@@ -10,6 +10,8 @@
 #pragma comment(lib,"opencv_objdetect231.lib")
 #endif
 
+using namespace cv;
+
 //Just some convienience macros
 #define CV_CVX_WHITE	CV_RGB(0xff,0xff,0xff)
 #define CV_CVX_BLACK	CV_RGB(0x00,0x00,0x00)

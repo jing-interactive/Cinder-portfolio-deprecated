@@ -13,6 +13,11 @@
 #include "OpenCV.h"
 #include "point2d.h"
 
+using cv::Rect;
+using cv::Point;
+using cv::RotatedRect;
+using cv::Point2f;
+
 struct vBlob
 {
 	vBlob()
@@ -63,10 +68,10 @@ struct vBlob
 
 	void boxMerge(const vBlob& other)
 	{
-		int _x = min(other.box.x, box.x);
-		int _y = min(other.box.y, box.y);
-		box.width = max(other.box.x + other.box.width, box.x + box.width)- _x;
-		box.height = max(other.box.y + other.box.height, box.y + box.height) - _y;
+		int _x = cv::min(other.box.x, box.x);
+		int _y = cv::min(other.box.y, box.y);
+		box.width = cv::max(other.box.x + other.box.width, box.x + box.width)- _x;
+		box.height = cv::max(other.box.y + other.box.height, box.y + box.height) - _y;
 
 		box.x = _x;
 		box.y = _y;

@@ -149,9 +149,9 @@ struct vOpticalFlowLK
         int width;
         int height;
 
-        Ptr<IplImage> vel_x;
-        Ptr<IplImage> vel_y;
-		Ptr<IplImage> prev;
+		cv::Ptr<IplImage> vel_x;
+        cv::Ptr<IplImage> vel_y;
+		cv::Ptr<IplImage> prev;
 
 		int block_size;
 };

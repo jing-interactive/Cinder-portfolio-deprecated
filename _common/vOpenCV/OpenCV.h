@@ -25,8 +25,6 @@ class ofxKinectCLNUI;
 class ofxCLeye;
 #endif
 
-using namespace cv;
-
 using std::vector;
 //using std::set;
 using std::map;
@@ -87,7 +85,7 @@ imgA[i][j].r = 111;
 void vCopyImageTo(CvArr* small_image, IplImage* big_image, const CvRect& region);
 
 void vDrawText(IplImage* img, int x,int y,char* str, CvScalar clr=CV_RGB(255,255,255));
-void vPolyLine(IplImage* dst, vector<Point>& pts, CvScalar clr=CV_RGB(255,255,255), int thick = 1);
+void vPolyLine(IplImage* dst, vector<cv::Point>& pts, CvScalar clr=CV_RGB(255,255,255), int thick = 1);
 CvScalar vDefaultColor(int idx);
 
 #define show_image(img_name) do{\
@@ -97,12 +95,12 @@ CvScalar vDefaultColor(int idx);
 
 #define show_image2(img_name) do{\
 	cvNamedWindow(#img_name, 0);\
-	cvShowImage(#img_name, img_name);\
+	cvShowImage(#img_name, img_name);}\
 	while(0);
 
 #define show_mat(img_name) do{\
-	cv::namedWindow(#img_name, 0);\
-	cv::imshow(#img_name, img_name);\
+	cv::namedWindow(#img_name);\
+	cv::imshow(#img_name, img_name);}\
 	while(0);
 
 //mask is 8bit，掩板图片，mask中像素的值 > thresh，则img对应位置为原色，否则为0
@@ -206,8 +204,8 @@ struct VideoInput
 
 	IplImage* _frame;
 	int _cam_idx;
-	Size _size;
-	Size _half_size;
+	cv::Size _size;
+	cv::Size _half_size;
 	int _channel;
 	int _codec;
 
@@ -222,11 +220,11 @@ struct VideoInput
 	bool init(int argc, char** argv);
 
 #ifdef KINECT
-	Ptr<ofxKinectCLNUI> _kinect;
+	cv::Ptr<ofxKinectCLNUI> _kinect;
 	bool init_kinect();
 #endif
 #ifdef PS3
-    Ptr<ofxCLeye> _ps3_cam;
+    cv::Ptr<ofxCLeye> _ps3_cam;
 	bool init_ps3();
 #endif
 	void wait(int t);
@@ -293,9 +291,9 @@ struct vBackGaussian: public IBackGround
 
 struct vBackGrayDiff: public IBackGround
 {
-	Ptr<IplImage> Frame;
-	Ptr<IplImage> Bg;
-	Ptr<IplImage> Fore ;
+	cv::Ptr<IplImage> Frame;
+	cv::Ptr<IplImage> Bg;
+	cv::Ptr<IplImage> Fore ;
  
 	int dark_thresh;
 
@@ -325,10 +323,10 @@ struct vBackColorDiff: public vBackGrayDiff
 //三帧差值法
 struct vThreeFrameDiff: public IBackGround
 {
-	Ptr<IplImage> grayFrameOne;
-	Ptr<IplImage> grayFrameTwo;
-	Ptr<IplImage> grayFrameThree;
-	Ptr<IplImage> grayDiff ;
+	cv::Ptr<IplImage> grayFrameOne;
+	cv::Ptr<IplImage> grayFrameTwo;
+	cv::Ptr<IplImage> grayFrameThree;
+	cv::Ptr<IplImage> grayDiff ;
 
 	void init(IplImage* initial, void* param = NULL);
 
@@ -362,7 +360,7 @@ struct Triangle
 	int& operator[](int i){return idx[i];}
 	const int operator[](int i) const{return idx[i];}
 	int idx[3];
-	point2di center;
+	cv::point2di center;
 
 	bool operator == (const Triangle& other) const 
 	{
@@ -389,15 +387,15 @@ struct DelaunaySubdiv
 	int getIndex(float x, float y);
 
 	CvRect rect;
-	MemStorage storage;
+	cv::MemStorage storage;
 	CvSubdiv2D* subdiv;
 
-	std::vector<Point> points;
-	std::vector<Point> hull;
+	std::vector<cv::Point> points;
+	std::vector<cv::Point> hull;
 
 	std::vector<Triangle> triangles;//x,y,z -> vert_0, vert_1, vert_2
 //	Mat hull;
-	std::map<point2di, int> pt_map;
+	std::map<cv::point2di, int> pt_map;
 
 //	std::vector<std::vector<int> > triangles;	
 private:
@@ -433,17 +431,17 @@ void convertHSVtoRGB(const IplImage *imageHSV, IplImage *imageRGB);
  
 void cvSkinSegment(IplImage* img, IplImage* mask);
 
-void vFillPoly(IplImage* img, const vector<Point>& pt_list, const Scalar& clr = Scalar(255,255,255));
-void vLinePoly(IplImage* img, const vector<Point>& pt_list, const Scalar& clr = Scalar(255,255,255), int thick = 1);
-void vLinePoly(IplImage* img, const vector<Point2f>& pt_list, const Scalar& clr = Scalar(255,255,255), int thick = 1);
+void vFillPoly(IplImage* img, const vector<cv::Point>& pt_list, const cv::Scalar& clr = cv::Scalar(255,255,255));
+void vLinePoly(IplImage* img, const vector<cv::Point>& pt_list, const cv::Scalar& clr = cv::Scalar(255,255,255), int thick = 1);
+void vLinePoly(IplImage* img, const vector<cv::Point2f>& pt_list, const cv::Scalar& clr = cv::Scalar(255,255,255), int thick = 1);
 
-inline bool isPointInsideRect(int x, int y, const Rect& rect)
+inline bool isPointInsideRect(int x, int y, const cv::Rect& rect)
 {
 	return (x >= rect.x && x <= rect.x+rect.width &&
 		y >= rect.y && y <= rect.height);
 }
 
-// inline bool vTestRectHitRect(const Rect& A, const Rect& B)
+// inline bool vTestRectHitRect(const cv::Rect& A, const cv::Rect& B)
 // {
 // 	int AminX = A.x, AminY = A.y, BminX = B.x, BminY = B.y;
 // 	int AmaxX = A.x+A.width, AmaxY = A.y+A.height, BmaxX = B.x+B.width, BmaxY = B.y+B.height;
@@ -453,4 +451,4 @@ inline bool isPointInsideRect(int x, int y, const Rect& rect)
 // }
 
 // Object-to-object bounding-box collision detector:
-bool vTestRectHitRect(const Rect& object1, const Rect& object2);
+bool vTestRectHitRect(const cv::Rect& object1, const cv::Rect& object2);

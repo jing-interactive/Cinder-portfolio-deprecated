@@ -17,6 +17,8 @@
 #include "../CLEye/ofxCLeye.h"
 #endif
 
+using namespace cv;
+
 #include <set>
 
 void vRotateImage(IplImage* image, float angle, float centreX, float centreY){
