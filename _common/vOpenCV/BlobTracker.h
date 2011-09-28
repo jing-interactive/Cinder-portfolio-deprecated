@@ -155,3 +155,106 @@ struct vOpticalFlowLK
 
 		int block_size;
 };
+
+
+
+struct IBackGround
+{
+	CvBGStatModel* bg_model;
+
+	int thresh;
+
+	IBackGround(){
+		bg_model = NULL;
+		thresh = 200;
+	}
+
+	virtual void init(IplImage* initial, void* param = NULL) = 0;
+
+	virtual void update(IplImage* image, int mode = 0){
+		cvUpdateBGStatModel( image, bg_model );
+	}
+	virtual void setIntParam(int idx, int value)
+	{
+		if (idx ==0) thresh = 255-value;
+	}
+
+	virtual IplImage* getForeground(){
+		return bg_model->foreground;
+	}
+
+	virtual IplImage* getBackground(){
+		return bg_model->background;
+	}
+
+	virtual ~IBackGround(){
+		if (bg_model)
+			cvReleaseBGStatModel(&bg_model);
+	}
+};
+
+
+struct vBackFGDStat: public IBackGround
+{
+	void init(IplImage* initial, void* param = NULL);
+};
+
+struct vBackGaussian: public IBackGround
+{
+	void init(IplImage* initial, void* param = NULL);
+};
+
+#define DETECT_BOTH 0
+#define DETECT_DARK 1
+#define DETECT_BRIGHT 2
+
+struct vBackGrayDiff: public IBackGround
+{
+	cv::Ptr<IplImage> Frame;
+	cv::Ptr<IplImage> Bg;
+	cv::Ptr<IplImage> Fore ;
+
+	int dark_thresh;
+
+	void init(IplImage* initial, void* param = NULL);
+
+	void setIntParam(int idx, int value);
+	///mode: 0-> ¼ì²âÃ÷Óë°µ 1->¼ì²âºÚ°µ 2->¼ì²âÃ÷ÁÁ
+	void update(IplImage* image, int mode = DETECT_BOTH);
+
+	IplImage* getForeground(){
+		return Fore;
+	}
+	IplImage* getBackground(){
+		return Bg;
+	}
+};
+
+struct vBackColorDiff: public vBackGrayDiff
+{
+	int nChannels;
+	void init(IplImage* initial, void* param = NULL);
+
+	///mode: 0-> ¼ì²âÃ÷Óë°µ 1->¼ì²âºÚ°µ 2->¼ì²âÃ÷ÁÁ
+	void update(IplImage* image, int mode = DETECT_BOTH);
+};
+
+//ÈýÖ¡²îÖµ·¨
+struct vThreeFrameDiff: public IBackGround
+{
+	cv::Ptr<IplImage> grayFrameOne;
+	cv::Ptr<IplImage> grayFrameTwo;
+	cv::Ptr<IplImage> grayFrameThree;
+	cv::Ptr<IplImage> grayDiff ;
+
+	void init(IplImage* initial, void* param = NULL);
+
+	void update(IplImage* image, int mode = 0);
+
+	IplImage* getForeground(){
+		return grayDiff;
+	}
+	IplImage* getBackground(){
+		return grayDiff;
+	}
+};

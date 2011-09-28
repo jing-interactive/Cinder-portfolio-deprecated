@@ -839,3 +839,226 @@ void vBlobTracker::doBlobOff( vTrackedBlob& b ) {
 	b.id = vTrackedBlob::BLOB_TO_DELETE;
 }
 
+
+
+CvFGDStatModelParams cvFGDStatModelParams()
+{
+	CvFGDStatModelParams p;
+	p.Lc = CV_BGFG_FGD_LC;			/* Quantized levels per 'color' component. Power of two, typically 32, 64 or 128.				*/
+	p.N1c = CV_BGFG_FGD_N1C;			/* Number of color vectors used to model normal background color variation at a given pixel.			*/
+	p.N2c = CV_BGFG_FGD_N2C;			/* Number of color vectors retained at given pixel.  Must be > N1c, typically ~ 5/3 of N1c.			*/
+	/* Used to allow the first N1c vectors to adapt over time to changing background.				*/
+
+	p.Lcc = CV_BGFG_FGD_LCC;			/* Quantized levels per 'color co-occurrence' component.  Power of two, typically 16, 32 or 64.			*/
+	p.N1cc = CV_BGFG_FGD_N1CC;		/* Number of color co-occurrence vectors used to model normal background color variation at a given pixel.	*/
+	p.N2cc = CV_BGFG_FGD_N2CC;		/* Number of color co-occurrence vectors retained at given pixel.  Must be > N1cc, typically ~ 5/3 of N1cc.	*/
+	/* Used to allow the first N1cc vectors to adapt over time to changing background.				*/
+
+	p.is_obj_without_holes;/* If TRUE we ignore holes within foreground blobs. Defaults to TRUE.						*/
+	p.perform_morphing;	/* Number of erode-dilate-erode foreground-blob cleanup iterations.						*/
+	/* These erase one-pixel junk blobs and merge almost-touching blobs. Default value is 1.			*/
+
+	p.alpha1 = CV_BGFG_FGD_ALPHA_1;		/* How quickly we forget old background pixel values seen.  Typically set to 0.1  				*/
+	p.alpha2 = CV_BGFG_FGD_ALPHA_2;		/* "Controls speed of feature learning". Depends on T. Typical value circa 0.005. 				*/
+	p.alpha3 = CV_BGFG_FGD_ALPHA_3;		/* Alternate to alpha2, used (e.g.) for quicker initial convergence. Typical value 0.1.				*/
+
+	p.delta = CV_BGFG_FGD_DELTA;		/* Affects color and color co-occurrence quantization, typically set to 2.					*/
+	p.T = CV_BGFG_FGD_T;			/* "A percentage value which determines when new features can be recognized as new background." (Typically 0.9).*/
+	p.minArea = CV_BGFG_FGD_MINAREA;		/* Discard foreground blobs whose bounding box is tinyer than this threshold.					*/
+
+	return  p;
+}
+
+void vBackFGDStat::init(IplImage* initial, void* param)
+{
+	CvFGDStatModelParams* p = (CvFGDStatModelParams*)param;
+	bg_model = cvCreateFGDStatModel( initial, p );
+}
+
+void vBackGaussian::init(IplImage* initial, void* param)
+{
+	CvGaussBGStatModelParams* p = (CvGaussBGStatModelParams*)param;
+	bg_model = cvCreateGaussianBGModel( initial, p );
+}
+
+void vBackGrayDiff::setIntParam(int idx, int value)
+{
+	IBackGround::setIntParam(idx, value);
+	if (idx == 1)
+		dark_thresh = 255-value;
+}
+
+void vBackGrayDiff::init(IplImage* initial, void* param/* = NULL*/){
+	cv::Size size = cvGetSize(initial);
+
+	Frame.release();
+	Frame = cvCreateImage(size, 8, 1);
+	Bg.release();
+	Bg = cvCreateImage(size, 8, 1);
+	Fore.release();
+	Fore = cvCreateImage(size, 8, 1);
+
+	thresh = 50;
+	dark_thresh = 200;
+
+	if (initial->nChannels == 1)
+		cvCopy(initial, Bg);
+	else
+		vGrayScale(initial, Bg);
+}
+
+void vBackGrayDiff::update(IplImage* image, int mode/* = 0*/){
+	if (image->nChannels == 1)
+		cvCopy(image, Frame);
+	else
+		vGrayScale(image, Frame); 
+	if (mode == DETECT_BOTH)
+	{
+		BwImage frame(Frame);
+		BwImage bg(Bg);
+		BwImage fore(Fore);
+
+		cvZero(Fore);
+		for (int y=0;y<image->height;y++)
+			for (int x=0;x<image->width;x++)
+			{
+				int delta = frame[y][x] - bg[y][x];
+				if (delta >= thresh || delta <= -dark_thresh)
+					fore[y][x] = 255;
+			}
+	}
+	else if (mode == DETECT_DARK)
+	{
+		cvSub(Bg, Frame, Fore);
+		vThresh(Fore, dark_thresh);
+	}
+	else if (mode == DETECT_BRIGHT)
+	{
+		cvSub(Frame, Bg, Fore);
+		vThresh(Fore, thresh);
+	}
+}
+
+
+void vBackColorDiff::init(IplImage* initial, void* param/* = NULL*/){
+	cv::Size size = cvGetSize(initial);
+	nChannels = initial->nChannels;
+
+	Frame.release();
+	Frame = cvCloneImage(initial);
+	Bg.release();
+	Bg = cvCloneImage(initial);
+	Fore.release();
+	Fore = cvCreateImage(size, 8, 1);
+
+	thresh = 220;
+	dark_thresh = 30;
+}
+
+void vBackColorDiff::update(IplImage* image, int mode/* = 0*/){
+	//	vGrayScale(image, Frame);
+	cvCopy(image, Frame);
+	if (mode == DETECT_BOTH)
+	{
+		if (nChannels == 1)
+		{
+			BwImage frame(Frame);
+			BwImage bg(Bg);
+			BwImage fore(Fore);
+
+			cvZero(Fore);
+			for (int y=0;y<image->height;y++)
+				for (int x=0;x<image->width;x++)
+				{
+					int delta = frame[y][x] - bg[y][x];
+					if (delta >= thresh || delta <= -dark_thresh)
+						fore[y][x] = 255;
+				}
+		}
+		else
+		{
+			RgbImage frame(Frame);
+			RgbImage bg(Bg);
+			BwImage fore(Fore);
+
+			int min_t = 255-thresh;
+			int max_t = 255-dark_thresh;
+			cvZero(Fore);
+			for (int y=0;y<image->height;y++)
+				for (int x=0;x<image->width;x++)
+				{
+					int r = frame[y][x].r - bg[y][x].r;
+					int g = frame[y][x].g - bg[y][x].g;
+					int b = frame[y][x].b - bg[y][x].b;
+#if 1
+					if ((r >= thresh || r <= -dark_thresh)
+						&& (g >= thresh || g <= -dark_thresh)
+						&& (b >= thresh || b <= -dark_thresh))
+#else
+					int delta = r*r+g*g+b*b;
+					if (delta >= min_t*min_t && delta <= max_t*max_t)
+#endif
+						fore[y][x] = 255;
+				}
+		}
+	}
+	else if (mode == DETECT_DARK)
+	{
+		cvSub(Bg, Frame, Fore);
+		vThresh(Fore, dark_thresh);
+	}
+	else if (mode == DETECT_BRIGHT)
+	{
+		cvSub(Frame, Bg, Fore);
+		vThresh(Fore, thresh);
+	}
+}
+
+void vThreeFrameDiff::init(IplImage* initial, void* param/* = NULL*/)
+{
+	cv::Size size = cvGetSize(initial);
+
+	grayFrameOne.release();
+	grayFrameOne = cvCreateImage(size, 8, 1);
+	vGrayScale(initial, grayFrameOne);
+	grayFrameTwo.release();
+	grayFrameTwo = cvCreateImage(size, 8, 1);
+	vGrayScale(initial, grayFrameTwo);
+	grayFrameThree.release();
+	grayFrameThree = cvCreateImage(size, 8, 1);
+	vGrayScale(initial, grayFrameThree);
+	grayDiff.release();
+	grayDiff = cvCreateImage(size, 8, 1);
+}
+
+void vThreeFrameDiff::update(IplImage* image, int mode/* = 0*/){
+	vGrayScale(image, grayFrameThree);
+
+	BwImage one(grayFrameOne);
+	BwImage two(grayFrameTwo);
+	BwImage three(grayFrameThree);
+	BwImage diff(grayDiff);
+
+	cvZero(grayDiff);
+	for (int y=0;y<image->height;y++)
+		for (int x=0;x<image->width;x++)
+		{
+			if (abs(one[y][x] - two[y][x]) > thresh ||
+				abs(three[y][x] - two[y][x]) > thresh)
+				diff[y][x] = 255;
+		}
+
+		show_image(grayFrameOne);
+		show_image(grayFrameTwo);
+		show_image(grayFrameThree);
+		cvCopy(grayFrameTwo, grayFrameOne);
+		cvCopy(grayFrameThree, grayFrameTwo);
+
+		//if (mode == DETECT_BOTH)
+		//	cvAbsDiff(grayFrame, grayBg, grayDiff);
+		//else if (mode == DETECT_DARK)
+		//	cvSub(grayBg, grayFrame, grayDiff);
+		//else if (mode == DETECT_BRIGHT)
+		//	cvSub(grayFrame, grayBg, grayDiff);
+		//vThresh(grayDiff, thresh);
+}
