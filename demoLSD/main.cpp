@@ -11,14 +11,14 @@ int main(int argc, char** argv )
 {	
 	if (input.init(argc,argv))
 	{
-		image_double lsd_in;
-		ntuple_list lsd_out;
+		image_double lsd_img;
+		ntuple_list segs;//resulted line segments
 
 		int W = input._size.width;
 		int H = input._size.height;
 		Mat gray(W, H, CV_8UC1);
 
-		lsd_in = new_image_double(W,H);
+		lsd_img = new_image_double(W,H);
 
 		while (true)
 		{
@@ -31,14 +31,16 @@ int main(int argc, char** argv )
 
 			for(int y=0;y<H;y++)
 				for(int x=0;x<W;x++)
-				lsd_in->data[ x + y * W ] = gray.at<uchar>(y,x);
-			lsd_out = lsd(lsd_in);
+				lsd_img->data[ x + y * W ] = gray.at<uchar>(y,x);
+			segs = lsd(lsd_img);
 
 			/* print output */ 		
-			printf("%u line segments found:\n",lsd_out->size);
-			for(int i=0;i<lsd_out->size;i++)
-				for(int j=0;j<lsd_out->dim;j++)
-					printf("%f ",lsd_out->values[ i * lsd_out->dim + j ]);
+			printf("%u line segments found:\n",segs->size);
+			for(int i=0;i<segs->size;i++)
+			{
+				double* s = &segs->values[i*segs->dim];
+				line(raw, Point(s[0],s[1]), Point(s[2],s[3]), vDefaultColor(i), s[4]);
+			}
 
 			show_mat(raw);
 			int key = cvWaitKey(1);
@@ -46,8 +48,8 @@ int main(int argc, char** argv )
 				break;
 		}
 
-		free_image_double(lsd_in);
-		free_ntuple_list(lsd_out);
+		free_image_double(lsd_img);
+		free_ntuple_list(segs);
 	}
 
 	return 0;
