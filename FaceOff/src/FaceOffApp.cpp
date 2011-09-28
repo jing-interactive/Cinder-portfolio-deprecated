@@ -353,7 +353,6 @@ void FaceOffApp::keyDown( KeyEvent event )
 		quit();
 	if (code == event.KEY_SPACE)
 		faceFrameVisible = !faceFrameVisible;
-
 }
 
 void FaceOffApp::modifyVertices(std::vector<ci::Vec2f>& vertices)
