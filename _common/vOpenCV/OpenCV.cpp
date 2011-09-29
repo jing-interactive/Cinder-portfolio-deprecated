@@ -342,11 +342,11 @@ IplImage* VideoInput::get_frame()
 		{
 			_frame = cvQueryFrame(_capture);
 			_frame_num ++;
-			if (_frame == NULL)
-			{
-				cvReleaseCapture(&_capture);
-				init(_argc, _argv);
-			}
+// 			if (_frame == NULL)
+// 			{
+// 				cvReleaseCapture(&_capture);
+// 				init(_argc, _argv);
+// 			}
 		}break;
 #ifdef KINECT
 	case From_Kinect:
@@ -383,6 +383,11 @@ void VideoInput::_post_init()
 			printf("Fps: unknown");
 		else
 			printf("Fps: %d", _fps);
+	}
+	else
+	{
+		_codec = CV_FOURCC('D', 'I', 'V', 'X');
+		_fps = 24;
 	}
 
 	_size.width = _frame->width;

@@ -6,6 +6,7 @@ extern "C"{
 using namespace cv;
 
 VideoInput input;
+VideoWriter output;
 
 int main(int argc, char** argv )
 {	
@@ -21,11 +22,20 @@ int main(int argc, char** argv )
 
 		lsd_img = new_image_double(W,H);
 
+		string source = "camera";
+		if (argc > 1)
+			source = argv[1]; // the source file name
+		string::size_type pAt = source.find_last_of('.'); // Find extension point
+		const string NAME = source.substr(0, pAt) + "_LSD.avi"; // Form the new name with container 
+		output.open(NAME, input._codec, input._fps, input._size);
+
 		while (true)
 		{
-			Mat raw = input.get_frame(); 
-			if (raw.empty())
+			IplImage* _raw = input.get_frame(); 
+			if (!_raw)
 				break;
+
+			Mat raw(_raw);
 
 			frame = raw.clone();
 
@@ -51,6 +61,7 @@ int main(int argc, char** argv )
 			}
 
 			show_mat(frame);
+			output << frame;
 			int key = cvWaitKey(1);
 			if (key == 0x1B)
 				break;
