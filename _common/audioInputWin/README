@@ -1,0 +1,10 @@
+This blocks wraps Windows' multimedia API to provide Cinder
+with low level, reliable access to line and microphone input 
+on Windows. See "input" samples in "btrAudioBlocks" for usage.
+
+-----------------------------------------
+
+http://www.bantherewind.com
+http://www.libcinder.org
+
+bantherewind@gmail.com

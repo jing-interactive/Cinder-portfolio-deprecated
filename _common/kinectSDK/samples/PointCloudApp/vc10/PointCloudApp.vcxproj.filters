@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="blocks">
+      <UniqueIdentifier>{bc923a7f-9032-44d0-91e8-3747da8487ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="blocks\kinectSdk">
+      <UniqueIdentifier>{1889549a-f9cc-477d-a1b8-75dc6b47e9dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="blocks\kinectSdk\Header Files">
+      <UniqueIdentifier>{257a7043-0014-4504-a6fb-81e4f759eacd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="blocks\kinectSdk\Source Files">
+      <UniqueIdentifier>{df53427f-f183-4d3f-a5b8-9d449b8e6375}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\PointCloudApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Kinect.cpp">
+      <Filter>blocks\kinectSdk\Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\include\Kinect.h">
+      <Filter>blocks\kinectSdk\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\Wincludes.h">
+      <Filter>blocks\kinectSdk\Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
