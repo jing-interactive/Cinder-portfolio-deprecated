@@ -35,7 +35,9 @@
 */
 
 // Include header
-#include <Kinect.h>
+#include "../include/Kinect.h"
+
+#pragma comment(lib, "MSRKinectNUI.lib")
 
 // Imports
 using namespace ci;
@@ -43,7 +45,7 @@ using namespace ci::app;
 using namespace std;
 
 // Constructor
-Kinect::Obj::Obj(const ImageResolution & videoResolution, const ImageResolution & depthResolution)
+Kinect::Obj::Obj(const NUI_IMAGE_RESOLUTION & videoResolution, const NUI_IMAGE_RESOLUTION & depthResolution)
 	: mDepthResolution(depthResolution), mUserCount(0), mVideoResolution(videoResolution)
 {
 
@@ -59,11 +61,11 @@ Kinect::Obj::Obj(const ImageResolution & videoResolution, const ImageResolution 
 	// Set depth dimensions
 	switch (mDepthResolution)
 	{
-	case ImageResolution::NUI_IMAGE_RESOLUTION_320x240:
+	case NUI_IMAGE_RESOLUTION_320x240:
 		mDepthWidth = 320;
 		mDepthHeight = 240;
 		break;
-	case ImageResolution::NUI_IMAGE_RESOLUTION_80x60:
+	case NUI_IMAGE_RESOLUTION_80x60:
 		mDepthWidth = 80;
 		mDepthHeight = 60;
 		break;
@@ -78,11 +80,11 @@ Kinect::Obj::Obj(const ImageResolution & videoResolution, const ImageResolution 
 	// Set depth dimensions
 	switch (mVideoResolution)
 	{
-	case ImageResolution::NUI_IMAGE_RESOLUTION_1280x1024:
+	case NUI_IMAGE_RESOLUTION_1280x1024:
 		mVideoWidth = 1280;
 		mVideoHeight = 1024;
 		break;
-	case ImageResolution::NUI_IMAGE_RESOLUTION_640x480:
+	case NUI_IMAGE_RESOLUTION_640x480:
 		mVideoWidth = 640;
 		mVideoHeight = 480;
 		break;

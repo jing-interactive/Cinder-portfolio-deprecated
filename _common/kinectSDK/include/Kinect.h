@@ -49,9 +49,13 @@
 // Imports
 using std::map;
 using std::vector;
+using boost::int32_t;
+using boost::uint8_t;
+using boost::uint16_t;
+using boost::uint32_t;
 
 // Join name alias
-typedef NUI_IMAGE_RESOLUTION ImageResolution;
+//typedef NUI_IMAGE_RESOLUTION NUI_IMAGE_RESOLUTION;
 typedef NUI_SKELETON_POSITION_INDEX JointName;
 typedef std::pair<JointName, ci::Vec3f> Joint;
 typedef std::map<JointName, ci::Vec3f> Skeleton;
@@ -69,7 +73,7 @@ private:
 	public:
 
 		// Con/de-structor
-		Obj(const ImageResolution & videoResolution, const ImageResolution & depthResolution);
+		Obj(const NUI_IMAGE_RESOLUTION & videoResolution, const NUI_IMAGE_RESOLUTION & depthResolution);
 		~Obj();
 
 		// Start/stop capturing
@@ -128,8 +132,8 @@ private:
 		ci::Surface8u mVideoSurface;
 
 		// Image resolution
-		ImageResolution mDepthResolution;
-		ImageResolution mVideoResolution;
+		NUI_IMAGE_RESOLUTION mDepthResolution;
+		NUI_IMAGE_RESOLUTION mVideoResolution;
 		int32_t mDepthHeight;
 		int32_t mDepthWidth;
 		int32_t mVideoHeight;
@@ -187,8 +191,8 @@ private:
 public:
 
 	// Con/de-structor
-	Kinect(const ImageResolution & videoResolution = ImageResolution::NUI_IMAGE_RESOLUTION_640x480, 
-		const ImageResolution & depthResolution = ImageResolution::NUI_IMAGE_RESOLUTION_320x240)
+	Kinect(NUI_IMAGE_RESOLUTION videoResolution = NUI_IMAGE_RESOLUTION_640x480, 
+		NUI_IMAGE_RESOLUTION depthResolution = NUI_IMAGE_RESOLUTION_320x240)
 		: mObj(ObjRef(new Obj(videoResolution, depthResolution)))
 	{}
 	~Kinect()
