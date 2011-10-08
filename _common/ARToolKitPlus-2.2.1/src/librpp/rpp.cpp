@@ -22,7 +22,8 @@
 #ifndef _NO_LIBRPP_
 
 #include <cstring>
-#include <cmath>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #include "rpp.h"
 #include "rpp_vecmat.h"

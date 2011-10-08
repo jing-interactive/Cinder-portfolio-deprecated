@@ -52,9 +52,9 @@ bool Camera::loadFromFile(const char* filename) {
         camf >> kc[0] >> kc[1] >> kc[2] >> kc[3] >> kc[4] >> kc[5];
         camf >> undist_iterations;
     } catch (ifstream::failure e) {
-        cerr << "Could not read Camera calibration file" << endl;
-        camf.close();
-        return false;
+   //     cerr << "Could not read Camera calibration file" << endl;
+   //     camf.close();
+   //     return false;
     }
 
     camf.close();

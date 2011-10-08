@@ -21,7 +21,7 @@
 
 #ifndef _NO_LIBRPP_
 
-
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include "stdio.h"
 #define max(a,b) (a>b?a:b)

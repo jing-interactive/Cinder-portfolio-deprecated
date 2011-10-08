@@ -30,6 +30,8 @@
 #ifndef AR_CONFIG_H
 #define AR_CONFIG_H
 
+#define AR_STATIC
+
 // may be changed to double, float is particularly useful for PDA's
 #ifdef _USE_DOUBLE_
 	typedef double ARFloat;
