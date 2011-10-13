@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "arPlusApp", "arPlusApp\arPlusApp.vcproj", "{D111AA7F-904A-42BF-9EED-0796753BD2C9}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "esmSample", "esmSample\esmSample.vcproj", "{D111AA7F-904A-42BF-9EED-0796753BD2C9}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cinder", "..\cinder_0.8.3_vc2008\vc9\cinder.vcproj", "{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}"
 EndProject
