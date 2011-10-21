@@ -1,0 +1,47 @@
+-------------------------------------------
+Demo code for ESM real-time visual tracking
+-------------------------------------------
+
+INRIA Sophia-Antipolis
+
+Authors:	Selim BENHIMANE (Selim.Benhimane@sophia.inria.fr)
+		Ezio  MALIS 	(Ezio.Malis@sophia.inria.fr) 
+
+Version 0.1, April, 2005
+
+This directory contains a compiled dll (with the associated lib file)
+for performing real-time visual tracking, a sample program showing the
+use of the ESM tracking library and a 10 images test sequence.
+
+A longer test sequence with 200 images can be downloaded from the ftp
+site:
+
+	ftp://ftp-sop.inria.fr/icare/malis/seq
+
+See the web page at:
+
+	http://www-sop.inria.fr/icare/personnel/malis/software/ESM.html
+
+for references to the relevant papers describing the ESM approach.
+
+----------------------------------------------------
+Compiling and testing the sample program in Windows
+----------------------------------------------------
+
+The example program is named "src/ESMexample.cpp".
+
+This program track a rectangular area of interest (defined in
+ESMexample.cpp) selected in the first image (im000.pgm). The program
+reads the PGM images and save new PGM images in the same directory
+with a rectangle overlayed indicating the location of the area of
+interest in the current image...  You can use any tool that displays
+the common PGM image format to inspect the result. With few
+modification you can use the library in a real-time application where
+the images are acquired on-line with your favorite camera.
+
+--------------------
+Licensing conditions
+--------------------
+
+This software is being made available for research purposes only.  
+See the file LICENSE in this directory for conditions of use.

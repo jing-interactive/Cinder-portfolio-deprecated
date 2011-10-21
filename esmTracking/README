@@ -1,0 +1,9 @@
+An interactive demo showing the usage of ESMlibry with Cinder rendering.
+
+vinjn @ 2011-10-13
+
+ESMlibry + Cinder + webcam
+
+Dragging your mouse to select the region to track.
+But the tracking result proves to be quite unstable.
+You mustn't move fast before webcam...

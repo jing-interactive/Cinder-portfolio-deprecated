@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "esmSample", "esmSample\esmSample.vcproj", "{D111AA7F-904A-42BF-9EED-0796753BD2C9}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cinder", "..\cinder_0.8.3_vc2008\vc9\cinder.vcproj", "{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D111AA7F-904A-42BF-9EED-0796753BD2C9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D111AA7F-904A-42BF-9EED-0796753BD2C9}.Debug|Win32.Build.0 = Debug|Win32
+		{D111AA7F-904A-42BF-9EED-0796753BD2C9}.Release|Win32.ActiveCfg = Release|Win32
+		{D111AA7F-904A-42BF-9EED-0796753BD2C9}.Release|Win32.Build.0 = Release|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.Debug|Win32.Build.0 = Debug|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.Release|Win32.ActiveCfg = Release|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
