@@ -1,13 +1,18 @@
 #pragma once
 
-#include <OpenCV/cv.h>
+#include <opencv2/opencv.hpp>
+#include <opencv2/legacy/legacy.hpp>
 #include <vector>
 #include <string>
 
 using std::vector; 
 using std::string;
 
-#define DIST_THRESH 1025021
+#if defined _DEBUG
+#pragma comment(lib,"opencv_legacy231d.lib")
+#else
+#pragma comment(lib,"opencv_legacy231.lib")
+#endif
 
 struct profile_t
 {//一个档案，不一定是人
@@ -16,11 +21,10 @@ struct profile_t
 	IplImage* photo;
 };
 
-
 struct recognition_t
 {//识别
 	vector<profile_t> profile_vec; //训练用，用于映射
-	vector<IplImage*> train_images;//训练用，用于图片序列
+	vector<cv::Mat> train_images;//训练用，用于图片序列
 
 	int nTrainFaces; 
 	int nEigens; // the number of eigenvalues
@@ -28,6 +32,8 @@ struct recognition_t
 	IplImage ** eigenVectArr; // eigenvectors
 	CvMat * eigenValMat; // eigenvalues
 	CvMat * projectedTrainFaceMat; // projected training faces
+
+	cv::PCA pca;
 
 	~recognition_t()
 	{
@@ -46,9 +52,9 @@ struct recognition_t
 
 	void release()
 	{
-		int n = train_images.size();
-		for (int i =0;i<n; i++)
-			cvReleaseImage(&train_images[i]);
+// 		int n = train_images.size();
+// 		for (int i =0;i<n; i++)
+// 			cvReleaseImage(&train_images[i]);
 		train_images.clear();
 		profile_vec.clear();
 
@@ -99,7 +105,7 @@ struct recognition_t
 		nEigens = nTrainFaces-1;
 
 		// allocate the eigenvector images
-		CvSize faceImgSize = cvGetSize(train_images[0]);
+		CvSize faceImgSize = train_images[0].size();
 		//faceImgSize.width  = profile_vec[0].photo->width;
 		//faceImgSize.height = profile_vec[0].photo->height;
 		eigenVectArr = (IplImage**)cvAlloc(sizeof(IplImage*) * nEigens);
@@ -115,6 +121,7 @@ struct recognition_t
 		// set the PCA termination criterion
 		CvTermCriteria calcLimit = cvTermCriteria( CV_TERMCRIT_ITER, nEigens, 1);
 
+		pca(train_images, cv::Mat(), CV_PCA_DATA_AS_COL, nEigens);
 		// compute average image, eigenvalues, and eigenvectors
 		cvCalcEigenObjects(
 			nTrainFaces,
@@ -136,7 +143,7 @@ struct recognition_t
 		{
 			//int offset = i * nEigens;
 			cvEigenDecomposite(
-				train_images[i],
+				&(IplImage)train_images[i],
 				nEigens,
 				eigenVectArr,
 				0, 0,
@@ -208,10 +215,10 @@ struct recognition_t
 			}
 		}
 
-		if (leastDistSq > DIST_THRESH)
+	//	if (leastDistSq > DIST_THRESH)
 			return iNearest;
-		else
-			return -1;//it's a stranger
+// 		else
+// 			return -1;//it's a stranger
 	}
 
 	int loadFaceImgArray(char * filename)

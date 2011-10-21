@@ -1,3 +1,11 @@
+*.user
+*.suo 
+*.pdb
+*.ilk
+*.obj
+*.ncb
+*.suo
+*.exe
 
 /arPlusApp/Debug
 /arPlusApp/Release

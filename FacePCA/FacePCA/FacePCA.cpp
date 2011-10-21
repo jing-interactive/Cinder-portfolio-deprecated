@@ -1,8 +1,5 @@
-// 部分代码来自于eigenface.c, by Robin Hewitt, 2007
-//
-// Example program showing how to implement eigenface with OpenCV
-//
-//vinjn, 2009
+// Some of the source codes is extracted from eigenface.c, by Robin Hewitt, 2007
+
 #include <algorithm>
 #include <direct.h>
 
@@ -10,6 +7,7 @@
 #include "../../_common/vOpenCV/BlobTracker.h"
 #include "../../_common/CommonDialog.h" 
 #include "recog.h"
+#include "CvGabor.h"
 
 using std::vector;
 using std::string;
