@@ -95,10 +95,13 @@ int main(int argc, const char** argv)
 		cv::equalizeHist(img1, img1);
 		cv::equalizeHist(img2, img2);
 	}
- 	
-	namedWindow("feature", 0);
-	createTrackbar("min_dist", "feature", &k_min, 100, onTracker);
-	createTrackbar("max_dist", "feature", &k_max, 100, onTracker);
+
+	if (args.get<bool>("visual"))
+	{
+		namedWindow("feature", 0);
+		createTrackbar("min_dist", "feature", &k_min, 100, onTracker);
+		createTrackbar("max_dist", "feature", &k_max, 100, onTracker);
+	}
 
 	// detecting keypoints
 	Ptr<FeatureDetector> detector = new SiftFeatureDetector;
