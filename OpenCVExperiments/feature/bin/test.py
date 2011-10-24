@@ -3,12 +3,16 @@ import sys
 import glob
 import shutil
 
-ukbenck_part_1 = 'D:\\snda_projects\\ImageRetrieval\\data\\ukbenck\\1\\'
-ukbenck_part_2 = 'D:\\snda_projects\\ImageRetrieval\\data\\ukbenck\\2\\'
-ukbenck_part_3 = 'D:\\snda_projects\\ImageRetrieval\\data\\ukbenck\\3\\'
-ukbenck_part_4 = 'D:\\snda_projects\\ImageRetrieval\\data\\ukbenck\\4\\'
+CMD_BASE = 'Feature.exe'
 
-CMD_BASE = '..\\bin\\Release\\ExtractSiftFromSingleImage.exe '
+folder_list = []
+for i in range(1,40):
+    folder_list.append({})
+    folder_list[i].folder = 's'+str(i);
+    folder_list[i].files = []  
+    for file in glob.glob('s'+str(i)+'/*.*'):
+        folder_list[i].files.append(file)
+    print folder_list[i]
 
 def extract_dir(img_dir):
     for file in glob.glob(img_dir + '\\*.jpg'):
@@ -18,5 +22,6 @@ def extract_dir(img_dir):
         #print CMD_BASE + file + ' ' + key_file_name + ' ' + desc_file_name
         os.system(CMD_BASE + file + ' ' + key_file_name + ' ' + desc_file_name)
         
-        
-extract_dir(ukbenck_part_1) 
+
+     
+
