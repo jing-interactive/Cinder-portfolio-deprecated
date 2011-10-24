@@ -29,13 +29,6 @@
 // 'f' key toggles fullscreen display
 // 'i' key toggles drawing the camera image
 
-
-
-#ifdef CINDER_MSW
-// for opengl functions
-#include <windows.h>
-#endif
-
 #ifdef _DEBUG
 #pragma comment(lib,"cinder_d.lib")
 #else
@@ -53,7 +46,7 @@
 #include "ARToolKitPlus/TrackerSingleMarker.h"
 #include "ARToolKitPlus/TrackerMultiMarker.h"
 
-#include "Resources.h"
+//#include "Resources.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -167,6 +160,8 @@ void atkpMultipleApp::setup()
 	// switch to simple ID based markers
 	// use the tool in tools/IdPatGen to generate markers
 	tracker->setMarkerMode(ARToolKitPlus::MARKER_ID_BCH);
+
+	tracker->setPoseEstimator(ARToolKitPlus::POSE_ESTIMATOR_RPP);
 
 	n_marks = 0;
 
@@ -306,8 +301,8 @@ case 'f':
 case 'i':
 	mDrawCapturedImage = ! mDrawCapturedImage;
 	break;
-case 's': 
-	shutdown();
+case KeyEvent::KEY_ESCAPE: 
+	quit();
 	break;
 	}
 }
