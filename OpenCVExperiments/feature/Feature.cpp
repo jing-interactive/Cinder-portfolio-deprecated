@@ -32,8 +32,9 @@ const char *keys =
 	"{2|||the right picature to do comparison}"
 	"{faceDetect|face|false|do face detection first}" 
 	"{equalizeHist|eq|false|call cv::equalizeHist first}"
-	"{visual||false|whether to visualizing the result}"
+	"{v|visual|false|whether to visualizing the result}"
 	"{h|help|false|display this help text}"
+	"{verb|verbose|false|be noisy}"
 };
 
 int k_min = 5;
@@ -62,7 +63,8 @@ int main(int argc, const char** argv)
 	Mat src2 = imread(argv[2], CV_LOAD_IMAGE_GRAYSCALE);
 	if(src1.empty() || src2.empty())
 	{
-		printf("Can't read one of the images\n");
+		if (args.get<bool>("verbose"))
+			printf("Can't read one of the images\n");
 		return -1;
 	}
 
@@ -157,7 +159,7 @@ int main(int argc, const char** argv)
 				for( int i = 0; i < descriptors1.rows; i++ )
 				{ 
 					float dist = matches[i].distance;
-					if( dist > min_dist*k_min*0.01 && dist < max_dist*k_max*0.01)
+					if( dist >= min_dist*k_min*0.01 && dist <= max_dist*k_max*0.01)
 					{
 						good_matches.push_back( matches[i]);
 					}
@@ -177,14 +179,18 @@ int main(int argc, const char** argv)
 		for( int i = 0; i < descriptors1.rows; i++ )
 		{ 
 			float dist = matches[i].distance;
-			if( dist > min_dist*k_min*0.01 && dist < max_dist*k_max*0.01)
+			if( dist >= min_dist*k_min*0.01 && dist <= max_dist*k_max*0.01)
 			{
 				good_matches.push_back( matches[i]);
 			}
 		}
 	}
-	printf("[%s] [%s] %d matches.\n", 
-		filename1.c_str(), filename2.c_str(), good_matches.size());
 
-	return 0;
+	if (args.get<bool>("verbose"))
+	{
+		printf("[%s] [%s] %d matches.\n", 
+			filename1.c_str(), filename2.c_str(), good_matches.size());
+	}
+
+	return good_matches.size();
 }
