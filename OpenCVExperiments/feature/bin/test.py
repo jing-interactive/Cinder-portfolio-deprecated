@@ -73,6 +73,7 @@ def run_test(testset_name, params):
 
     print "true_positive rate = ",(config.true_total-config.true_negative*1.0)/config.true_total
     print "false_negative rate = ",(config.false_total-config.false_positive*1.0)/config.false_total
-    
-run_test('Cambridge','')
-run_test('FERET','')
+
+if __name__ == '__main__':
+    run_test('Cambridge','')
+    run_test('FERET','')
