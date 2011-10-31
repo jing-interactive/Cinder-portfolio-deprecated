@@ -45,7 +45,8 @@ void CameraBoothApp::setup()
 	focusArea = getWindowBounds();
 	max_angle = 1;
 	try {
-		mCap = Capture( 640, 480 );
+		std::vector<Capture::DeviceRef> devices( Capture::getDevices() );
+		mCap = Capture( 640, 480, devices[1]);
 		mCap.start();
 	}
 	catch( ... ) {
