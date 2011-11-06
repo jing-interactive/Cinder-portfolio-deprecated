@@ -129,7 +129,7 @@ inline CvScalar vRandomColor()
 
 /*
 
-#include "OpenCV/OpenCV.h"
+#include "OpenCV.h"
 
 VideoInput input;
 
