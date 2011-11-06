@@ -1,4 +1,5 @@
 #include "../../../_common/vOpenCV/OpenCV.h"
+#include "../../../_common/MiniTimer.h"
 
 VideoInput input;
 
@@ -22,16 +23,20 @@ int main(int argc, char** argv )
 		std::vector<one_track> tracks;
 
 		while (true)
-		{		
-			Mat raw = input.get_frame(); 
-			if (raw.empty())
+		{
+			MiniTimer tm;
+
+			IplImage* _raw = input.get_frame(); 
+			if (!_raw)
 				break;
+			Mat raw = _raw;
 
 			flip(raw, frame, 1);
 			cvtColor(frame, frame_gray, CV_BGR2GRAY);
 			if (mask.empty())
 				mask = Mat(frame_gray.size(), frame_gray.type(), CV_RGB(255,255,255));
 
+			tm.resetStartTime();
 			if (tracks.size() > 0)
 			{  
 				vector<uchar> status;
@@ -75,9 +80,11 @@ int main(int argc, char** argv )
 				IplImage ipl = frame;
 				vDrawText(&ipl, 20, 20, info);
 			}
+			tm.profileFunction("calcOpticalFlowPyrLK");
 
 			if (input._frame_num % detect_interval == 0)
 			{
+				tm.resetStartTime();
 				for (int i=0;i<tracks.size();i++)
 				{
 					one_track& tr = tracks[i];
@@ -85,13 +92,14 @@ int main(int argc, char** argv )
 				}
 
 				std::vector<Point2f> corners;
-				goodFeaturesToTrack(frame_gray, corners, 500, 0.3, 7,mask,7);
+				goodFeaturesToTrack(frame_gray, corners, 500, 0.1, 7,mask,7);
 				for (int i=0;i<corners.size();i++)
 				{
 					one_track tr;
 					tr.push_back(corners[i]);
 					tracks.push_back(tr);
 				}
+				tm.profileFunction("goodFeaturesToTrack");
 			}
 
 			prev_gray = frame_gray.clone();
