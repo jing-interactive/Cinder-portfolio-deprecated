@@ -1,0 +1,4 @@
+kmeans tests of
+opencv native kmeans
+flann hierarchical kmeans/ randomized forest of k-d trees
+vlfeat ikmeans/hikmeans
