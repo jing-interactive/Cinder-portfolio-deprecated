@@ -16,9 +16,7 @@
 /esmTracking/esmSample/Debug
 /esmTracking/esmSample/Release
 
-/OpenCVExperiments/ASEF/Debug
-/OpenCVExperiments/ASEF/ASEF/Debug
-/OpenCVExperiments/NewKMeans/NewKMeans/Debug
-/OpenCVExperiments/NewKMeans/NewKMeans/Release
-/OpenCVExperiments/NewKMeans/Debug
-/OpenCVExperiments/NewKMeans/Release
+/OpenCVExperiments/LucasKanade/Debug
+/OpenCVExperiments/LucasKanade/Release
+/OpenCVExperiments/LucasKanade/LucasKanade/Debug
+/OpenCVExperiments/LucasKanade/LucasKanade/Release
