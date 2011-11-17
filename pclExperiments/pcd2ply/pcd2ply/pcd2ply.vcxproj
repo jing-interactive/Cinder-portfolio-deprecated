@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{1CD47E0A-3E21-4CBC-A3EA-12224AD9DFCC}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>pcd2ply</RootNamespace>
+    <ProjectName>pcd2ply</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>f:\PCL-1.3.0\3rdParty\VTK 5.8.0\include\vtk-5.8\;f:\PCL-1.3.0\include\pcl-1.3\;f:\PCL-1.3.0\3rdParty\Eigen\include\;f:\PCL-1.3.0\3rdParty\Boost\include\;f:\PCL-1.3.0\3rdParty\flann\include\;f:\PCL-1.3.0\3rdParty\qhull\include\;f:\PCL-1.3.0\3rdParty\VTK 5.8.0\include\;D:\Program Files\Microsoft DirectX SDK (June 2010)\Include;f:\OpenCV-2.3.1\build\include\;f:\__svn_pool\CreativeCoding\cinder_0.8.3_vc2008\;f:\__svn_pool\CreativeCoding\cinder_0.8.3_vc2008\boost\;f:\__svn_pool\CreativeCoding\cinder_0.8.3_vc2008\include\;f:\__svn_pool\CreativeCoding\cinder_0.8.3_vc2008\blocks\;$(IncludePath)</IncludePath>
+    <LibraryPath>f:\PCL-1.3.0\3rdParty\VTK 5.8.0\lib\vtk-5.8\;f:\PCL-1.3.0\3rdParty\Boost\lib\;f:\PCL-1.3.0\lib\;F:\OpenCV2.1\VS2008\lib;D:\Program Files\Microsoft DirectX SDK (June 2010)\Lib\x86;f:\OpenCV-2.3.1\VS2008\lib\Debug\;f:\OpenCV-2.3.1\VS2008\lib\Release\;f:\__svn_pool\CreativeCoding\cinder_0.8.3_vc2008\lib\;f:\__svn_pool\CreativeCoding\cinder_0.8.3_vc2008\lib\msw\;f:\__svn_pool\CreativeCoding\cinder_0.8.3_vc2008\blocks\opencv\lib\vc9\;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>f:\PCL-1.3.0\3rdParty\VTK 5.8.0\include\vtk-5.8\;f:\PCL-1.3.0\include\pcl-1.3\;f:\PCL-1.3.0\3rdParty\Eigen\include\;f:\PCL-1.3.0\3rdParty\Boost\include\;f:\PCL-1.3.0\3rdParty\flann\include\;f:\PCL-1.3.0\3rdParty\qhull\include\;f:\PCL-1.3.0\3rdParty\VTK 5.8.0\include\;D:\Program Files\Microsoft DirectX SDK (June 2010)\Include;f:\OpenCV-2.3.1\build\include\;f:\__svn_pool\CreativeCoding\cinder_0.8.3_vc2008\;f:\__svn_pool\CreativeCoding\cinder_0.8.3_vc2008\boost\;f:\__svn_pool\CreativeCoding\cinder_0.8.3_vc2008\include\;f:\__svn_pool\CreativeCoding\cinder_0.8.3_vc2008\blocks\;$(IncludePath)</IncludePath>
+    <LibraryPath>f:\PCL-1.3.0\3rdParty\VTK 5.8.0\lib\vtk-5.8\;f:\PCL-1.3.0\lib\;F:\OpenCV2.1\VS2008\lib;D:\Program Files\Microsoft DirectX SDK (June 2010)\Lib\x86;f:\OpenCV-2.3.1\VS2008\lib\Debug\;f:\OpenCV-2.3.1\VS2008\lib\Release\;f:\__svn_pool\CreativeCoding\cinder_0.8.3_vc2008\lib\;f:\__svn_pool\CreativeCoding\cinder_0.8.3_vc2008\lib\msw\;f:\__svn_pool\CreativeCoding\cinder_0.8.3_vc2008\blocks\opencv\lib\vc9\;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="common.cpp" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
