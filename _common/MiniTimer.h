@@ -1,7 +1,7 @@
-#pragma once
+#ifdef MINITIMER_H
+#define MINITIMER_H
 
 #include <windows.h>
-#include <assert.h>
 
 
 //uncomment this if u have "FloDebug.h"
@@ -55,3 +55,5 @@ private:
 	DWORD _start_time;
 };
 
+
+#endif // MINITIMER_H
