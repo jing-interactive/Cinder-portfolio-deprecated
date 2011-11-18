@@ -29,8 +29,7 @@ int main(int argc, char** argv)
 	if (console::parse_argument (argc, argv, "-i", pcd_file) > 0)
 	{
 		PCL_INFO ("Reading %s\n",pcd_file.c_str());		
-		PCDReader reader;
-		reader.read (pcd_file, cloud);
+		io::loadPCDFile(pcd_file, cloud);
 		ply_file = pcd_file + ".ply";
 	}
 	else
@@ -40,11 +39,7 @@ int main(int argc, char** argv)
 	}
 	//write 
 	PCL_INFO("Writing %s\n",ply_file.c_str());
-	sensor_msgs::PointCloud2 cloud_blob;
-	toROSMsg(cloud, cloud_blob);
-
-	PLYWriter writer;
-	writer.writeASCII(ply_file, cloud_blob);
+	io::savePLYFileASCII(ply_file, cloud);
 
 	return 0;
 }
