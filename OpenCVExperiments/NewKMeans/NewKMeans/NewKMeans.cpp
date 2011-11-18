@@ -8,6 +8,11 @@ extern "C"
 #include "../../../_common/vOpenCV/OpenCV.h"
 #include <opencv2/flann/flann.hpp>
 
+#define DIMENSION 128
+
+//#define CVKMEANS
+#define HKMEANS
+#define AKMEANS
 #define VISUAL
 
 using namespace cv;
@@ -24,7 +29,7 @@ void help()
 
 namespace ir
 {
-	double kmeans( InputArray _data, int K,
+	double akmeans( InputArray _data, int K,
 		CV_OUT InputOutputArray _bestLabels,
 		TermCriteria criteria, int attempts,
 		int flags, OutputArray _centers = noArray() );
@@ -146,16 +151,16 @@ void HKMeans( Mat &points, int K, int nleaves, Mat &img)
 		Point ipt(x,y);
 		circle( img, ipt, 2, CV_RGB(255,0,0), CV_FILLED, CV_AA );
 	}
-// 	const VlHIKMNode* root = vl_hikm_get_root(tree);
-// 	VlIKMFilt* filter = root->filter;
-// 	for (int j=0;j<filter->K;j++)
-// 	{
-// 		vl_ikm_acc idx = filter->centers[j];  
-// 		float x = points.at<uchar>(idx,0);
-// 		float y = points.at<uchar>(idx,1);
-// 		Point ipt(x,y);
-// 		circle(img, ipt, 10, CV_RGB(0,255,0), 1, CV_AA );
-// 	}
+	// 	const VlHIKMNode* root = vl_hikm_get_root(tree);
+	// 	VlIKMFilt* filter = root->filter;
+	// 	for (int j=0;j<filter->K;j++)
+	// 	{
+	// 		vl_ikm_acc idx = filter->centers[j];  
+	// 		float x = points.at<uchar>(idx,0);
+	// 		float y = points.at<uchar>(idx,1);
+	// 		Point ipt(x,y);
+	// 		circle(img, ipt, 10, CV_RGB(0,255,0), 1, CV_AA );
+	// 	}
 	plot_tree(points, tree, img);
 
 	imshow("vlfeat HKMeans", img);
@@ -212,7 +217,7 @@ void IKmeans(Mat &points, int K, Mat &img )
 
 template <typename Distance>
 int hierarchicalClustering2(const Mat& features, Mat& centers, const ::cvflann::KMeansIndexParams& params,
-						   Distance d = Distance())
+							Distance d = Distance())
 {
 	typedef typename Distance::ElementType ElementType;
 	typedef typename Distance::ResultType DistanceType;
@@ -238,17 +243,16 @@ int main( int /*argc*/, char** /*argv*/ )
 	RNG rng(12345);
 
 	double freq = cv::getTickFrequency();
-#if 1
-	for (int sampleCount=1000;sampleCount<100000;sampleCount*=2)
+	for (int sampleCount=10000;sampleCount<100000;sampleCount*=2)
 	{
 		printf("c: %d\n", sampleCount);
 		int k, clusterCount = 100;
-		const int dim = 2;
-		Mat points_(sampleCount, 1, CV_32FC(dim));
+		const int dim = DIMENSION;
+		Mat points_(sampleCount, 1, CV_8UC(dim));
 
 		clusterCount = MIN(clusterCount, sampleCount);
-		Mat centers(clusterCount, dim, CV_32FC1);
-		
+		Mat centers(clusterCount, dim, CV_8UC1);
+
 		/* generate random sample from multigaussian distribution */
 		for( k = 0; k < clusterCount; k++ )
 		{
@@ -267,82 +271,123 @@ int main( int /*argc*/, char** /*argv*/ )
 				(k+1)*sampleCount/clusterCount);
 			rng.fill(pointChunk, CV_RAND_NORMAL, center, diff);
 		}
-		randShuffle(points_, 1, &rng);
-		Mat fpoints = points_.reshape(1);
+		//randShuffle(points_, 1, &rng);
+		Mat points = points_.reshape(1);
 
 		int64 tm = cv::getTickCount();
 
-		Mat points;
-		fpoints.convertTo(points, CV_8UC1);
- 		cvflann::KMeansIndexParams  param = cvflann::KMeansIndexParams(6,11, cvflann::FLANN_CENTERS_KMEANSPP);
+		Mat fpoints;
+		points.convertTo(fpoints, CV_32FC1);
+
+#ifdef FLANN_KMEANS
+		cvflann::KMeansIndexParams  param = cvflann::KMeansIndexParams(6,11, cvflann::FLANN_CENTERS_KMEANSPP);
 		int real_K = hierarchicalClustering2<cvflann::L2<float>>(fpoints, centers, param);
 		printf("%.1f ms\n", (cv::getTickCount()-tm)*1000/freq);
 
 #ifdef VISUAL
-		img = Scalar::all(0);
-		for(int i = 0; i < sampleCount; i++ )
+		if (dim == 2)
 		{
-			float x = fpoints.at<float>(i,0);
-			float y = fpoints.at<float>(i,1);
-			Point ipt(x,y); 
-			circle( img, ipt, 2, CV_RGB(255,0,0), CV_FILLED, CV_AA );
-		}
-		for(int i = 0; i < real_K; i++ )
-		{
-			float x = centers.at<float>(i,0);
-			float y = centers.at<float>(i,1);
-			Point ipt(x,y); 
-			circle( img, ipt, 10, CV_RGB(0,255,0), 1, CV_AA );
-		}
-		imshow("flann kmeans", img);
-#endif
-
-#if 0	
-		tm = cv::getTickCount();
-		HKMeans(points, 4, clusterCount, img); 
-		printf("%.1f ms\n", (cv::getTickCount()-tm)*1000/freq);
-#endif
-#if 1
-		tm = cv::getTickCount();
-		IKmeans(points, clusterCount, img);
-		printf("%.1f ms\n", (cv::getTickCount()-tm)*1000/freq);
-#endif
-
-#if 1
-		tm = cv::getTickCount();
-		{
-			Mat labels;
-			ir::kmeans(fpoints, clusterCount, labels, 
-				TermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 10, 1.0),
-				3, KMEANS_PP_CENTERS, centers);
-#ifdef VISUAL
 			img = Scalar::all(0);
 			for(int i = 0; i < sampleCount; i++ )
 			{
-				int clusterIdx = labels.at<int>(i);
 				float x = fpoints.at<float>(i,0);
 				float y = fpoints.at<float>(i,1);
 				Point ipt(x,y); 
 				circle( img, ipt, 2, CV_RGB(255,0,0), CV_FILLED, CV_AA );
 			}
-			for(int i = 0; i < clusterCount; i++ )
+			for(int i = 0; i < real_K; i++ )
 			{
 				float x = centers.at<float>(i,0);
 				float y = centers.at<float>(i,1);
 				Point ipt(x,y); 
 				circle( img, ipt, 10, CV_RGB(0,255,0), 1, CV_AA );
 			}
-			imshow("cv kmeans", img);
+			imshow("flann kmeans", img);
+		}
+#endif
+#endif
+
+#ifdef HKMEANS
+		tm = cv::getTickCount();
+		HKMeans(points, 4, clusterCount, img); 
+		printf("hkmeans: %.1f ms\n", (cv::getTickCount()-tm)*1000/freq);
+#endif
+#ifdef IKMEANS
+		tm = cv::getTickCount();
+		IKmeans(points, clusterCount, img);
+		printf("IKmeans: %.1f ms\n", (cv::getTickCount()-tm)*1000/freq);
+#endif
+
+#ifdef CVKMEANS
+		tm = cv::getTickCount();
+		{
+			Mat labels;
+			cv::kmeans(fpoints, clusterCount, labels, 
+				TermCriteria(CV_TERMCRIT_ITER,1,0),
+				3, KMEANS_PP_CENTERS, centers);
+#ifdef VISUAL
+			if (dim == 2)
+			{
+				img = Scalar::all(0);
+				for(int i = 0; i < sampleCount; i++ )
+				{
+					int clusterIdx = labels.at<int>(i);
+					float x = fpoints.at<float>(i,0);
+					float y = fpoints.at<float>(i,1);
+					Point ipt(x,y); 
+					circle( img, ipt, 2, CV_RGB(255,0,0), CV_FILLED, CV_AA );
+				}
+				for(int i = 0; i < clusterCount; i++ )
+				{
+					float x = centers.at<float>(i,0);
+					float y = centers.at<float>(i,1);
+					Point ipt(x,y); 
+					circle( img, ipt, 10, CV_RGB(0,255,0), 1, CV_AA );
+				}
+				imshow("cv kmeans", img);
+			}
 #endif
 		}
-		printf("%.1f ms\n", (cv::getTickCount()-tm)*1000/freq);
+		printf("cv::kmeans: %.1f ms\n", (cv::getTickCount()-tm)*1000/freq);
 #endif
+
+#ifdef AKMEANS
+		tm = cv::getTickCount();
+		{
+			Mat labels;
+			ir::akmeans(fpoints, clusterCount, labels, 
+				TermCriteria(),
+				3, KMEANS_RANDOM_CENTERS, centers);
+#ifdef VISUAL
+			if (dim == 2)
+			{
+				img = Scalar::all(0);
+				for(int i = 0; i < sampleCount; i++ )
+				{
+					int clusterIdx = labels.at<int>(i);
+					float x = fpoints.at<float>(i,0);
+					float y = fpoints.at<float>(i,1);
+					Point ipt(x,y); 
+					circle( img, ipt, 2, CV_RGB(255,0,0), CV_FILLED, CV_AA );
+				}
+				for(int i = 0; i < clusterCount; i++ )
+				{
+					float x = centers.at<float>(i,0);
+					float y = centers.at<float>(i,1);
+					Point ipt(x,y); 
+					circle( img, ipt, 10, CV_RGB(0,255,0), 1, CV_AA );
+				}
+				imshow("akmeans", img);
+			}
+#endif
+		}
+		printf("ir::akmeans: %.1f ms\n", (cv::getTickCount()-tm)*1000/freq);
+#endif
+
 #ifdef VISUAL
 		cv::waitKey();
 #endif
 	}	
-	
-#endif
 	return 0;
 }
 
@@ -360,12 +405,13 @@ namespace ir
 			center[j] = ((float)rng*(1.f+margin*2.f)-margin)*(box[j][1] - box[j][0]) + box[j][0];
 	}
 
+#define CV_DECL_ALIGNED(x) __declspec(align(x))
 
 	static inline float distance(const float* a, const float* b, int n)
 	{
 		int j = 0; float d = 0.f;
-#if CV_SSE
-		if( USE_SSE2 )
+#if 1
+		if( 1 )
 		{
 			float CV_DECL_ALIGNED(16) buf[4];
 			__m128 d0 = _mm_setzero_ps(), d1 = _mm_setzero_ps();
@@ -462,7 +508,7 @@ namespace ir
 	}
 
 
-	double kmeans( InputArray _data, int K,
+	double akmeans( InputArray _data, int K,
 		InputOutputArray _bestLabels,
 		TermCriteria criteria, int attempts,
 		int flags, OutputArray _centers)
@@ -525,7 +571,7 @@ namespace ir
 		}
 
 		const float* sample = data.ptr<float>(0);
-		for( j = 0; j < dims; j++ )
+		for( j = 0; j < dims; j++ )//用于generateRandomCenter增加准确率
 			box[j] = Vec2f(sample[j], sample[j]);
 
 		for( i = 1; i < N; i++ )
@@ -539,15 +585,17 @@ namespace ir
 			}
 		}
 
-		for( a = 0; a < attempts; a++ )
+		for( a = 0; a < attempts; a++ )//尝试attempts次
 		{
 			double max_center_shift = DBL_MAX;
+			//每次的最大迭代数为criteria.maxCount
 			for( iter = 0; iter < criteria.maxCount && max_center_shift > criteria.epsilon; iter++ )
 			{
 				swap(centers, old_centers);
 
 				if( iter == 0 && (a > 0 || !(flags & KMEANS_USE_INITIAL_LABELS)) )
 				{
+					//两种赋初始值的方法
 					if( flags & KMEANS_PP_CENTERS )
 						generateCentersPP(data, centers, K, rng, SPP_TRIALS);
 					else
@@ -572,7 +620,7 @@ namespace ir
 					for( i = 0; i < N; i++ )
 					{
 						sample = data.ptr<float>(i);
-						k = labels[i];
+						k = labels[i];//所属的中心
 						float* center = centers.ptr<float>(k);
 						for( j = 0; j <= dims - 4; j += 4 )
 						{
@@ -599,17 +647,18 @@ namespace ir
 					for( k = 0; k < K; k++ )
 					{
 						float* center = centers.ptr<float>(k);
-						if( counters[k] != 0 )
-						{
+
+						if( counters[k] != 0 )//属于中心点k的元素非零
+						{//计算平均值
 							float scale = 1.f/counters[k];
 							for( j = 0; j < dims; j++ )
 								center[j] *= scale;
 						}
-						else
+						else//否则重新赋值
 							generateRandomCenter(_box, center, rng);
 
 						if( iter > 0 )
-						{
+						{//计算centers在两次迭代之间的误差值，用于终止迭代
 							double dist = 0;
 							const float* old_center = old_centers.ptr<float>(k);
 							for( j = 0; j < dims; j++ )
@@ -622,10 +671,36 @@ namespace ir
 					}
 				}
 
+#if 1
+				//build kd forest
+				::cvflann::Matrix<float> m_centers((float*)centers.ptr<float>(), centers.rows, centers.cols);
+				::cvflann::KDTreeIndex<cvflann::L2<float> > kdForestIndex(m_centers, ::cvflann::KDTreeIndexParams(4));
+				kdForestIndex.buildIndex();
+
+				//query
+				int knn = 1;//because we only need the nearest center
+				::cvflann::Matrix<float> m_queries((float*)data.ptr<float>(), data.rows, data.cols);
+				int *indices = labels;
+				vector<float> dist(data.rows);
+				::cvflann::Matrix<int> m_indices(indices, data.rows, knn);
+				::cvflann::Matrix<float> m_dists(&dist[0], data.rows, knn);
+				kdForestIndex.knnSearch(m_queries, m_indices, m_dists, knn, ::cvflann::SearchParams(64,0,false));
+
+				compactness = 0;
+				for(int i = 0; i < N; i++ )
+				{
+					int k_best = labels[i];
+					double min_dist = dist[k_best];
+
+					compactness += min_dist;
+				}
+
+#else
 				// assign labels
 				compactness = 0;
 				for( i = 0; i < N; i++ )
 				{
+					//从k个中心中查找离data[i]最接近的中心，记录于labels[i]
 					sample = data.ptr<float>(i);
 					int k_best = 0;
 					double min_dist = DBL_MAX;
@@ -645,6 +720,7 @@ namespace ir
 					compactness += min_dist;
 					labels[i] = k_best;
 				}
+#endif
 			}
 
 			if( compactness < best_compactness )
