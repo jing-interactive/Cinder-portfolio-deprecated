@@ -167,7 +167,7 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\src\common.cpp"
+			RelativePath="..\common.cpp"
 			>
 		</File>
 		<File
