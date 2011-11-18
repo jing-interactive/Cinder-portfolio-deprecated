@@ -13,3 +13,9 @@
 #pragma comment(lib, "pcl_common.lib")
 #pragma comment(lib, "pcl_search.lib")
 #endif
+
+#ifdef _DEBUG
+#pragma comment(lib, "opencv_core231d.lib")
+#else
+#pragma comment(lib, "opencv_core231.lib")
+#endif

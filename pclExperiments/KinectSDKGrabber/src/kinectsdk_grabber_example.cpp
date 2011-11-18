@@ -1,4 +1,4 @@
-#include <boost/thread/thread.hpp>
+//#include <boost/thread/thread.hpp>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/filters/approximate_voxel_grid.h>
@@ -40,7 +40,7 @@ public:
 		const std::string& field_name = "z", float min_v = 0, float max_v = 5.0,
 		float leaf_size_x = 0.01, float leaf_size_y = 0.01, float leaf_size_z = 0.01)
 		:// viewer ("PCL OpenNI VoxelGrid Viewer"),
-		device_id_(device_id)
+	device_id_(device_id)
 	{
 		grid_.setLeafSize (leaf_size_x, leaf_size_y, leaf_size_z);
 		grid_.setFilterFieldName (field_name);
@@ -57,7 +57,7 @@ public:
 		set (const CloudConstPtr& cloud)
 	{
 		//lock while we set our cloud;
-		boost::mutex::scoped_lock lock (mtx_);
+		//		boost::mutex::scoped_lock lock (mtx_);
 		cloud_  = cloud;
 	}
 
@@ -65,7 +65,7 @@ public:
 		get ()
 	{
 		//lock while we swap our cloud and reset it.
-		boost::mutex::scoped_lock lock (mtx_);
+		//		boost::mutex::scoped_lock lock (mtx_);
 		CloudPtr temp_cloud (new Cloud);
 
 		grid_.setInputCloud (cloud_);
@@ -84,41 +84,41 @@ public:
 
 		interface->start ();
 
-// 		while (!viewer.wasStopped ())
-// 		{
-// 			if (cloud_)
-// 			{
-// 				FPS_CALC ("drawing");
-// 				//the call to get() sets the cloud_ to null;
-// 				viewer.showCloud (get ());
-// 			}
-// 		}
+		// 		while (!viewer.wasStopped ())
+		// 		{
+		// 			if (cloud_)
+		// 			{
+		// 				FPS_CALC ("drawing");
+		// 				//the call to get() sets the cloud_ to null;
+		// 				viewer.showCloud (get ());
+		// 			}
+		// 		}
 
 		interface->stop ();
 	}
 
 	pcl::ApproximateVoxelGrid<PointType> grid_;
-//	pcl::visualization::CloudViewer viewer;
+	//	pcl::visualization::CloudViewer viewer;
 	int device_id_;
-	boost::mutex mtx_;
+	//	boost::mutex mtx_;
 	CloudConstPtr cloud_;
 };
 
 int main(int argc, char** argv)
 {
-  pcl::Grabber* grabber = new pcl::KinectSdkGrabber (0.0, 0.0, 0.0, 1.0, 180, 90);
-  
-  if (grabber->providesCallback<void (const CloudConstPtr&)>() )
-  {
-	  boost::function<void (const CloudConstPtr&)> global_function =
-		  boost::bind(globalFunction, _1);
-	  grabber->registerCallback(global_function);
-  }
-  
-  grabber->start();
-  while(true);
-  grabber->stop ();
+	pcl::Grabber* grabber = new pcl::KinectSdkGrabber(0);
 
-  return 0;
+	if (grabber->providesCallback<void (const CloudConstPtr&)>() )
+	{
+		boost::function<void (const CloudConstPtr&)> global_function =
+			boost::bind(globalFunction, _1);
+		grabber->registerCallback(global_function);
+	}
+
+	grabber->start();
+	while(true);
+	grabber->stop ();
+
+	return 0;
 }
 

@@ -16,15 +16,25 @@ Values of z can range from 0.0 to 4.0.
 #include <objbase.h>
 #include <MMSystem.h>
 #include "MSR_NuiApi.h"
-#include "../vOpenCV/OpenCV.h"
+#include <opencv2/opencv.hpp>
 #include "../ofxThread.h"
+
+#pragma comment(lib, "winmm.lib")
 
 #define MSG_BOX(str) ::MessageBox(NULL, TEXT(str), TEXT("kinect app"), MB_OK | MB_ICONHAND)
 
 static char* state_desc[3] = {"not_tracked","half_tracked","tracked"};
 
-struct KinectDevice : public ofxThread
+class KinectDevice : public ofxThread
 {
+
+public:
+	//implement use if you need us!
+	virtual void depth_callback(){}
+	virtual void rgb_callback(){}
+	virtual void skeleton_callback(cv::Mat& frame, NUI_SKELETON_DATA * pSkel, int playerIdx ){}
+
+public:
 	static int getDeviceCount()
 	{
 		int count = 0;
@@ -62,23 +72,21 @@ struct KinectDevice : public ofxThread
 	HRESULT setup(bool isColor = false, bool isDepth = true, bool isSkeleton = true);
 	void release();
 
-	void Nui_GotDepthAlert(); 
-	void Nui_GotVideoAlert(); 
-	void Nui_GotSkeletonAlert();
-	CvScalar Nui_ShortToQuad_Depth( USHORT s );
-
 	static std::string getStateString(int state )
 	{
 		return state_desc[state];
 	}
 
-	virtual void Nui_DrawSkeleton(cv::Mat& frame, NUI_SKELETON_DATA * pSkel, int playerIdx ){}
 	int getFps() const{return m_fps;}
 
 protected:
 	cv::Point3f   m_Points[NUI_SKELETON_POSITION_COUNT];
-
+	cv::Scalar_<uchar> Nui_ShortToQuad_Depth( USHORT s );
 private:
+	void Nui_GotDepthAlert();
+	void Nui_GotVideoAlert();
+	void Nui_GotSkeletonAlert();
+
 	int	m_fps;
 	int           m_LastSkeletonFoundTime;
 	bool          m_bScreenBlanked;
@@ -108,8 +116,8 @@ void KinectDevice::Nui_GotDepthAlert( )
 		return;
 	}
 
-	NuiImageBuffer * pTexture = pImageFrame->pFrameTexture;
-	KINECT_LOCKED_RECT LockedRect;
+	INuiFrameTexture * pTexture = pImageFrame->pFrameTexture;
+	NUI_LOCKED_RECT LockedRect;
 	pTexture->LockRect( 0, &LockedRect, NULL, 0 );
 	if( LockedRect.Pitch != 0 )
 	{
@@ -120,7 +128,7 @@ void KinectDevice::Nui_GotDepthAlert( )
 		int i=0;
 		for( int i =0;i<320*240;i++,pBufferRun++,pRaw++)
 		{ 
-			CvScalar quad = Nui_ShortToQuad_Depth( *pBufferRun );
+			cv::Scalar_<uchar> quad = Nui_ShortToQuad_Depth( *pBufferRun );
 
 			pixels[i*3+0] = quad.val[0];
 			pixels[i*3+1] = quad.val[1];
@@ -151,8 +159,8 @@ void KinectDevice::Nui_GotVideoAlert( )
 		return;
 	}
 
-	NuiImageBuffer * pTexture = pImageFrame->pFrameTexture;
-	KINECT_LOCKED_RECT LockedRect;
+	INuiFrameTexture * pTexture = pImageFrame->pFrameTexture;
+	NUI_LOCKED_RECT LockedRect;
 	pTexture->LockRect( 0, &LockedRect, NULL, 0 );
 	if( LockedRect.Pitch != 0 )
 	{
@@ -205,17 +213,17 @@ void KinectDevice::Nui_GotSkeletonAlert( )
 
 	// draw each skeleton color according to the slot within they are found.
 	// 
-	renderedSkeleton = CV_BLACK;
+	renderedSkeleton = cv::Scalar(0,0,0);
 	for( int i = 0 ; i < NUI_SKELETON_COUNT ; i++ )
 	{
 		if( SkeletonFrame.SkeletonData[i].eTrackingState == NUI_SKELETON_TRACKED )
 		{
-			Nui_DrawSkeleton(renderedSkeleton, &SkeletonFrame.SkeletonData[i], i ); 
+			skeleton_callback(renderedSkeleton, &SkeletonFrame.SkeletonData[i], i ); 
 		}
 	}
 }
 
-CvScalar KinectDevice::Nui_ShortToQuad_Depth( ushort s )
+cv::Scalar_<uchar> KinectDevice::Nui_ShortToQuad_Depth( ushort s )
 {
 	USHORT RealDepth = (s & 0xfff8) >> 3;
 	USHORT Player = s & 7;
@@ -266,7 +274,7 @@ CvScalar KinectDevice::Nui_ShortToQuad_Depth( ushort s )
 		b = 255 - ( l / 2 );
 	}
 
-	return CV_RGB(r,g,b);
+	return cv::Scalar_<uchar>(r,g,b);
 }
 
 void KinectDevice::threadedFunction()
@@ -316,7 +324,7 @@ void KinectDevice::threadedFunction()
 		{
 			if( !m_bScreenBlanked )
 			{
-				renderedSkeleton = CV_BLACK;
+				renderedSkeleton = cv::Scalar(0,0,0);
 				m_bScreenBlanked = true;
 			}
 		}

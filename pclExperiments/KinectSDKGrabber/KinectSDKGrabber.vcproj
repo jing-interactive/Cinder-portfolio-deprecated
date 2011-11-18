@@ -165,6 +165,26 @@
 	<References>
 	</References>
 	<Files>
+		<Filter
+			Name="depend"
+			>
+			<File
+				RelativePath="..\..\_common\Kinect\KinectDevice.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\_common\ofxThread.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\_common\ofxThread.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\_common\SimpleMutex.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath="..\common.cpp"
 			>
