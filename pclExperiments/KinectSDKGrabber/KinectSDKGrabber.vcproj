@@ -190,14 +190,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\src\kinectsdk_grabber.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\src\kinectsdk_grabber.h"
-			>
-		</File>
-		<File
 			RelativePath=".\src\kinectsdk_grabber_example.cpp"
 			>
 		</File>

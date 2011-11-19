@@ -1,12 +1,17 @@
-//#include <boost/thread/thread.hpp>
+#include <boost/thread/thread.hpp>
+#include <pcl/common/time.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/filters/approximate_voxel_grid.h>
+#include <pcl/io/ply_io.h>
+#include <pcl/registration/incremental_registration.h>
+ 
+#include "../../_common/Kinect/KinectDevice.h"
 
 #include <windows.h>
 
-#include "kinectsdk_grabber.h"
-
+#define SHOW_FPS 1
+#if SHOW_FPS
 #define FPS_CALC(_WHAT_) \
 	do \
 { \
@@ -21,104 +26,97 @@
 	last = now; \
 	} \
 }while(false)
+#else
+#define FPS_CALC(_WHAT_) \
+	do \
+{ \
+}while(false)
+#endif
 
-typedef pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr CloudConstPtr;
-void globalFunction (const CloudConstPtr& cloud)
+typedef pcl::PointCloud<pcl::PointXYZ> Cloud;
+typedef pcl::PointCloud<pcl::PointXYZ>::Ptr CloudPtr;
+typedef pcl::PointCloud<pcl::PointXYZ>::ConstPtr CloudConstPtr; 
+
+template <typename type>
+void mat2cloud(const cv::Mat& depth, Cloud& cloud )
 {
+	cloud.width = depth.cols;
+	cloud.height = depth.rows;
+	cloud.resize(cloud.width*cloud.height);
+	cloud.is_dense = true;
 
+	cv::Mat_<type> M(depth);
+	for(int i = 0; i < M.rows; i++)
+		for(int j = 0; j < M.cols; j++)
+		{
+			cloud(j,i).x = 4400/320.0f*j;
+			cloud(j,i).y = 3200/240.0f*i;
+			cloud(j,i).z = M(i,j);
+		}
 }
 
-template <typename PointType>
-class KinectVoxelGrid
-{
-public:
-	typedef pcl::PointCloud<PointType> Cloud;
-	typedef typename Cloud::Ptr CloudPtr;
-	typedef typename Cloud::ConstPtr CloudConstPtr;
-
-	KinectVoxelGrid (int device_id = 0, 
-		const std::string& field_name = "z", float min_v = 0, float max_v = 5.0,
-		float leaf_size_x = 0.01, float leaf_size_y = 0.01, float leaf_size_z = 0.01)
-		:// viewer ("PCL OpenNI VoxelGrid Viewer"),
-	device_id_(device_id)
+struct MyKinectDevice : public KinectDevice
+{ 
+	MyKinectDevice(int device_id)
+		:KinectDevice(device_id)
 	{
-		grid_.setLeafSize (leaf_size_x, leaf_size_y, leaf_size_z);
-		grid_.setFilterFieldName (field_name);
-		grid_.setFilterLimits (min_v, max_v);
+		cloud_ = CloudPtr(new Cloud);
+		cloud_raw_ = CloudPtr(new Cloud);
+		cloud_registered_ = CloudPtr(new Cloud);
+		model_ = CloudPtr(new Cloud);
+
+		grid_.setLeafSize (0.01f, 0.01f, 0.01f);
+		grid_.setFilterFieldName ("z");
+		grid_.setFilterLimits (0, 5.);
 	}
 
-	void 
-		cloud_cb_ (const CloudConstPtr& cloud)
+	void setup()
 	{
-		set (cloud);
+		KinectDevice::setup(false, true, false);
 	}
 
-	void
-		set (const CloudConstPtr& cloud)
-	{
-		//lock while we set our cloud;
-		//		boost::mutex::scoped_lock lock (mtx_);
-		cloud_  = cloud;
+	virtual void onDepthEvent(const cv::Mat& depth_u16)
+	{ 
+		FPS_CALC ("callback");
+		boost::mutex::scoped_lock lock (mtx_);
+
+		mat2cloud<ushort>(depth_u16, *cloud_raw_);
+
+		reg_.setInputCloud(cloud_raw_);
+		reg_.setDownsamplingLeafSizeInput(0.03);
+		reg_.setDownsamplingLeafSizeModel(0.03);
+		reg_.setRegistrationDistanceThreshold(0.5);
+
+		bool use_vanilla_icp = false;
+		reg_.align(*cloud_registered_, use_vanilla_icp);
+		pcl::copyPointCloud(*reg_.getModel(), *model_);
+
+		cloud_ = model_;
+
+	//	pcl::io::savePLYFile("kinect.ply", *cloud_);
 	}
+	CloudPtr cloud_;
+	CloudPtr cloud_raw_;
+	CloudPtr cloud_registered_;
+	CloudPtr model_;
+	pcl::ApproximateVoxelGrid<pcl::PointXYZ> grid_;
+	pcl::registration::IncrementalRegistration<pcl::PointXYZ> reg_;
 
-	CloudPtr
-		get ()
-	{
-		//lock while we swap our cloud and reset it.
-		//		boost::mutex::scoped_lock lock (mtx_);
-		CloudPtr temp_cloud (new Cloud);
-
-		grid_.setInputCloud (cloud_);
-		grid_.filter (*temp_cloud);
-
-		return (temp_cloud);
-	}
-
-	void
-		run ()
-	{
-		pcl::Grabber* interface = new pcl::KinectSdkGrabber (device_id_);
-
-		boost::function<void (const CloudConstPtr&)> f = boost::bind (&KinectVoxelGrid::cloud_cb_, this, _1);
-		boost::signals2::connection c = interface->registerCallback (f);
-
-		interface->start ();
-
-		// 		while (!viewer.wasStopped ())
-		// 		{
-		// 			if (cloud_)
-		// 			{
-		// 				FPS_CALC ("drawing");
-		// 				//the call to get() sets the cloud_ to null;
-		// 				viewer.showCloud (get ());
-		// 			}
-		// 		}
-
-		interface->stop ();
-	}
-
-	pcl::ApproximateVoxelGrid<PointType> grid_;
-	//	pcl::visualization::CloudViewer viewer;
-	int device_id_;
-	//	boost::mutex mtx_;
-	CloudConstPtr cloud_;
+	boost::mutex mtx_;
 };
 
+ 
 int main(int argc, char** argv)
 {
-	pcl::Grabber* grabber = new pcl::KinectSdkGrabber(0);
+	MyKinectDevice device(0);
 
-	if (grabber->providesCallback<void (const CloudConstPtr&)>() )
+	device.setup();
+
+	while (true)
 	{
-		boost::function<void (const CloudConstPtr&)> global_function =
-			boost::bind(globalFunction, _1);
-		grabber->registerCallback(global_function);
+		//do some rendering
+		::Sleep(30);
 	}
 
-	grabber->start();
-	while(true);
-	grabber->stop ();
-
-	return 0;
+ 	return 0;
 }
-
