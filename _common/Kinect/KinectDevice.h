@@ -1,5 +1,6 @@
-//wrapper for Microsoft Kinect SDK beta 2
+//a multi-threaded device wrapper for Microsoft Kinect SDK beta 2
 //author: vinjn.z@gmail.com
+//http://www.weibo.com/vinjnmelanie
 
 /*
 The Kinect sensor returns x, y, and z values in the following ranges:
@@ -12,12 +13,15 @@ Values of z can range from 0.0 to 4.0.
 #ifndef KINECT_DEVICE_H
 #define KINECT_DEVICE_H
 
+#pragma warning( disable: 4244 )
+
 #include <windows.h>
 #include <objbase.h>
 #include <MMSystem.h>
 #include "MSR_NuiApi.h"
 #include <opencv2/opencv.hpp>
 #include "../ofxThread.h"
+#include "../SimpleMutex.h"
 
 #pragma comment(lib, "winmm.lib")
 
@@ -25,16 +29,88 @@ Values of z can range from 0.0 to 4.0.
 
 static char* state_desc[3] = {"not_tracked","half_tracked","tracked"};
 
-class KinectDevice : public ofxThread
+static CvScalar default_colors[] =
 {
+	{{169, 176, 155}},
+	{{169, 176, 155}}, 
+	{{168, 230, 29}},
+	{{200, 0,   0}},
+	{{79,  84,  33}}, 
+	{{84,  33,  42}},
+	{{255, 126, 0}},
+	{{215,  86, 0}},
+	{{33,  79,  84}}, 
+	{{33,  33,  84}},
+	{{77,  109, 243}}, 
+	{{37,   69, 243}},
+	{{77,  109, 243}},
+	{{69,  33,  84}},
+	{{229, 170, 122}}, 
+	{{255, 126, 0}},
+	{{181, 165, 213}}, 
+	{{71, 222,  76}},
+	{{245, 228, 156}}, 
+	{{77,  109, 243}}
+};
 
+const int sizeOfColors = sizeof(default_colors)/sizeof(CvScalar);
+static CvScalar vDefaultColor(int idx){ return default_colors[idx%sizeOfColors];}
+
+class KinectDevice;
+
+struct DepthThread : public ofxThread
+{
+	DepthThread(KinectDevice& ref):ref_(ref),ofxThread("DepthThread"){}
+	void threadedFunction();
+	KinectDevice& ref_;
+};
+
+struct RgbThread : public ofxThread
+{
+	RgbThread(KinectDevice& ref):ref_(ref),ofxThread("RgbThread"){}
+	void threadedFunction();
+	KinectDevice& ref_;
+};
+
+struct SkeletonThread : public ofxThread
+{
+	SkeletonThread(KinectDevice& ref):ref_(ref),ofxThread("SkeletonThread"){}
+	void threadedFunction();
+	KinectDevice& ref_;
+};
+
+class KinectDevice
+{
 public:
 	//implement use if you need us!
-	virtual void depth_callback(){}
-	virtual void rgb_callback(){}
-	virtual void skeleton_callback(cv::Mat& frame, NUI_SKELETON_DATA * pSkel, int playerIdx ){}
+	virtual void onDepthEvent(const cv::Mat& depth_u16){}
+	virtual void onRgbEvent(const cv::Mat& rgb){}
+	virtual void onSkeletonEvent(cv::Mat& frame, const cv::Point3f* skel_points, int playerIdx ){}
 
 public:
+	void setDeviceAngle(int angle)
+	{
+		if (m_pNuiInstance)
+		{
+			if (angle < NUI_CAMERA_ELEVATION_MINIMUM)
+				angle = NUI_CAMERA_ELEVATION_MINIMUM;
+			else
+				if (angle > NUI_CAMERA_ELEVATION_MAXIMUM)
+					angle = NUI_CAMERA_ELEVATION_MAXIMUM;
+			m_pNuiInstance->NuiCameraElevationSetAngle(angle);
+		}
+	}
+
+	int getDeviceAngle()
+	{
+		LONG angle = 0;
+		if (m_pNuiInstance)
+		{
+			m_pNuiInstance->NuiCameraElevationGetAngle(&angle);
+		}
+		return angle;
+	}
+
 	static int getDeviceCount()
 	{
 		int count = 0;
@@ -42,7 +118,7 @@ public:
 		return count;
 	}
 
-	INuiInstance*           m_pNuiInstance;
+	INuiInstance* m_pNuiInstance;
 	int m_DeviceId;
 	KinectDevice(int deviceId = 0)
 	{
@@ -50,19 +126,17 @@ public:
 		m_DeviceId = deviceId;
 		m_fps = 0;
 		m_pNuiInstance = NULL;
-		m_hEvNuiProcessStop = NULL;
-		m_hNextDepthFrameEvent = NULL;
-		m_hNextVideoFrameEvent = NULL;
-		m_hNextSkeletonEvent = NULL;
+		evt_devicequit = NULL;
+		evt_nextDepth = NULL;
+		evt_nextRgb = NULL;
+		evt_nextSkeleton = NULL;
 		m_pDepthStreamHandle = NULL;
 		m_pVideoStreamHandle = NULL;
 	}
-	~KinectDevice()
+	virtual ~KinectDevice()
 	{
 		release();
 	}
-
-	void threadedFunction();
 
 	cv::Mat renderedSkeleton;//rendered
 	IplImage* iplColor;//for rendering
@@ -80,30 +154,55 @@ public:
 	int getFps() const{return m_fps;}
 
 protected:
-	cv::Point3f   m_Points[NUI_SKELETON_POSITION_COUNT];
+	cv::Ptr<ofxThread> threads_[3];
 	cv::Scalar_<uchar> Nui_ShortToQuad_Depth( USHORT s );
+	void Nui_DrawSkeletonSegment(cv::Mat& frame, NUI_SKELETON_DATA * pSkel, int numJoints, ... );
+	cv::Point3f   m_Points[NUI_SKELETON_POSITION_COUNT];
+
 private:
 	void Nui_GotDepthAlert();
-	void Nui_GotVideoAlert();
+	void Nui_GotRgbAlert();
 	void Nui_GotSkeletonAlert();
 
 	int	m_fps;
-	int           m_LastSkeletonFoundTime;
-	bool          m_bScreenBlanked;
-	int           m_FramesTotal;
-	int           m_LastFPStime;
-	int           m_LastFramesTotal;
+	int	m_LastSkeletonFoundTime;
+	bool m_bScreenBlanked;
+	int	m_FramesTotal;
+	int	m_LastFPStime;
+	int	m_LastFramesTotal;
 
-	HANDLE        m_hEvNuiProcessStop;
-	HANDLE        m_hNextDepthFrameEvent;
-	HANDLE        m_hNextVideoFrameEvent;
-	HANDLE        m_hNextSkeletonEvent;
-	HANDLE        m_pDepthStreamHandle;
-	HANDLE        m_pVideoStreamHandle;
+	HANDLE evt_devicequit;
+	HANDLE evt_nextDepth;
+	HANDLE evt_nextRgb;
+	HANDLE evt_nextSkeleton;
+	HANDLE m_pDepthStreamHandle;
+	HANDLE m_pVideoStreamHandle;
+
+	friend struct DepthThread;
+	friend struct RgbThread;
+	friend struct SkeletonThread;
 };
 
 void KinectDevice::Nui_GotDepthAlert( )
 {
+	// Perform FPS processing
+	int t = timeGetTime( );
+	if( m_LastFPStime == -1 )
+	{
+		m_LastFPStime = t;
+		m_LastFramesTotal = m_FramesTotal;
+	}
+	int dt = t - m_LastFPStime;
+	if( dt > 1000 )
+	{
+		m_LastFPStime = t;
+		m_fps = m_FramesTotal - m_LastFramesTotal;
+		m_LastFramesTotal = m_FramesTotal;
+		//printf("%.1f\n", FrameDelta);
+		//	SetDlgItemInt( m_hWnd, IDC_FPS, FrameDelta,FALSE );
+	}
+	m_FramesTotal++;
+
 	const NUI_IMAGE_FRAME * pImageFrame = NULL;
 
 	HRESULT hr = m_pNuiInstance->NuiImageStreamGetNextFrame(
@@ -136,6 +235,12 @@ void KinectDevice::Nui_GotDepthAlert( )
 
 			*pRaw = (*pBufferRun & 0xfff8) >> 3;
 		}
+
+		char buf[10];
+		sprintf(buf,"fps: %d", m_fps);
+		cv::putText(renderedDepth, buf, cv::Point(20,20), 0, 0.6, CV_RGB(255,255,255));
+
+		onDepthEvent(rawDepth);
 	}
 	else
 	{
@@ -146,7 +251,7 @@ void KinectDevice::Nui_GotDepthAlert( )
 }
 
 
-void KinectDevice::Nui_GotVideoAlert( )
+void KinectDevice::Nui_GotRgbAlert( )
 {
 	const NUI_IMAGE_FRAME * pImageFrame = NULL;
 
@@ -173,6 +278,8 @@ void KinectDevice::Nui_GotVideoAlert( )
 		// 			pixels[i*4+1] = GetGValue(*pBufferRun);
 		// 			pixels[i*4+2] = GetBValue(*pBufferRun);
 		// 		}
+		cv::Mat ref(iplColor);
+		onRgbEvent(ref);
 	}
 	else
 	{
@@ -184,6 +291,21 @@ void KinectDevice::Nui_GotVideoAlert( )
 
 void KinectDevice::Nui_GotSkeletonAlert( )
 {
+	// Perform skeletal panel blanking
+	int t = timeGetTime( );
+
+	if( m_LastSkeletonFoundTime == -1 )
+		m_LastSkeletonFoundTime = t;
+	int dt = t - m_LastSkeletonFoundTime;
+	if( dt > 250 )
+	{
+		if( !m_bScreenBlanked )
+		{
+			renderedSkeleton = cv::Scalar(0,0,0);
+			m_bScreenBlanked = true;
+		}
+	}
+
 	NUI_SKELETON_FRAME SkeletonFrame;
 
 	HRESULT hr = m_pNuiInstance->NuiSkeletonGetNextFrame( 0, &SkeletonFrame );
@@ -214,11 +336,36 @@ void KinectDevice::Nui_GotSkeletonAlert( )
 	// draw each skeleton color according to the slot within they are found.
 	// 
 	renderedSkeleton = cv::Scalar(0,0,0);
+	char buf[100];
 	for( int i = 0 ; i < NUI_SKELETON_COUNT ; i++ )
 	{
 		if( SkeletonFrame.SkeletonData[i].eTrackingState == NUI_SKELETON_TRACKED )
 		{
-			skeleton_callback(renderedSkeleton, &SkeletonFrame.SkeletonData[i], i ); 
+			NUI_SKELETON_DATA* pSkel = &SkeletonFrame.SkeletonData[i];
+			for (int k = 0; k < NUI_SKELETON_POSITION_COUNT; k++)
+			{
+				float fx=0,fy=0;
+				USHORT uDepth;
+				NuiTransformSkeletonToDepthImageF( pSkel->SkeletonPositions[k], &fx, &fy, &uDepth);
+
+				//for 2d rendering
+				m_Points[k].x = fx;
+				m_Points[k].y = fy;
+				m_Points[k].z = pSkel->SkeletonPositions[k].z;
+
+				cv::Point pos(m_Points[k].x*640+10, m_Points[k].y*480);
+				cv::circle(renderedSkeleton, pos, 5, vDefaultColor(k),3, -1);
+				sprintf(buf, "%.1f m", m_Points[k].z);
+				cv::putText(renderedSkeleton, buf, cv::Point(pos.x, pos.y), 0, 0.5, CV_RGB(255,255,255));
+			}
+
+			Nui_DrawSkeletonSegment(renderedSkeleton,pSkel,4,NUI_SKELETON_POSITION_HIP_CENTER, NUI_SKELETON_POSITION_SPINE, NUI_SKELETON_POSITION_SHOULDER_CENTER, NUI_SKELETON_POSITION_HEAD);
+			Nui_DrawSkeletonSegment(renderedSkeleton,pSkel,5,NUI_SKELETON_POSITION_SHOULDER_CENTER, NUI_SKELETON_POSITION_SHOULDER_LEFT, NUI_SKELETON_POSITION_ELBOW_LEFT, NUI_SKELETON_POSITION_WRIST_LEFT, NUI_SKELETON_POSITION_HAND_LEFT);
+			Nui_DrawSkeletonSegment(renderedSkeleton,pSkel,5,NUI_SKELETON_POSITION_SHOULDER_CENTER, NUI_SKELETON_POSITION_SHOULDER_RIGHT, NUI_SKELETON_POSITION_ELBOW_RIGHT, NUI_SKELETON_POSITION_WRIST_RIGHT, NUI_SKELETON_POSITION_HAND_RIGHT);
+			Nui_DrawSkeletonSegment(renderedSkeleton,pSkel,5,NUI_SKELETON_POSITION_HIP_CENTER, NUI_SKELETON_POSITION_HIP_LEFT, NUI_SKELETON_POSITION_KNEE_LEFT, NUI_SKELETON_POSITION_ANKLE_LEFT, NUI_SKELETON_POSITION_FOOT_LEFT);
+			Nui_DrawSkeletonSegment(renderedSkeleton,pSkel,5,NUI_SKELETON_POSITION_HIP_CENTER, NUI_SKELETON_POSITION_HIP_RIGHT, NUI_SKELETON_POSITION_KNEE_RIGHT, NUI_SKELETON_POSITION_ANKLE_RIGHT, NUI_SKELETON_POSITION_FOOT_RIGHT);
+
+			onSkeletonEvent(renderedSkeleton, m_Points, i ); 
 		}
 	}
 }
@@ -277,77 +424,6 @@ cv::Scalar_<uchar> KinectDevice::Nui_ShortToQuad_Depth( ushort s )
 	return cv::Scalar_<uchar>(r,g,b);
 }
 
-void KinectDevice::threadedFunction()
-{
-	//	CSkeletalViewerApp *pthis=(CSkeletalViewerApp *) pParam;
-	HANDLE                hEvents[4];
-	int                    nEventIdx,t,dt;
-
-	// Configure events to be listened on
-	hEvents[0]=m_hEvNuiProcessStop;
-	hEvents[1]=m_hNextDepthFrameEvent;
-	hEvents[2]=m_hNextVideoFrameEvent;
-	hEvents[3]=m_hNextSkeletonEvent;
-
-	// Main thread loop
-	while (true)
-	{
-		// Wait for an event to be signaled
-		nEventIdx=WaitForMultipleObjects(sizeof(hEvents)/sizeof(hEvents[0]),hEvents,FALSE,100);
-
-		// If the stop event, stop looping and exit
-		if(nEventIdx==0)
-			break;            
-
-		// Perform FPS processing
-		t = timeGetTime( );
-		if( m_LastFPStime == -1 )
-		{
-			m_LastFPStime = t;
-			m_LastFramesTotal = m_FramesTotal;
-		}
-		dt = t - m_LastFPStime;
-		if( dt > 1000 )
-		{
-			m_LastFPStime = t;
-			m_fps = m_FramesTotal - m_LastFramesTotal;
-			m_LastFramesTotal = m_FramesTotal;
-			//printf("%.1f\n", FrameDelta);
-			//	SetDlgItemInt( m_hWnd, IDC_FPS, FrameDelta,FALSE );
-		}
-
-		// Perform skeletal panel blanking
-		if( m_LastSkeletonFoundTime == -1 )
-			m_LastSkeletonFoundTime = t;
-		dt = t - m_LastSkeletonFoundTime;
-		if( dt > 250 )
-		{
-			if( !m_bScreenBlanked )
-			{
-				renderedSkeleton = cv::Scalar(0,0,0);
-				m_bScreenBlanked = true;
-			}
-		}
-
-		// Process signal events
-		switch(nEventIdx)
-		{
-		case 1:
-			Nui_GotDepthAlert();
-			m_FramesTotal++;
-			break;
-
-		case 2:
-			Nui_GotVideoAlert();
-			break;
-
-		case 3:
-			Nui_GotSkeletonAlert( );
-			break;
-		}
-	}
-}
-
 HRESULT KinectDevice::setup(bool isColor, bool isDepth, bool isSkeleton)
 {
 	int flag = 0;
@@ -376,9 +452,9 @@ HRESULT KinectDevice::setup(bool isColor, bool isDepth, bool isSkeleton)
 	renderedDepth.create(cv::Size(320,240), CV_8UC3);
 	rawDepth.create(cv::Size(320,240), CV_16UC1);
 
-	m_hNextVideoFrameEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
-	m_hNextDepthFrameEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
-	m_hNextSkeletonEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
+	evt_nextRgb = CreateEvent( NULL, TRUE, FALSE, NULL );
+	evt_nextDepth = CreateEvent( NULL, TRUE, FALSE, NULL );
+	evt_nextSkeleton = CreateEvent( NULL, TRUE, FALSE, NULL );
 
 	if (isColor)
 	{
@@ -387,13 +463,15 @@ HRESULT KinectDevice::setup(bool isColor, bool isDepth, bool isSkeleton)
 			NUI_IMAGE_RESOLUTION_640x480,
 			0,
 			2,
-			m_hNextVideoFrameEvent,
+			evt_nextRgb,
 			&m_pVideoStreamHandle );
 		if( FAILED( hr ) )
 		{
 			MSG_BOX("failed to NuiImageStreamOpen(NUI_IMAGE_TYPE_COLOR)");
 			return hr;
 		}
+		threads_[0] = new DepthThread(*this);
+		threads_[0]->startThread();
 	}
 
 	if (isDepth)
@@ -403,29 +481,33 @@ HRESULT KinectDevice::setup(bool isColor, bool isDepth, bool isSkeleton)
 			NUI_IMAGE_RESOLUTION_320x240,
 			0,
 			2,
-			m_hNextDepthFrameEvent,
+			evt_nextDepth,
 			&m_pDepthStreamHandle );
 		if( FAILED( hr ) )
 		{
 			MSG_BOX("failed to NuiImageStreamOpen(NUI_IMAGE_TYPE_DEPTH_AND_PLAYER_INDEX)");
 			return hr;
 		}
+		threads_[1] = new DepthThread(*this);
+		threads_[1]->startThread();
 	}
 
 	if (isSkeleton)
 	{
-		hr = m_pNuiInstance->NuiSkeletonTrackingEnable( m_hNextSkeletonEvent, 0 );
+		hr = m_pNuiInstance->NuiSkeletonTrackingEnable( evt_nextSkeleton, 0 );
 		if( FAILED( hr ) )
 		{
 			MSG_BOX("failed to NuiSkeletonTrackingEnable()");
 			return hr;
 		}
+		threads_[2] = new SkeletonThread(*this);
+		threads_[2]->startThread();
 	}
 
 	// Start the Nui processing thread
-	m_hEvNuiProcessStop = CreateEvent(NULL,FALSE,FALSE,NULL);
+	evt_devicequit = CreateEvent(NULL,FALSE,FALSE,NULL);
 
-	startThread();
+	m_FramesTotal = 0;
 
 	return hr;
 }
@@ -433,17 +515,21 @@ HRESULT KinectDevice::setup(bool isColor, bool isDepth, bool isSkeleton)
 void KinectDevice::release()
 {
 	// Stop the Nui processing thread
-	if(m_hEvNuiProcessStop!=NULL)
+	if(evt_devicequit!=NULL)
 	{
 		// Signal the thread
-		SetEvent(m_hEvNuiProcessStop);
+		SetEvent(evt_devicequit);
 
-		// Wait for thread to stop
-		if(myThread!=NULL)
+		for (int i=0;i<3;i++)
 		{
-			WaitForSingleObject(myThread,INFINITE);
+			// Wait for thread to stop
+			if(threads_[i]!=NULL)
+			{
+				//	WaitForSingleObject(threads_[i]->th,INFINITE);
+			}
 		}
-		CloseHandle(m_hEvNuiProcessStop);
+
+		CloseHandle(evt_devicequit);
 	}
 
 	if (iplColor)
@@ -454,22 +540,72 @@ void KinectDevice::release()
 
 	MSR_NuiDestroyInstance(m_pNuiInstance);
 
-	if( m_hNextSkeletonEvent && ( m_hNextSkeletonEvent != INVALID_HANDLE_VALUE ) )
+	if( evt_nextSkeleton && ( evt_nextSkeleton != INVALID_HANDLE_VALUE ) )
 	{
-		CloseHandle( m_hNextSkeletonEvent );
-		m_hNextSkeletonEvent = NULL;
+		CloseHandle( evt_nextSkeleton );
+		evt_nextSkeleton = NULL;
 	}
-	if( m_hNextDepthFrameEvent && ( m_hNextDepthFrameEvent != INVALID_HANDLE_VALUE ) )
+	if( evt_nextDepth && ( evt_nextDepth != INVALID_HANDLE_VALUE ) )
 	{
-		CloseHandle( m_hNextDepthFrameEvent );
-		m_hNextDepthFrameEvent = NULL;
+		CloseHandle( evt_nextDepth );
+		evt_nextDepth = NULL;
 	}
-	if( m_hNextVideoFrameEvent && ( m_hNextVideoFrameEvent != INVALID_HANDLE_VALUE ) )
+	if( evt_nextRgb && ( evt_nextRgb != INVALID_HANDLE_VALUE ) )
 	{
-		CloseHandle( m_hNextVideoFrameEvent );
-		m_hNextVideoFrameEvent = NULL;
+		CloseHandle( evt_nextRgb );
+		evt_nextRgb = NULL;
 	}
 }
 
+
+void KinectDevice::Nui_DrawSkeletonSegment(cv::Mat& frame, NUI_SKELETON_DATA * pSkel, int numJoints, ... )
+{
+	va_list vl;
+	va_start(vl,numJoints);
+	cv::Point prev;
+
+	for (int i = 0; i < numJoints; i++)
+	{
+		NUI_SKELETON_POSITION_INDEX jointIndex = va_arg(vl,NUI_SKELETON_POSITION_INDEX);
+
+		cv::Point curr(m_Points[jointIndex].x*640, m_Points[jointIndex].y*480);
+		if (pSkel->eSkeletonPositionTrackingState[jointIndex] != NUI_SKELETON_POSITION_NOT_TRACKED)
+		{
+			if (i > 0)
+				cv::line(renderedSkeleton, prev, curr, vDefaultColor(i), 4);
+			prev = curr;
+		}
+		else if (i == 0)
+			prev = curr;
+  	}
+	va_end(vl);
+}
+
+void DepthThread::threadedFunction()
+{
+	while (isThreadRunning())
+	{
+		::WaitForSingleObject(ref_.evt_nextDepth, INFINITE);
+		ref_.Nui_GotDepthAlert();
+	}
+}
+
+void RgbThread::threadedFunction()
+{
+	while (isThreadRunning())
+	{
+		::WaitForSingleObject(ref_.evt_nextRgb, INFINITE);
+		ref_.Nui_GotRgbAlert();
+	}
+}
+
+void SkeletonThread::threadedFunction()
+{
+	while (isThreadRunning())
+	{
+		::WaitForSingleObject(ref_.evt_nextSkeleton, INFINITE);
+		ref_.Nui_GotSkeletonAlert();
+	}
+}
 
 #endif
