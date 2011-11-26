@@ -30,9 +30,9 @@ class KinectDevice : public ofxThread
 
 public:
 	//implement use if you need us!
-	virtual void depth_callback(){}
-	virtual void rgb_callback(){}
-	virtual void skeleton_callback(cv::Mat& frame, NUI_SKELETON_DATA * pSkel, int playerIdx ){}
+	virtual void onDepthEvent(const cv::Mat& depth_u16){}
+	virtual void onRgbEvent(const cv::Mat& rgb){}
+	virtual void onSkeletonEvent(cv::Mat& frame, NUI_SKELETON_DATA * pSkel, int playerIdx ){}
 
 public:
 	static int getDeviceCount()
@@ -57,7 +57,7 @@ public:
 		m_pDepthStreamHandle = NULL;
 		m_pVideoStreamHandle = NULL;
 	}
-	~KinectDevice()
+	virtual ~KinectDevice()
 	{
 		release();
 	}
@@ -136,6 +136,7 @@ void KinectDevice::Nui_GotDepthAlert( )
 
 			*pRaw = (*pBufferRun & 0xfff8) >> 3;
 		}
+		onDepthEvent(rawDepth);
 	}
 	else
 	{
@@ -173,6 +174,8 @@ void KinectDevice::Nui_GotVideoAlert( )
 		// 			pixels[i*4+1] = GetGValue(*pBufferRun);
 		// 			pixels[i*4+2] = GetBValue(*pBufferRun);
 		// 		}
+		cv::Mat ref(iplColor);
+		onRgbEvent(ref);
 	}
 	else
 	{
@@ -218,7 +221,7 @@ void KinectDevice::Nui_GotSkeletonAlert( )
 	{
 		if( SkeletonFrame.SkeletonData[i].eTrackingState == NUI_SKELETON_TRACKED )
 		{
-			skeleton_callback(renderedSkeleton, &SkeletonFrame.SkeletonData[i], i ); 
+			onSkeletonEvent(renderedSkeleton, &SkeletonFrame.SkeletonData[i], i ); 
 		}
 	}
 }
