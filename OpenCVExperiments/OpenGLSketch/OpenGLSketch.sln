@@ -1,0 +1,56 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenGLSketch", "OpenGLSketch.vcproj", "{8B0E2130-ED5A-4F03-AC02-7434B22EE64B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opencv_core", "..\..\..\opencv_svn\opencv\VS2008\modules\core\opencv_core.vcproj", "{E1E38842-0F83-4A94-BADE-3B10FFCC1B5D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opencv_highgui", "..\..\..\opencv_svn\opencv\VS2008\modules\highgui\opencv_highgui.vcproj", "{98AA62A1-76F5-48E8-B46B-47AFA022116C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opencv_calib3d", "..\..\..\opencv_svn\opencv\VS2008\modules\calib3d\opencv_calib3d.vcproj", "{6A8C9B62-17FE-4B9F-8F5A-ED40B9036614}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		MinSizeRel|Win32 = MinSizeRel|Win32
+		Release|Win32 = Release|Win32
+		RelWithDebInfo|Win32 = RelWithDebInfo|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8B0E2130-ED5A-4F03-AC02-7434B22EE64B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8B0E2130-ED5A-4F03-AC02-7434B22EE64B}.Debug|Win32.Build.0 = Debug|Win32
+		{8B0E2130-ED5A-4F03-AC02-7434B22EE64B}.MinSizeRel|Win32.ActiveCfg = Release|Win32
+		{8B0E2130-ED5A-4F03-AC02-7434B22EE64B}.MinSizeRel|Win32.Build.0 = Release|Win32
+		{8B0E2130-ED5A-4F03-AC02-7434B22EE64B}.Release|Win32.ActiveCfg = Release|Win32
+		{8B0E2130-ED5A-4F03-AC02-7434B22EE64B}.Release|Win32.Build.0 = Release|Win32
+		{8B0E2130-ED5A-4F03-AC02-7434B22EE64B}.RelWithDebInfo|Win32.ActiveCfg = Release|Win32
+		{8B0E2130-ED5A-4F03-AC02-7434B22EE64B}.RelWithDebInfo|Win32.Build.0 = Release|Win32
+		{E1E38842-0F83-4A94-BADE-3B10FFCC1B5D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E1E38842-0F83-4A94-BADE-3B10FFCC1B5D}.Debug|Win32.Build.0 = Debug|Win32
+		{E1E38842-0F83-4A94-BADE-3B10FFCC1B5D}.MinSizeRel|Win32.ActiveCfg = MinSizeRel|Win32
+		{E1E38842-0F83-4A94-BADE-3B10FFCC1B5D}.MinSizeRel|Win32.Build.0 = MinSizeRel|Win32
+		{E1E38842-0F83-4A94-BADE-3B10FFCC1B5D}.Release|Win32.ActiveCfg = Release|Win32
+		{E1E38842-0F83-4A94-BADE-3B10FFCC1B5D}.Release|Win32.Build.0 = Release|Win32
+		{E1E38842-0F83-4A94-BADE-3B10FFCC1B5D}.RelWithDebInfo|Win32.ActiveCfg = RelWithDebInfo|Win32
+		{E1E38842-0F83-4A94-BADE-3B10FFCC1B5D}.RelWithDebInfo|Win32.Build.0 = RelWithDebInfo|Win32
+		{98AA62A1-76F5-48E8-B46B-47AFA022116C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{98AA62A1-76F5-48E8-B46B-47AFA022116C}.Debug|Win32.Build.0 = Debug|Win32
+		{98AA62A1-76F5-48E8-B46B-47AFA022116C}.MinSizeRel|Win32.ActiveCfg = MinSizeRel|Win32
+		{98AA62A1-76F5-48E8-B46B-47AFA022116C}.MinSizeRel|Win32.Build.0 = MinSizeRel|Win32
+		{98AA62A1-76F5-48E8-B46B-47AFA022116C}.Release|Win32.ActiveCfg = Release|Win32
+		{98AA62A1-76F5-48E8-B46B-47AFA022116C}.Release|Win32.Build.0 = Release|Win32
+		{98AA62A1-76F5-48E8-B46B-47AFA022116C}.RelWithDebInfo|Win32.ActiveCfg = RelWithDebInfo|Win32
+		{98AA62A1-76F5-48E8-B46B-47AFA022116C}.RelWithDebInfo|Win32.Build.0 = RelWithDebInfo|Win32
+		{6A8C9B62-17FE-4B9F-8F5A-ED40B9036614}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6A8C9B62-17FE-4B9F-8F5A-ED40B9036614}.Debug|Win32.Build.0 = Debug|Win32
+		{6A8C9B62-17FE-4B9F-8F5A-ED40B9036614}.MinSizeRel|Win32.ActiveCfg = MinSizeRel|Win32
+		{6A8C9B62-17FE-4B9F-8F5A-ED40B9036614}.MinSizeRel|Win32.Build.0 = MinSizeRel|Win32
+		{6A8C9B62-17FE-4B9F-8F5A-ED40B9036614}.Release|Win32.ActiveCfg = Release|Win32
+		{6A8C9B62-17FE-4B9F-8F5A-ED40B9036614}.Release|Win32.Build.0 = Release|Win32
+		{6A8C9B62-17FE-4B9F-8F5A-ED40B9036614}.RelWithDebInfo|Win32.ActiveCfg = RelWithDebInfo|Win32
+		{6A8C9B62-17FE-4B9F-8F5A-ED40B9036614}.RelWithDebInfo|Win32.Build.0 = RelWithDebInfo|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
