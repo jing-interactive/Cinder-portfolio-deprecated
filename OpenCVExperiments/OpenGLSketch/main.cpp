@@ -5,6 +5,7 @@
 #include <opencv2/core/gpumat.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/core/opengl_interop.hpp>
 
 #if defined _DEBUG
 #pragma comment(lib,"opencv_core232d.lib")
@@ -95,7 +96,7 @@ int main(int argc, const char* argv[])
 	const Point3d dirVec(0.0, 0.0, -1.0);
 	const Point3d upVec(0.0, 1.0, 0.0);
 	const Point3d leftVec(-1.0, 0.0, 0.0);
-	Point3d pos;
+	Point3d pos(0,0,10);
 	Mat raw,gray;
 
 	VideoCapture input;
@@ -112,14 +113,15 @@ int main(int argc, const char* argv[])
 		{
 			for (int x=0;x<gray.cols;x++)
 			{
-				points(y,x).x = rand()%1000;
-				points(y,x).z = rand()%1000;
-				points(y,x).y = gray.at<uchar>(y,x);
+				Point3d& p = points(y,x);
+				p.x = x;
+				p.y = y;
+				p.z = gray.at<uchar>(y,x);
 			}
 		}
  
 		pointCloud.setVertexArray(points); 
-//		pointCloud.setColorArray(raw, false);
+		pointCloud.setColorArray(raw, false);
 
 		double aspect = getWindowProperty("OpenGL Sample", WND_PROP_ASPECT_RATIO);
 
@@ -152,6 +154,8 @@ int main(int argc, const char* argv[])
 			pos += posStep * rotate(upVec, yaw, pitch);
 		else if (key == 'e')
 			pos -= posStep * rotate(upVec, yaw, pitch);
+
+		cout<<pos<<endl;
 
 		camera.setCameraPos(pos, yaw, pitch, 0.0);
 

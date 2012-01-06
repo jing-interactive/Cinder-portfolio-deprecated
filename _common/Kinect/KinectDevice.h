@@ -182,6 +182,8 @@ public:
 		fps_skeleton = 0;
 
 		::ZeroMemory(m_PrevPoints, sizeof(m_PrevPoints));
+
+//		registerDeviceCallback();
 	}
 
 	virtual ~KinectDevice()
@@ -210,10 +212,27 @@ protected:
 	int m_DeviceId;
 	cv::Point3f   m_PrevPoints[NUI_SKELETON_COUNT][NUI_SKELETON_POSITION_COUNT];
 	cv::Point3f   m_Points[NUI_SKELETON_POSITION_COUNT];
+	float	m_Confidences[NUI_SKELETON_POSITION_COUNT];
 
 	bool isPlayerVisible[NUI_SKELETON_COUNT];//valid id->0/1/2/3/4/5
 	//TODO: should be 1/2/3/4/5/6
 private:
+	static void registerDeviceCallback()
+	{
+		static bool first_time = true;
+		if (first_time)
+		{
+			first_time = false;
+			MSR_NuiSetDeviceStatusCallback(onDeviceStatus);
+		}
+	}
+	static void CALLBACK onDeviceStatus(const NuiStatusData *pStatusData)
+	{
+	//	MSG_BOX(pStatusData->instanceName);
+		if (FAILED(pStatusData->hrStatus))
+			MSG_BOX("Kinect disconnected!");
+	}
+
 	void Nui_GotDepthAlert();
 	void Nui_GotRgbAlert();
 	void Nui_GotSkeletonAlert();
@@ -378,7 +397,7 @@ void KinectDevice::Nui_GotSkeletonAlert( )
 			pSkel->eSkeletonPositionTrackingState[NUI_SKELETON_POSITION_HAND_LEFT] == NUI_SKELETON_POSITION_NOT_TRACKED
 			//|| pSkel->eSkeletonPositionTrackingState[NUI_SKELETON_POSITION_HEAD] != NUI_SKELETON_POSITION_NOT_TRACKED
 			)
-		{//if player not tracked or both hands not tracked
+		{//if both hands not tracked
 			//TODO: replacing with SkeletonFrame.SkeletonData[i].dwTrackingID
 			if (isPlayerVisible[i])//the player is leaving us
 				onPlayerLeave(i);
@@ -399,6 +418,8 @@ void KinectDevice::Nui_GotSkeletonAlert( )
 				m_Points[k].x = fx;
 				m_Points[k].y = fy;
 				m_Points[k].z = pSkel->SkeletonPositions[k].z;
+
+				m_Confidences[k] = (int)pSkel->eSkeletonPositionTrackingState[k]*0.5f;
 
 				cv::Point pos(m_Points[k].x*640+10, m_Points[k].y*480);
 				cv::circle(renderedSkeleton, pos, 5, vDefaultColor(k),3, -1);
@@ -493,7 +514,7 @@ cv::Scalar_<uchar> KinectDevice::Nui_ShortToQuad_Depth( ushort s )
 
 HRESULT KinectDevice::setup(bool isColor, bool isDepth, bool isSkeleton)
 {
-	printf("Hello I am trying to setup Kinect #%d with\n", m_DeviceId);
+	printf("KinServer is trying to launch Kinect #%d with\n", m_DeviceId);
 	if (isColor)
 		printf(" * RGB frame\n");
 	if (isDepth)
@@ -551,7 +572,7 @@ HRESULT KinectDevice::setup(bool isColor, bool isDepth, bool isSkeleton)
 			MSG_BOX("failed on NuiImageStreamOpen(NUI_IMAGE_TYPE_COLOR)");
 			return hr;
 		}
-		threads_[0] = new DepthThread(*this);
+		threads_[0] = new RgbThread(*this);
 		threads_[0]->startThread();
 	}
 
@@ -592,14 +613,6 @@ HRESULT KinectDevice::setup(bool isColor, bool isDepth, bool isSkeleton)
 
 void KinectDevice::release()
 {
-	if (iplColor)
-		cvReleaseImageHeader(&iplColor);
-
-	if (m_pNuiInstance)
-		m_pNuiInstance->NuiShutdown();
-
-	MSR_NuiDestroyInstance(m_pNuiInstance);
-
 	if( evt_nextSkeleton && ( evt_nextSkeleton != INVALID_HANDLE_VALUE ) )
 	{
 		CloseHandle( evt_nextSkeleton );
@@ -615,6 +628,13 @@ void KinectDevice::release()
 		CloseHandle( evt_nextRgb );
 		evt_nextRgb = NULL;
 	}
+	if (iplColor)
+		cvReleaseImageHeader(&iplColor);
+
+	if (m_pNuiInstance)
+		m_pNuiInstance->NuiShutdown();
+
+	MSR_NuiDestroyInstance(m_pNuiInstance);
 }
 
 void KinectDevice::Nui_DrawSkeletonSegment(cv::Mat& frame, NUI_SKELETON_DATA * pSkel, int numJoints, ... )
