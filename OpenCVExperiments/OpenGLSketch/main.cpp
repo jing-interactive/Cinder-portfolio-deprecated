@@ -1,11 +1,17 @@
-#include <cstring>
-#include <cmath>
-#include <iostream>
+//////////////////////////////////////////////////////////////////////////
+//Point Cloud Sample
+//author:vinjn
+//http://weibo.com/vinjnmelanie
+//displays 3d point clouds from camera, the code is based on /samples/cpp/point_cloud.cpp
+//
+
 #include <opencv2/core/core.hpp>
-#include <opencv2/core/gpumat.hpp>
+#include <opencv2/core/opengl_interop.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/core/opengl_interop.hpp>
+
+#include <gl/GL.h>
+#pragma comment(lib,"opengl32.lib")
 
 #if defined _DEBUG
 #pragma comment(lib,"opencv_core232d.lib")
@@ -17,16 +23,116 @@
 #pragma comment(lib,"opencv_highgui232.lib")
 #endif
 
-
-using namespace std;
 using namespace cv;
-using namespace cv::gpu;
+
+class PointCloudRenderer
+{
+public:
+	PointCloudRenderer(double scale);
+
+	void onMouseEvent(int event, int x, int y, int flags);
+	void draw();
+	void update(Mat_<Point3d> points, Mat img, double aspect);
+
+	int fov_;
+
+private:
+	int mouse_dx_;
+	int mouse_dy_;
+
+	Point3d pos_;
+
+	GlCamera camera_;
+	GlArrays pointCloud_;
+};
+
+bool stop = false;
 
 void mouseCallback(int event, int x, int y, int flags, void* userdata)
 {
-	int* dx = static_cast<int*>(userdata);
-	int* dy = dx + 1;
+	if (stop)
+		return;
 
+	PointCloudRenderer* renderer = static_cast<PointCloudRenderer*>(userdata);
+	renderer->onMouseEvent(event, x, y, flags);
+}
+
+void openGlDrawCallback(void* userdata)
+{
+	if (stop)
+		return;
+
+	PointCloudRenderer* renderer = static_cast<PointCloudRenderer*>(userdata);
+	renderer->draw();
+}
+
+int main(int argc, const char* argv[])
+{
+	double scale = 0.2;
+
+	const string windowName = "OpenGL Point Cloud";
+
+	VideoCapture input;
+	input.open(0);
+
+	Mat raw,gray,clr;
+	input>>raw; 
+
+	Mat_<Point3d> points(raw.size());
+
+	namedWindow(windowName, WINDOW_OPENGL);
+	resizeWindow(windowName, 800, 600);
+
+	PointCloudRenderer renderer(scale);
+
+	createTrackbar("Fov", windowName, &renderer.fov_, 100);
+	setMouseCallback(windowName, mouseCallback, &renderer);
+	setOpenGlDrawCallback(windowName, openGlDrawCallback, &renderer);
+
+	while (true)
+	{
+		input>>raw;
+
+		cvtColor(raw, clr, COLOR_BGR2RGB);
+		flip(clr, clr,0);
+		cvtColor(clr, gray, COLOR_RGB2GRAY);
+		int half_w = gray.cols/2;
+		int half_h = gray.rows/2;
+		for (int y=0;y<gray.rows;y++)
+		{
+			for (int x=0;x<gray.cols;x++)
+			{
+				Point3d& p = points(y,x);
+				p.x = x - half_w;
+				p.y = y - half_h;
+				p.z = 256-gray.at<uchar>(y,x);
+			}
+		}	
+
+		double aspect = getWindowProperty(windowName, WND_PROP_ASPECT_RATIO);
+		renderer.update(points, clr, aspect);
+
+		updateWindow(windowName);
+
+		int key = waitKey(1);
+	}
+
+	return 0;
+}
+
+PointCloudRenderer::PointCloudRenderer(double scale)
+{
+	mouse_dx_ = 0;
+	mouse_dy_ = 0;
+
+	fov_ = 0;
+	pos_ = Point3d(0,0,-100);
+ 
+	camera_.setScale(Point3d(scale, scale, scale));
+}
+
+void PointCloudRenderer::onMouseEvent(int event, int x, int y, int flags)
+{
 	static int oldx = x;
 	static int oldy = y;
 	static bool moving = false;
@@ -44,124 +150,43 @@ void mouseCallback(int event, int x, int y, int flags, void* userdata)
 
 	if (moving)
 	{
-		*dx = oldx - x;
-		*dy = oldy - y;
+		mouse_dx_ = oldx - x;
+		mouse_dy_ = oldy - y;
 	}
 	else
 	{
-		*dx = 0;
-		*dy = 0;
+		mouse_dx_ = 0;
+		mouse_dy_ = 0;
 	}
 }
 
-inline int clamp(int val, int minVal, int maxVal)
+void PointCloudRenderer::update(Mat_<Point3d> points, Mat img, double aspect)
 {
-	return max(min(val, maxVal), minVal);
-}
-
-Point3d rotate(Point3d v, double yaw, double pitch)
-{
-	Point3d t1;
-	t1.x = v.x * cos(-yaw / 180.0 * CV_PI) - v.z * sin(-yaw / 180.0 * CV_PI);
-	t1.y = v.y;
-	t1.z = v.x * sin(-yaw / 180.0 * CV_PI) + v.z * cos(-yaw / 180.0 * CV_PI);
-
-	Point3d t2;
-	t2.x = t1.x;
-	t2.y = t1.y * cos(pitch / 180.0 * CV_PI) - t1.z * sin(pitch / 180.0 * CV_PI);
-	t2.z = t1.y * sin(pitch / 180.0 * CV_PI) + t1.z * cos(pitch / 180.0 * CV_PI);
-
-	return t2;
-}
-
-int main(int argc, const char* argv[])
-{
-	namedWindow("OpenGL Sample", WINDOW_OPENGL);
-
-	int fov = 0;
-	createTrackbar("Fov", "OpenGL Sample", &fov, 100);
-
-	int mouse[2] = {0, 0};
-	setMouseCallback("OpenGL Sample", mouseCallback, mouse);
-
-	double scale = 1.0;
-
-	GlArrays pointCloud;
-	GlCamera camera;
-	camera.setScale(Point3d(scale, scale, scale));
-
-	double yaw = 0.0;
-	double pitch = 0.0;
-
 	const Point3d dirVec(0.0, 0.0, -1.0);
 	const Point3d upVec(0.0, 1.0, 0.0);
 	const Point3d leftVec(-1.0, 0.0, 0.0);
-	Point3d pos(0,0,10);
-	Mat raw,gray;
 
-	VideoCapture input;
-	input.open(0);
+	const double posStep = 1;
 
-	input>>raw;
-	Mat_<Point3d> points(raw.size());
+	const double mouseStep = 0.001;
 
-	while (true)
-	{
-		input>>raw;
-		cvtColor(raw, gray, COLOR_BGR2GRAY);		
-		for (int y=0;y<gray.rows;y++)
-		{
-			for (int x=0;x<gray.cols;x++)
-			{
-				Point3d& p = points(y,x);
-				p.x = x;
-				p.y = y;
-				p.z = gray.at<uchar>(y,x);
-			}
-		}
- 
-		pointCloud.setVertexArray(points); 
-		pointCloud.setColorArray(raw, false);
+	camera_.setPerspectiveProjection(30.0 + fov_ / 100.0 * 40.0, aspect, 0.1, 1000.0);
+ 	camera_.lookAt(pos_, Point3d(0,0,0), Point3d(0,1,0));
 
-		double aspect = getWindowProperty("OpenGL Sample", WND_PROP_ASPECT_RATIO);
+	pointCloud_.setVertexArray(points);
+	pointCloud_.setColorArray(img, false);
+}
 
-		const double posStep = 0.1;
-		const double mouseStep = 0.001;
-		const int mouseClamp = 300;
+void PointCloudRenderer::draw()
+{
+	camera_.setupProjectionMatrix();
+	camera_.setupModelViewMatrix();
+	
+	glPushMatrix();
+	glRotatef(mouse_dx_, 0,1.0f,0);
+	glRotatef(-mouse_dy_, 1.0f,0,0);
+	render(pointCloud_);
+	glPopMatrix();
 
-		camera.setPerspectiveProjection(30.0 + fov / 100.0 * 40.0, aspect, 0.1, 1000.0); 
-
-		int mouse_dx = clamp(mouse[0], -mouseClamp, mouseClamp);
-		int mouse_dy = clamp(mouse[1], -mouseClamp, mouseClamp);
-
-		yaw += mouse_dx * mouseStep;
-		pitch += mouse_dy * mouseStep;
-
-		int key = waitKey(1);
-
-		if (key == 27)
-			break;
-		key = tolower(key);
-		if (key == 'w')
-			pos += posStep * rotate(dirVec, yaw, pitch);
-		else if (key == 's')
-			pos -= posStep * rotate(dirVec, yaw, pitch);
-		else if (key == 'a')
-			pos += posStep * rotate(leftVec, yaw, pitch);
-		else if (key == 'd')
-			pos -= posStep * rotate(leftVec, yaw, pitch);
-		else if (key == 'q')
-			pos += posStep * rotate(upVec, yaw, pitch);
-		else if (key == 'e')
-			pos -= posStep * rotate(upVec, yaw, pitch);
-
-		cout<<pos<<endl;
-
-		camera.setCameraPos(pos, yaw, pitch, 0.0);
-
-		pointCloudShow("OpenGL Sample", camera, pointCloud);
-		//imshow("v",pointCloud.);
-	}
-
-	return 0;
+	render("OpenCV+OpenGL", GlFont::get("Courier New", 16), Scalar::all(255), Point2d(3.0, 0.0));
 }
