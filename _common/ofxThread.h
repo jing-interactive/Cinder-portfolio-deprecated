@@ -1,6 +1,8 @@
 #ifndef _OFX_THREAD_H_
 #define _OFX_THREAD_H_
 
+#include <string>
+
 #ifdef WIN32	
 	#include <stdio.h>
 	#include <windows.h>
@@ -13,7 +15,7 @@
 class ofxThread{
 
 	public:
-		ofxThread();
+		ofxThread(const std::string& name="ofxThread");
 		virtual ~ofxThread();
 		bool isThreadRunning();
 		void startThread(bool _blocking = true, bool _verbose = true);
@@ -22,6 +24,7 @@ class ofxThread{
 		void stopThread();
 
 	protected:
+		std::string name_;
 
 		//-------------------------------------------------
 		//you need to overide this with the function you want to thread

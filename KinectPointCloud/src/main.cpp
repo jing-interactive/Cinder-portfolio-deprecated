@@ -9,6 +9,7 @@
 #include <opencv2/core/opengl_interop.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include "../../../_common/Kinect/KinectDevice.h"
 
 #include <gl/GL.h>
 #pragma comment(lib,"opengl32.lib")
@@ -71,12 +72,8 @@ int main(int argc, const char* argv[])
 
 	const string windowName = "OpenGL Point Cloud";
 
-	VideoCapture input;
-	input.open(0);
-
 	Mat raw,gray,clr;
-	input>>raw; 
-
+ 
 	Mat_<Point3d> points(raw.size());
 
 	namedWindow(windowName, WINDOW_OPENGL);

@@ -1,7 +1,36 @@
 #include "ofxThread.h" 
 
+const DWORD MS_VC_EXCEPTION=0x406D1388;
+
+#pragma pack(push,8)
+typedef struct tagTHREADNAME_INFO
+{
+	DWORD dwType; // Must be 0x1000.
+	LPCSTR szName; // Pointer to name (in user addr space).
+	DWORD dwThreadID; // Thread ID (-1=caller thread).
+	DWORD dwFlags; // Reserved for future use, must be zero.
+} THREADNAME_INFO;
+#pragma pack(pop)
+
+void SetThreadName( DWORD dwThreadID, char* threadName)
+{
+	THREADNAME_INFO info;
+	info.dwType = 0x1000;
+	info.szName = threadName;
+	info.dwThreadID = dwThreadID;
+	info.dwFlags = 0;
+
+	__try
+	{
+		RaiseException( MS_VC_EXCEPTION, 0, sizeof(info)/sizeof(ULONG_PTR), (ULONG_PTR*)&info );
+	}
+	__except(EXCEPTION_EXECUTE_HANDLER)
+	{
+	}
+}
+
 //------------------------------------------------- 
-ofxThread::ofxThread(){ 
+ofxThread::ofxThread(const std::string& name):name_(name){ 
    threadRunning = false; 
    #ifdef WIN32 
       InitializeCriticalSection(&critSec); 
@@ -37,7 +66,10 @@ void ofxThread::startThread(bool _blocking, bool _verbose){
 
    #ifdef WIN32 
       //InitializeCriticalSection(&critSec); 
-      myThread = (HANDLE)_beginthreadex(NULL, 0, this->thread,  (void *)this, 0, NULL); 
+      myThread = (HANDLE)_beginthreadex(NULL, 0, this->thread,  (void *)this, 0, NULL);
+	  DWORD thread_id = GetThreadId(myThread);
+	  SetThreadName(thread_id, (char*)name_.c_str());
+
    #else 
       //pthread_mutex_init(&myMutex, NULL); 
       pthread_create(&myThread, NULL, thread, (void *)this); 
@@ -98,14 +130,15 @@ bool ofxThread::unlock(){
 //------------------------------------------------- 
 void ofxThread::stopThread(){ 
    if(threadRunning){ 
-      #ifdef WIN32 
-         CloseHandle(myThread); 
-      #else 
-         //pthread_mutex_destroy(&myMutex); 
-         pthread_detach(myThread); 
-      #endif 
       if(verbose)printf("ofxThread: thread stopped\n"); 
       threadRunning = false; 
+#ifdef WIN32 
+	  //::WaitForSingleObject( myThread, INFINITE );
+	  ::CloseHandle( myThread );
+#else 
+	  //pthread_mutex_destroy(&myMutex); 
+	  pthread_detach(myThread); 
+#endif 
    }else{ 
       if(verbose)printf("ofxThread: thread already stopped\n"); 
    } 
