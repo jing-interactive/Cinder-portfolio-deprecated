@@ -50,13 +50,22 @@ struct KinectDevice3D : public KinectDevice, public I3DRenderer
 
 	void onRgbData(const cv::Mat& rgb)
 	{
+#ifdef INVISIBLE_MAN_MODE
+		static bool first = true;
+		if (first)
+		{
+			_color = rgb.clone();
+			first = false;
+		}
+#else
 		_color = rgb;
+#endif
 	}
 
 	void draw()
 	{
 		glPointSize(4);
-		_camera.lookAt(Point3d(0,0,100), Point3d(0,0,0), Point3d(0,-1,0));
+		_camera.lookAt(Point3d(0,0,70), Point3d(0,0,0), Point3d(0,-1,0));
 		_camera.setupProjectionMatrix();
 		_camera.setupModelViewMatrix();
 		glRotatef(_mouse_dx, 0,1.0f,0);
