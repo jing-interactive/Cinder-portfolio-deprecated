@@ -167,11 +167,7 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\feature.h"
-			>
-		</File>
-		<File
-			RelativePath=".\gl_helper.h"
+			RelativePath="..\..\..\_common\vOpenCV\FeatureMatcher.h"
 			>
 		</File>
 		<File
@@ -180,6 +176,10 @@
 		</File>
 		<File
 			RelativePath=".\NaiveAR_surf.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\..\_common\vOpenCV\OpenGL.h"
 			>
 		</File>
 	</Files>

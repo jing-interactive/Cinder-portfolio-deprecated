@@ -5,6 +5,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NaiveAR_surf", "src\NaiveAR
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opencv_features2d", "..\..\..\opencv_svn\opencv\VS2008\modules\features2d\opencv_features2d.vcproj", "{4078E8F8-857B-4644-8FC7-46EC93E0B8C6}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opencv_highgui", "..\..\..\opencv_svn\opencv\VS2008\modules\highgui\opencv_highgui.vcproj", "{4975BF39-BE85-4832-8E56-0ACDB803CEA5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opencv_core", "..\..\..\opencv_svn\opencv\VS2008\modules\core\opencv_core.vcproj", "{F78645AD-78D5-4682-8882-0A4F3C1CCCCF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opencv_calib3d", "..\..\..\opencv_svn\opencv\VS2008\modules\calib3d\opencv_calib3d.vcproj", "{E0F4F971-EC84-4D6A-AF6D-F7239327D53C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -29,6 +35,30 @@ Global
 		{4078E8F8-857B-4644-8FC7-46EC93E0B8C6}.Release|Win32.Build.0 = Release|Win32
 		{4078E8F8-857B-4644-8FC7-46EC93E0B8C6}.RelWithDebInfo|Win32.ActiveCfg = RelWithDebInfo|Win32
 		{4078E8F8-857B-4644-8FC7-46EC93E0B8C6}.RelWithDebInfo|Win32.Build.0 = RelWithDebInfo|Win32
+		{4975BF39-BE85-4832-8E56-0ACDB803CEA5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4975BF39-BE85-4832-8E56-0ACDB803CEA5}.Debug|Win32.Build.0 = Debug|Win32
+		{4975BF39-BE85-4832-8E56-0ACDB803CEA5}.MinSizeRel|Win32.ActiveCfg = MinSizeRel|Win32
+		{4975BF39-BE85-4832-8E56-0ACDB803CEA5}.MinSizeRel|Win32.Build.0 = MinSizeRel|Win32
+		{4975BF39-BE85-4832-8E56-0ACDB803CEA5}.Release|Win32.ActiveCfg = Release|Win32
+		{4975BF39-BE85-4832-8E56-0ACDB803CEA5}.Release|Win32.Build.0 = Release|Win32
+		{4975BF39-BE85-4832-8E56-0ACDB803CEA5}.RelWithDebInfo|Win32.ActiveCfg = RelWithDebInfo|Win32
+		{4975BF39-BE85-4832-8E56-0ACDB803CEA5}.RelWithDebInfo|Win32.Build.0 = RelWithDebInfo|Win32
+		{F78645AD-78D5-4682-8882-0A4F3C1CCCCF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F78645AD-78D5-4682-8882-0A4F3C1CCCCF}.Debug|Win32.Build.0 = Debug|Win32
+		{F78645AD-78D5-4682-8882-0A4F3C1CCCCF}.MinSizeRel|Win32.ActiveCfg = MinSizeRel|Win32
+		{F78645AD-78D5-4682-8882-0A4F3C1CCCCF}.MinSizeRel|Win32.Build.0 = MinSizeRel|Win32
+		{F78645AD-78D5-4682-8882-0A4F3C1CCCCF}.Release|Win32.ActiveCfg = Release|Win32
+		{F78645AD-78D5-4682-8882-0A4F3C1CCCCF}.Release|Win32.Build.0 = Release|Win32
+		{F78645AD-78D5-4682-8882-0A4F3C1CCCCF}.RelWithDebInfo|Win32.ActiveCfg = RelWithDebInfo|Win32
+		{F78645AD-78D5-4682-8882-0A4F3C1CCCCF}.RelWithDebInfo|Win32.Build.0 = RelWithDebInfo|Win32
+		{E0F4F971-EC84-4D6A-AF6D-F7239327D53C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E0F4F971-EC84-4D6A-AF6D-F7239327D53C}.Debug|Win32.Build.0 = Debug|Win32
+		{E0F4F971-EC84-4D6A-AF6D-F7239327D53C}.MinSizeRel|Win32.ActiveCfg = MinSizeRel|Win32
+		{E0F4F971-EC84-4D6A-AF6D-F7239327D53C}.MinSizeRel|Win32.Build.0 = MinSizeRel|Win32
+		{E0F4F971-EC84-4D6A-AF6D-F7239327D53C}.Release|Win32.ActiveCfg = Release|Win32
+		{E0F4F971-EC84-4D6A-AF6D-F7239327D53C}.Release|Win32.Build.0 = Release|Win32
+		{E0F4F971-EC84-4D6A-AF6D-F7239327D53C}.RelWithDebInfo|Win32.ActiveCfg = RelWithDebInfo|Win32
+		{E0F4F971-EC84-4D6A-AF6D-F7239327D53C}.RelWithDebInfo|Win32.Build.0 = RelWithDebInfo|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

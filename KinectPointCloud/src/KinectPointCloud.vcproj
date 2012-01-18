@@ -169,24 +169,32 @@
 			Name="kinect"
 			>
 			<File
-				RelativePath="..\..\..\_common\Kinect\KinectDevice.h"
+				RelativePath="..\..\_common\Kinect\KinectDevice.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\_common\Kinect\MSRKinectNUI.lib"
+				RelativePath="..\..\_common\Kinect\MSRKinectNUI.lib"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\_common\ofxThread.cpp"
+				RelativePath="..\..\_common\ofxThread.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\_common\ofxThread.h"
+				RelativePath="..\..\_common\ofxThread.h"
 				>
 			</File>
 		</Filter>
 		<File
+			RelativePath=".\link.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\main.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\_common\vOpenCV\OpenGL.h"
 			>
 		</File>
 	</Files>
