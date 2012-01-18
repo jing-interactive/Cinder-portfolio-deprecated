@@ -64,6 +64,9 @@ struct KinectDevice3D : public KinectDevice, public I3DRenderer
 
 	void draw()
 	{
+		if (stop)
+			return;
+
 		glPointSize(4);
 		_camera.lookAt(Point3d(0,0,70), Point3d(0,0,0), Point3d(0,-1,0));
 		_camera.setupProjectionMatrix();
@@ -97,6 +100,8 @@ int main(int argc, const char* argv[])
 		updateWindow(windowName);
 
 		int key = waitKey(1);
+		if (key == VK_ESCAPE)
+			break;
 	}
 
 	stop = true;
