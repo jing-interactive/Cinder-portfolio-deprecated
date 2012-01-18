@@ -84,6 +84,13 @@ static CvScalar vDefaultColor(int idx){ return default_colors[idx%sizeOfColors];
 
 class KinectDevice;
 
+enum{
+	DEPTH_WIDTH = 320,
+	DEPTH_HEIGHT = 240,
+	RGB_WIDTH = 640,
+	RGB_HEIGHT = 480,
+};
+
 struct DepthThread : public ofxThread
 {
 	DepthThread(KinectDevice& ref):ref_(ref),ofxThread("DepthThread"){}
@@ -285,7 +292,7 @@ void KinectDevice::Nui_GotDepthAlert( )
 		USHORT * pBufferRun = (USHORT*) pBuffer;
 		USHORT * pRaw = rawDepth.ptr<ushort>();
 		int i=0;
-		for( int i =0;i<320*240;i++,pBufferRun++,pRaw++)
+		for( int i =0;i<DEPTH_WIDTH*DEPTH_HEIGHT;i++,pBufferRun++,pRaw++)
 		{ 
 			cv::Scalar_<uchar> quad = Nui_ShortToQuad_Depth( *pBufferRun );
 
@@ -421,14 +428,14 @@ void KinectDevice::Nui_GotSkeletonAlert( )
 
 				m_Confidences[k] = (int)pSkel->eSkeletonPositionTrackingState[k]*0.5f;
 
-				cv::Point pos(m_Points[k].x*640+10, m_Points[k].y*480);
+				cv::Point pos(m_Points[k].x*RGB_WIDTH+10, m_Points[k].y*RGB_HEIGHT);
 				cv::circle(renderedSkeleton, pos, 5, vDefaultColor(k),3, -1);
 				sprintf(buf, "%.1f m", m_Points[k].z);
 				cv::putText(renderedSkeleton, buf, cv::Point(pos.x, pos.y), 0, 0.5, CV_RGB(255,255,255));
 			}
 			sprintf(buf, "#%d", i);
 			NuiTransformSkeletonToDepthImageF(pSkel->Position, &fx, &fy);
-			cv::putText(renderedDepth, buf, cv::Point(fx*320, fy*240), 0, 0.9, CV_RGB(0,0,0));
+			cv::putText(renderedDepth, buf, cv::Point(fx*DEPTH_WIDTH, fy*DEPTH_HEIGHT), 0, 0.9, CV_RGB(0,0,0));
 
 			Nui_DrawSkeletonSegment(renderedSkeleton,pSkel,4,NUI_SKELETON_POSITION_HIP_CENTER, NUI_SKELETON_POSITION_SPINE, NUI_SKELETON_POSITION_SHOULDER_CENTER, NUI_SKELETON_POSITION_HEAD);
 			Nui_DrawSkeletonSegment(renderedSkeleton,pSkel,5,NUI_SKELETON_POSITION_SHOULDER_CENTER, NUI_SKELETON_POSITION_SHOULDER_LEFT, NUI_SKELETON_POSITION_ELBOW_LEFT, NUI_SKELETON_POSITION_WRIST_LEFT, NUI_SKELETON_POSITION_HAND_LEFT);
@@ -549,10 +556,10 @@ HRESULT KinectDevice::setup(bool isColor, bool isDepth, bool isSkeleton)
 		return hr;
 	}
 
-	renderedSkeleton.create(cv::Size(640,480), CV_8UC3);
-	iplColor = cvCreateImageHeader(cvSize(640,480), 8, 4);
-	renderedDepth.create(cv::Size(320,240), CV_8UC3);
-	rawDepth.create(cv::Size(320,240), CV_16UC1);
+	renderedSkeleton.create(cv::Size(RGB_WIDTH,RGB_HEIGHT), CV_8UC3);
+	iplColor = cvCreateImageHeader(cvSize(RGB_WIDTH,RGB_HEIGHT), 8, 4);
+	renderedDepth.create(cv::Size(DEPTH_WIDTH,DEPTH_HEIGHT), CV_8UC3);
+	rawDepth.create(cv::Size(DEPTH_WIDTH,DEPTH_HEIGHT), CV_16UC1);
 
 	evt_nextRgb = CreateEvent( NULL, TRUE, FALSE, NULL );
 	evt_nextDepth = CreateEvent( NULL, TRUE, FALSE, NULL );
@@ -647,7 +654,7 @@ void KinectDevice::Nui_DrawSkeletonSegment(cv::Mat& frame, NUI_SKELETON_DATA * p
 	{
 		NUI_SKELETON_POSITION_INDEX jointIndex = va_arg(vl,NUI_SKELETON_POSITION_INDEX);
 
-		cv::Point curr(m_Points[jointIndex].x*640, m_Points[jointIndex].y*480);
+		cv::Point curr(m_Points[jointIndex].x*RGB_WIDTH, m_Points[jointIndex].y*RGB_HEIGHT);
 		if (pSkel->eSkeletonPositionTrackingState[jointIndex] != NUI_SKELETON_POSITION_NOT_TRACKED)
 		{
 			if (i > 0)
