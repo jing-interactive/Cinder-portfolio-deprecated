@@ -11,7 +11,7 @@ The Kinect sensor returns x, y, and z values in the following ranges:
 
 Values of x can range from approximately ¨C2.2 to 2.2.
 Values of y can range from approximately ¨C1.6 to 1.6.
-Values of z can range from 0.0 to 4.0.
+Values of z can range from 0.8 to 4.0.
 */
 
 #ifndef KINECT_DEVICE_H
@@ -213,6 +213,13 @@ public:
 	}
 
 protected:
+	cv::Point2f getUVFromDepthPixel(int x, int y, ushort depthValue ) 
+	{		
+		LONG u,v;
+		HRESULT hr = m_pNuiInstance->NuiImageGetColorPixelCoordinatesFromDepthPixel(
+			NUI_IMAGE_RESOLUTION_640x480,NULL,x,y,depthValue<<3,&u,&v);
+		return cv::Point2f(u/(float)RGB_WIDTH, v/(float)RGB_HEIGHT);
+	}
 
 	INuiInstance* m_pNuiInstance;//the object represents the physical Kinect device
 

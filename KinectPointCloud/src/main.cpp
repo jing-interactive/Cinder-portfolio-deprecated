@@ -30,26 +30,31 @@ struct KinectDevice3D : public KinectDevice, public I3DRenderer
 
 	void onDepthData(const cv::Mat& depth_u16)
 	{
+		if (stop)
+			return;
 		int half_w = DEPTH_WIDTH/2;
 		int half_h = DEPTH_HEIGHT/2;
 		for (int y=0;y<DEPTH_HEIGHT;y++)
 		{
 			for (int x=0;x<DEPTH_WIDTH;x++)
 			{
-				Point3f& v = _vertices(y,x);
-				v.x = x - half_w;
-				v.y = y - half_h;
-				v.z = -depth_u16.at<ushort>(y,x)*0.2;
+				ushort depthValue = depth_u16.at<ushort>(y,x);
+
+				Point3f& p = _vertices(y,x);
+				p.x = x - half_w;
+				p.y = y - half_h;
+				p.z = -depthValue*0.2;
 
 				Point2f& uv = _uvCoord(y,x);
-				uv.x = x/(float)DEPTH_WIDTH;
-				uv.y = y/(float)DEPTH_HEIGHT;
+				uv = getUVFromDepthPixel(x,y,depthValue);
 			}
 		}
 	}
 
 	void onRgbData(const cv::Mat& rgb)
 	{
+		if (stop)
+			return;
 #ifdef INVISIBLE_MAN_MODE
 		static bool first = true;
 		if (first)
@@ -67,12 +72,17 @@ struct KinectDevice3D : public KinectDevice, public I3DRenderer
 		if (stop)
 			return;
 
+		static float sum_mouse_dx = 0;
+		static float sum_mouse_dy = 0;
+		sum_mouse_dx += _mouse_dx*0.1;
+		sum_mouse_dy += _mouse_dy*0.1;
+
 		glPointSize(4);
-		_camera.lookAt(Point3d(0,0,70), Point3d(0,0,0), Point3d(0,-1,0));
+		_camera.lookAt(Point3d(0,0,1), Point3d(0,0,0), Point3d(0,-1,0));
 		_camera.setupProjectionMatrix();
 		_camera.setupModelViewMatrix();
-		glRotatef(_mouse_dx, 0,1.0f,0);
-		glRotatef(-_mouse_dy, 1.0f,0,0);
+		glRotatef(sum_mouse_dx, 0,1.0f,0);
+		glRotatef(sum_mouse_dy, 1.0f,0,0);
 		_pointCloud.setVertexArray(_vertices);
 		_pointCloud.setTexCoordArray(_uvCoord);
 		if (!_color.empty())
@@ -105,6 +115,7 @@ int main(int argc, const char* argv[])
 	}
 
 	stop = true;
+	destroyAllWindows();
 
 	return 0;
 }
