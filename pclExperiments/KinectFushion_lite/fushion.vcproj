@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="KinectSDKGrabber"
+	Name="fushion"
 	ProjectGUID="{A83EC0F4-0C5E-4CAC-B81A-4644F110A695}"
-	RootNamespace="KinectSDKGrabber"
+	RootNamespace="fushion"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>

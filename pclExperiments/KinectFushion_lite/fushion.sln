@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KinectSDKGrabber", "KinectSDKGrabber.vcproj", "{A83EC0F4-0C5E-4CAC-B81A-4644F110A695}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fushion", "fushion.vcproj", "{A83EC0F4-0C5E-4CAC-B81A-4644F110A695}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pcl_registration", "..\..\_PCL\VS2008\registration\pcl_registration.vcproj", "{C93F3D98-2D47-4485-A912-D0EB8B818E6C}"
 EndProject
