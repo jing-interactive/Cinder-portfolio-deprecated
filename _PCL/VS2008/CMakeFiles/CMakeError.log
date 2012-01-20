@@ -1,0 +1,64 @@
+Performing C SOURCE FILE Test OpenMP_FLAG_DETECTED failed with the following output:
+Change Dir: f:/__svn_pool/CreativeCoding/_PCL/VS2008/CMakeFiles/CMakeTmp
+
+Run Build Command:d:\PROGRA~1\MICROS~1.0\Common7\IDE\devenv.com CMAKE_TRY_COMPILE.sln /build Debug /project cmTryCompileExec
+
+Microsoft (R) Visual Studio Version 9.0.30729.1.
+Copyright (C) Microsoft Corp. All rights reserved.
+1>------ Build started: Project: cmTryCompileExec, Configuration: Debug Win32 ------
+1>Compiling...
+1>Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 15.00.30729.01 for 80x86
+1>Copyright (C) Microsoft Corporation.  All rights reserved.
+1>cl /Od /D "WIN32" /D "_WINDOWS" /D "OpenMP_FLAG_DETECTED" /D "_DEBUG" /D "CMAKE_INTDIR=\"Debug\"" /D "_MBCS" /FD /RTC1 /MDd /Fo"cmTryCompileExec.dir\Debug\\" /Fd"F:\__svn_pool\CreativeCoding\_PCL\VS2008\CMakeFiles\CMakeTmp\Debug/cmTryCompileExec.pdb" /W3 /c /Zi /TC   /Zm1000 -fopenmp
+1>   .\src.c
+1>cl : Command line warning D9002 : ignoring unknown option '-fopenmp'
+1>src.c
+1>.\src.c(9) : error C2065: 'breaks_on_purpose' : undeclared identifier
+1>.\src.c(9) : error C2143: syntax error : missing ';' before '}'
+1>Build log was saved at "file://f:\__svn_pool\CreativeCoding\_PCL\VS2008\CMakeFiles\CMakeTmp\cmTryCompileExec.dir\Debug\BuildLog.htm"
+1>cmTryCompileExec - 2 error(s), 1 warning(s)
+========== Build: 0 succeeded, 1 failed, 0 up-to-date, 0 skipped ==========
+
+Source file was:
+
+#include <omp.h>
+int main() { 
+#ifdef _OPENMP
+  return 0; 
+#else
+  breaks_on_purpose
+#endif
+}
+
+Performing C++ SOURCE FILE Test OpenMP_FLAG_DETECTED failed with the following output:
+Change Dir: f:/__svn_pool/CreativeCoding/_PCL/VS2008/CMakeFiles/CMakeTmp
+
+Run Build Command:d:\PROGRA~1\MICROS~1.0\Common7\IDE\devenv.com CMAKE_TRY_COMPILE.sln /build Debug /project cmTryCompileExec
+
+Microsoft (R) Visual Studio Version 9.0.30729.1.
+Copyright (C) Microsoft Corp. All rights reserved.
+1>------ Build started: Project: cmTryCompileExec, Configuration: Debug Win32 ------
+1>Compiling...
+1>Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 15.00.30729.01 for 80x86
+1>Copyright (C) Microsoft Corporation.  All rights reserved.
+1>cl /Od /D "WIN32" /D "_WINDOWS" /D "OpenMP_FLAG_DETECTED" /D "_DEBUG" /D "CMAKE_INTDIR=\"Debug\"" /D "_MBCS" /FD /EHsc /RTC1 /MDd /Fo"cmTryCompileExec.dir\Debug\\" /Fd"F:\__svn_pool\CreativeCoding\_PCL\VS2008\CMakeFiles\CMakeTmp\Debug/cmTryCompileExec.pdb" /W3 /c /Zi /TP   /Zm1000 -fopenmp
+1>   .\src.cxx
+1>cl : Command line warning D9002 : ignoring unknown option '-fopenmp'
+1>src.cxx
+1>.\src.cxx(9) : error C2065: 'breaks_on_purpose' : undeclared identifier
+1>.\src.cxx(9) : error C2143: syntax error : missing ';' before '}'
+1>Build log was saved at "file://f:\__svn_pool\CreativeCoding\_PCL\VS2008\CMakeFiles\CMakeTmp\cmTryCompileExec.dir\Debug\BuildLog.htm"
+1>cmTryCompileExec - 2 error(s), 1 warning(s)
+========== Build: 0 succeeded, 1 failed, 0 up-to-date, 0 skipped ==========
+
+Source file was:
+
+#include <omp.h>
+int main() { 
+#ifdef _OPENMP
+  return 0; 
+#else
+  breaks_on_purpose
+#endif
+}
+

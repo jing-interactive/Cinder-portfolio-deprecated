@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding = "Windows-1252"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="9.00"
+	Name="convert_pcd_ascii_binary"
+	ProjectGUID="{5D9CC3C9-D1FD-47A4-B721-81C2E74E2693}"
+	Keyword="Win32Proj">
+	<Platforms>
+		<Platform
+			Name="Win32"/>
+	</Platforms>
+	<Configurations>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory="Debug"
+			IntermediateDirectory="convert_pcd_ascii_binary.dir\Debug"
+			ConfigurationType="1"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalOptions=" /Zm1000 /bigobj /MP"
+				AdditionalIncludeDirectories="f:\boost_1_47_0;f:\__svn_pool\CreativeCoding\_common\Eigen;f:\__svn_pool\CreativeCoding\_common\flann;F:\__svn_pool\CreativeCoding\_PCL\VS2008\include;f:\__svn_pool\CreativeCoding\_PCL\common\include;f:\__svn_pool\CreativeCoding\_PCL\octree\include;f:\__svn_pool\CreativeCoding\_PCL\io\include;"
+				BasicRuntimeChecks="3"
+				CompileAs="2"
+				DebugInformationFormat="3"
+				ExceptionHandling="1"
+				InlineFunctionExpansion="0"
+				Optimization="0"
+				RuntimeLibrary="3"
+				RuntimeTypeInfo="TRUE"
+				WarningLevel="0"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;BOOST_DISABLE_ASSERTS;EIGEN_NO_DEBUG;BOOST_ALL_NO_LIB;_SCL_SECURE_NO_WARNINGS;NOMINMAX;EIGEN_DEFAULT_TO_ROW_MAJOR;BOOST_LIB_DIAGNOSTIC;EIGEN_USE_NEW_STDVECTOR;EIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET;FLANN_STATIC;CMAKE_INTDIR=\&quot;Debug\&quot;"
+				AssemblerListingLocation="Debug"
+				ObjectFile="$(IntDir)\"
+				ProgramDataBaseFileName="F:\__svn_pool\CreativeCoding\_PCL\VS2008\bin/convert_pcd_ascii_binary-gd.pdb"
+/>
+			<Tool
+				Name="VCCustomBuildTool"/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="f:\boost_1_47_0;f:\__svn_pool\CreativeCoding\_common\Eigen;f:\__svn_pool\CreativeCoding\_common\flann;F:\__svn_pool\CreativeCoding\_PCL\VS2008\include;f:\__svn_pool\CreativeCoding\_PCL\common\include;f:\__svn_pool\CreativeCoding\_PCL\octree\include;f:\__svn_pool\CreativeCoding\_PCL\io\include;"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;BOOST_DISABLE_ASSERTS;EIGEN_NO_DEBUG;BOOST_ALL_NO_LIB;_SCL_SECURE_NO_WARNINGS;NOMINMAX;EIGEN_DEFAULT_TO_ROW_MAJOR;BOOST_LIB_DIAGNOSTIC;EIGEN_USE_NEW_STDVECTOR;EIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET;FLANN_STATIC;CMAKE_INTDIR=\&quot;Debug\&quot;"/>
+			<Tool
+				Name="VCMIDLTool"
+				MkTypLibCompatible="FALSE"
+				TargetEnvironment="1"
+				GenerateStublessProxies="TRUE"
+				TypeLibraryName="$(InputName).tlb"
+				OutputDirectory="$(IntDir)"
+				HeaderFileName="$(InputName).h"
+				DLLDataFileName=""
+				InterfaceIdentifierFileName="$(InputName)_i.c"
+				ProxyFileName="$(InputName)_p.c"/>
+			<Tool
+				Name="VCPreBuildEventTool"/>
+			<Tool
+				Name="VCPreLinkEventTool"
+CommandLine="&quot;D:\Program Files\CMake 2.8\bin\cmake.exe&quot; -E make_directory F:/__svn_pool/CreativeCoding/_PCL/VS2008/lib&#x0D;&#x0A;if errorlevel 1 goto :VCReportError"/>
+			<Tool
+				Name="VCPostBuildEventTool"/>
+			<Tool
+				Name="VCLinkerTool"
+				LinkLibraryDependencies="false"
+				AdditionalOptions=" /STACK:10000000 /machine:X86 /debug"
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  f:\boost_1_47_0\stage\lib\libboost_system-vc90-mt-gd-1_47.lib f:\boost_1_47_0\stage\lib\libboost_filesystem-vc90-mt-gd-1_47.lib f:\boost_1_47_0\stage\lib\libboost_thread-vc90-mt-gd-1_47.lib f:\boost_1_47_0\stage\lib\libboost_date_time-vc90-mt-gd-1_47.lib f:\boost_1_47_0\stage\lib\libboost_iostreams-vc90-mt-gd-1_47.lib ..\..\lib\pcl_common-gd.lib ..\..\lib\pcl_io-gd.lib ..\..\lib\pcl_common-gd.lib f:\boost_1_47_0\stage\lib\libboost_system-vc90-mt-gd-1_47.lib f:\boost_1_47_0\stage\lib\libboost_filesystem-vc90-mt-gd-1_47.lib f:\boost_1_47_0\stage\lib\libboost_thread-vc90-mt-gd-1_47.lib f:\boost_1_47_0\stage\lib\libboost_date_time-vc90-mt-gd-1_47.lib f:\boost_1_47_0\stage\lib\libboost_iostreams-vc90-mt-gd-1_47.lib "
+				OutputFile="F:\__svn_pool\CreativeCoding\_PCL\VS2008\bin\convert_pcd_ascii_binary-gd.exe"
+				Version="0.0"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="f:\boost_1_47_0\stage\lib\$(OutDir),f:\boost_1_47_0\stage\lib"
+				ProgramDatabaseFile="F:\__svn_pool\CreativeCoding\_PCL\VS2008\bin/convert_pcd_ascii_binary-gd.pdb"
+				GenerateDebugInformation="TRUE"
+				SubSystem="1"
+				ImportLibrary="F:\__svn_pool\CreativeCoding\_PCL\VS2008\lib\convert_pcd_ascii_binary-gd.lib"/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="Release"
+			IntermediateDirectory="convert_pcd_ascii_binary.dir\Release"
+			ConfigurationType="1"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalOptions=" /Zm1000 /bigobj /MP"
+				AdditionalIncludeDirectories="f:\boost_1_47_0;f:\__svn_pool\CreativeCoding\_common\Eigen;f:\__svn_pool\CreativeCoding\_common\flann;F:\__svn_pool\CreativeCoding\_PCL\VS2008\include;f:\__svn_pool\CreativeCoding\_PCL\common\include;f:\__svn_pool\CreativeCoding\_PCL\octree\include;f:\__svn_pool\CreativeCoding\_PCL\io\include;"
+				CompileAs="2"
+				ExceptionHandling="1"
+				InlineFunctionExpansion="2"
+				Optimization="2"
+				RuntimeLibrary="2"
+				RuntimeTypeInfo="TRUE"
+				WarningLevel="0"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;BOOST_DISABLE_ASSERTS;EIGEN_NO_DEBUG;BOOST_ALL_NO_LIB;_SCL_SECURE_NO_WARNINGS;NOMINMAX;EIGEN_DEFAULT_TO_ROW_MAJOR;BOOST_LIB_DIAGNOSTIC;EIGEN_USE_NEW_STDVECTOR;EIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET;FLANN_STATIC;CMAKE_INTDIR=\&quot;Release\&quot;"
+				AssemblerListingLocation="Release"
+				ObjectFile="$(IntDir)\"
+				ProgramDataBaseFileName="F:\__svn_pool\CreativeCoding\_PCL\VS2008\bin/convert_pcd_ascii_binary.pdb"
+/>
+			<Tool
+				Name="VCCustomBuildTool"/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="f:\boost_1_47_0;f:\__svn_pool\CreativeCoding\_common\Eigen;f:\__svn_pool\CreativeCoding\_common\flann;F:\__svn_pool\CreativeCoding\_PCL\VS2008\include;f:\__svn_pool\CreativeCoding\_PCL\common\include;f:\__svn_pool\CreativeCoding\_PCL\octree\include;f:\__svn_pool\CreativeCoding\_PCL\io\include;"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;BOOST_DISABLE_ASSERTS;EIGEN_NO_DEBUG;BOOST_ALL_NO_LIB;_SCL_SECURE_NO_WARNINGS;NOMINMAX;EIGEN_DEFAULT_TO_ROW_MAJOR;BOOST_LIB_DIAGNOSTIC;EIGEN_USE_NEW_STDVECTOR;EIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET;FLANN_STATIC;CMAKE_INTDIR=\&quot;Release\&quot;"/>
+			<Tool
+				Name="VCMIDLTool"
+				MkTypLibCompatible="FALSE"
+				TargetEnvironment="1"
+				GenerateStublessProxies="TRUE"
+				TypeLibraryName="$(InputName).tlb"
+				OutputDirectory="$(IntDir)"
+				HeaderFileName="$(InputName).h"
+				DLLDataFileName=""
+				InterfaceIdentifierFileName="$(InputName)_i.c"
+				ProxyFileName="$(InputName)_p.c"/>
+			<Tool
+				Name="VCPreBuildEventTool"/>
+			<Tool
+				Name="VCPreLinkEventTool"
+CommandLine="&quot;D:\Program Files\CMake 2.8\bin\cmake.exe&quot; -E make_directory F:/__svn_pool/CreativeCoding/_PCL/VS2008/lib&#x0D;&#x0A;if errorlevel 1 goto :VCReportError"/>
+			<Tool
+				Name="VCPostBuildEventTool"/>
+			<Tool
+				Name="VCLinkerTool"
+				LinkLibraryDependencies="false"
+				AdditionalOptions=" /STACK:10000000 /machine:X86"
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  f:\boost_1_47_0\stage\lib\libboost_system-vc90-mt-1_47.lib f:\boost_1_47_0\stage\lib\libboost_filesystem-vc90-mt-1_47.lib f:\boost_1_47_0\stage\lib\libboost_thread-vc90-mt-1_47.lib f:\boost_1_47_0\stage\lib\libboost_date_time-vc90-mt-1_47.lib f:\boost_1_47_0\stage\lib\libboost_iostreams-vc90-mt-1_47.lib ..\..\lib\pcl_common.lib ..\..\lib\pcl_io.lib ..\..\lib\pcl_common.lib f:\boost_1_47_0\stage\lib\libboost_system-vc90-mt-1_47.lib f:\boost_1_47_0\stage\lib\libboost_filesystem-vc90-mt-1_47.lib f:\boost_1_47_0\stage\lib\libboost_thread-vc90-mt-1_47.lib f:\boost_1_47_0\stage\lib\libboost_date_time-vc90-mt-1_47.lib f:\boost_1_47_0\stage\lib\libboost_iostreams-vc90-mt-1_47.lib "
+				OutputFile="F:\__svn_pool\CreativeCoding\_PCL\VS2008\bin\convert_pcd_ascii_binary.exe"
+				Version="0.0"
+				LinkIncremental="1"
+				OptimizeReferences="2"
+				AdditionalLibraryDirectories="f:\boost_1_47_0\stage\lib\$(OutDir),f:\boost_1_47_0\stage\lib"
+				ProgramDatabaseFile="F:\__svn_pool\CreativeCoding\_PCL\VS2008\bin/convert_pcd_ascii_binary.pdb"
+				SubSystem="1"
+				ImportLibrary="F:\__svn_pool\CreativeCoding\_PCL\VS2008\lib\convert_pcd_ascii_binary.lib"/>
+		</Configuration>
+	</Configurations>
+	<Files>
+			<File
+				RelativePath="f:\__svn_pool\CreativeCoding\_PCL\io\tools\CMakeLists.txt">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+					Name="VCCustomBuildTool"
+					Description="Building Custom Rule f:/__svn_pool/CreativeCoding/_PCL/io/tools/CMakeLists.txt"
+					CommandLine="&quot;D:\Program Files\CMake 2.8\bin\cmake.exe&quot; -Hf:/__svn_pool/CreativeCoding/_PCL -BF:/__svn_pool/CreativeCoding/_PCL/VS2008 --check-stamp-file F:\__svn_pool\CreativeCoding\_PCL\VS2008\io\tools\CMakeFiles\generate.stamp&#x0D;&#x0A;if errorlevel 1 goto :VCReportError"
+					AdditionalDependencies="f:\__svn_pool\CreativeCoding\_PCL\io\tools\CMakeLists.txt;f:\__svn_pool\CreativeCoding\_PCL\io\tools\CMakeLists.txt;"
+					Outputs="F:\__svn_pool\CreativeCoding\_PCL\VS2008\io\tools\CMakeFiles\generate.stamp"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+					Name="VCCustomBuildTool"
+					Description="Building Custom Rule f:/__svn_pool/CreativeCoding/_PCL/io/tools/CMakeLists.txt"
+					CommandLine="&quot;D:\Program Files\CMake 2.8\bin\cmake.exe&quot; -Hf:/__svn_pool/CreativeCoding/_PCL -BF:/__svn_pool/CreativeCoding/_PCL/VS2008 --check-stamp-file F:\__svn_pool\CreativeCoding\_PCL\VS2008\io\tools\CMakeFiles\generate.stamp&#x0D;&#x0A;if errorlevel 1 goto :VCReportError"
+					AdditionalDependencies="f:\__svn_pool\CreativeCoding\_PCL\io\tools\CMakeLists.txt;f:\__svn_pool\CreativeCoding\_PCL\io\tools\CMakeLists.txt;"
+					Outputs="F:\__svn_pool\CreativeCoding\_PCL\VS2008\io\tools\CMakeFiles\generate.stamp"/>
+				</FileConfiguration>
+			</File>
+		<Filter
+			Name="Source Files"
+			Filter="">
+			<File
+				RelativePath="f:\__svn_pool\CreativeCoding\_PCL\io\tools\convert_pcd_ascii_binary.cpp">
+			</File>
+		</Filter>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>
