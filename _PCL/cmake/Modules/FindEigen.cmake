@@ -14,7 +14,7 @@ find_path(EIGEN_INCLUDE_DIR Eigen/Core
     HINTS ${PC_EIGEN_INCLUDEDIR} ${PC_EIGEN_INCLUDE_DIRS} "${EIGEN_ROOT}" "$ENV{EIGEN_ROOT}"
     PATHS "$ENV{PROGRAMFILES}/Eigen" "$ENV{PROGRAMW6432}/Eigen"
           "$ENV{PROGRAMFILES}/Eigen 3.0.0" "$ENV{PROGRAMW6432}/Eigen 3.0.0"
-          "../_common/_common/Eigen"
+          "../_common/Eigen"
     PATH_SUFFIXES eigen3 include/eigen3 include)
 
 set(EIGEN_INCLUDE_DIRS ${EIGEN_INCLUDE_DIR})
