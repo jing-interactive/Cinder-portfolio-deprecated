@@ -17,7 +17,7 @@
 #endif
 
 #ifdef _DEBUG
-#pragma comment(lib, "opencv_core231d.lib")
+#pragma comment(lib, "opencv_core232d.lib")
 #else
-#pragma comment(lib, "opencv_core231.lib")
+#pragma comment(lib, "opencv_core232.lib")
 #endif

@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 	}
 	//write 
 	PCL_INFO("Writing %s\n",ply_file.c_str());
-	io::savePLYFileASCII(ply_file, cloud);
+	io::savePLYFile(ply_file, cloud);
 
 	return 0;
 }
