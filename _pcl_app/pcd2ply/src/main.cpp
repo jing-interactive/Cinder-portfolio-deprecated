@@ -5,6 +5,14 @@
 
 #include <pcl/console/parse.h>
 
+#ifdef _DEBUG
+#pragma comment(lib, "pcl_io-gd.lib")
+#pragma comment(lib, "pcl_common-gd.lib")
+#else
+#pragma comment(lib, "pcl_io.lib")
+#pragma comment(lib, "pcl_common.lib")
+#endif
+
 using namespace pcl;
 
 void randomize_cloud(PointCloud<PointXYZ>& cloud_)
