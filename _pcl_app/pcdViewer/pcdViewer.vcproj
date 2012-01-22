@@ -165,36 +165,8 @@
 	<References>
 	</References>
 	<Files>
-		<Filter
-			Name="depend"
-			>
-			<File
-				RelativePath="..\..\_common\Kinect\KinectDevice.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_CRE_\_common\Kinect\MSRKinectNUI.lib"
-				>
-			</File>
-			<File
-				RelativePath="..\..\_common\ofxThread.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\_common\ofxThread.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\_common\SimpleMutex.h"
-				>
-			</File>
-		</Filter>
 		<File
 			RelativePath=".\src\main.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\..\_common\pcl\pcl.cpp"
 			>
 		</File>
 		<File

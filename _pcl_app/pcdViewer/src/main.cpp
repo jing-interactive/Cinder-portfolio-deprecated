@@ -1,18 +1,30 @@
-#include <boost/thread/thread.hpp>
-#include <pcl/common/time.h>
-#include <pcl/filters/approximate_voxel_grid.h>
+#include <pcl/io/pcd_io.h>
 #include <pcl/io/ply_io.h>
-#include <pcl/registration/registration.h> 
+#include <pcl/console/parse.h>
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
+#include <opencv2/opencv.hpp>
+#include "../../_common/vOpenCV/OpenGL.h"
 
-#include "../../_common/Kinect/KinectDevice.h"
-#include "../../_common/pcl/pcl.h"
-#include "../../_common/pcl/registration.h"
-#include "../../_common/pcl/feature_estimation.h"
+#ifdef _DEBUG
+#pragma comment(lib, "pcl_io-gd.lib")
+#pragma comment(lib, "pcl_common-gd.lib")
+#pragma comment(lib,"opencv_core232d.lib")
+#pragma comment(lib,"opencv_imgproc232d.lib")
+#pragma comment(lib,"opencv_highgui232d.lib")
+#else
+#pragma comment(lib, "pcl_io.lib")
+#pragma comment(lib, "pcl_common.lib")
+#pragma comment(lib,"opencv_core232.lib")
+#pragma comment(lib,"opencv_imgproc232.lib")
+#pragma comment(lib,"opencv_highgui232.lib")
+#endif
 
-#include <windows.h>
+using namespace cv;
+using namespace pcl;
 
 template <typename type>
-void mat2cloud(const cv::Mat& depth, PointCloud& cloud )
+void mat2cloud(const cv::Mat& depth, PointCloud<PointXYZ>& cloud )
 {
 	cloud.width = depth.cols;
 	cloud.height = depth.rows;
@@ -28,122 +40,81 @@ void mat2cloud(const cv::Mat& depth, PointCloud& cloud )
 		cloud(j,i).z = M(i,j);
 	}
 }
+ 
+void cloud2mat(const PointCloud<PointXYZ>& cloud, vector<Point3f>& points)
+{
+	points.reserve(cloud.width * cloud.height);
+	int n_points = cloud.size();
 
-struct MyKinectDevice : public KinectDevice
-{ 
-	MyKinectDevice()
-		:KinectDevice(0)
+	for(int i=0;i<n_points;i++)
 	{
-		setup(false, true, false);
-
-		cloud_ = PointCloudPtr(new PointCloud);
-		cloud_raw_ = PointCloudPtr(new PointCloud);
-		cloud_registered_ = PointCloudPtr(new PointCloud);
-		model_ = PointCloudPtr(new PointCloud);
-
-		tform = Eigen::Matrix4f::Identity();
+		const PointXYZ& p = cloud[i];
+		points.push_back(Point3f(p.x,p.y,p.z));
 	}
+}
 
-	void compute_features(PointCloudPtr cloud, PointCloudPtr keypoints, LocalDescriptorsPtr local_descriptors)
+const string windowName = "pcd viewer";
+
+struct PcdViewer : public I3DRenderer
+{
+	PcdViewer(PointCloud<PointXYZ>& cloud):I3DRenderer(windowName),_pclCloud(cloud){}
+	void draw()
 	{
-		// Estimate surface normals
-		float surface_radius = 0.03;
-		SurfaceNormalsPtr normals = estimateSurfaceNormals (cloud, surface_radius);
+		static float sum_mouse_dx = 0;
+		static float sum_mouse_dy = 0;
+		sum_mouse_dx += _mouse_dx*0.1;
+		sum_mouse_dy += _mouse_dy*0.1;
 
-		// Detect keypoints
-		float min_scale = 0.005f;
-		int nr_octaves = 5;
-		int nr_scales = 8;
-		float min_contrast = 0.1f;
-		keypoints = detectKeypoints (cloud, normals, min_scale, nr_octaves, nr_scales, min_contrast);
-		PCL_INFO("Detected %zu keypoints\n", keypoints->size ());
-
-		// Compute local descriptors
-		double feature_radius = 0.06;
-		assert (normals && keypoints);
-		local_descriptors = computeLocalDescriptors (cloud, normals, keypoints, feature_radius);
-		PCL_INFO("Computed local descriptors\n");
-
-		// Compute global descriptor
-// 		GlobalDescriptorsPtr global_descriptor;
-// 		global_descriptor = computeGlobalDescriptor (cloud, normals);
-// 		PCL_INFO ("Computed global descriptor\n");
+		_camera.lookAt(Point3d(0,0,1), Point3d(0,0,0), Point3d(0,-1,0));
+		_camera.setScale(Point3d(5,5,5));
+		_camera.setupProjectionMatrix();
+		_camera.setupModelViewMatrix();
+		glPointSize(4);
+		glRotatef(sum_mouse_dx, 0,1.0f,0);
+		glRotatef(sum_mouse_dy, 1.0f,0,0);
+		cloud2mat(_pclCloud, _vertices);
+		_glCloud.setVertexArray(_vertices);
+		render(_glCloud, RenderMode::POINTS);
 	}
-
-	Eigen::Matrix4f initial_alignment(PointCloudPtr src_points, PointCloudPtr dst_points)
-	{ // Compute the intial alignment
-		PointCloudPtr keypoints[2];
-		LocalDescriptorsPtr local_descriptors[2];
-		compute_features(src_points, keypoints[0], local_descriptors[0]);
-		compute_features(dst_points, keypoints[1], local_descriptors[1]);
-
-		//param
-		double min_sample_dist = 0.05, max_correspondence_dist=0.02, nr_iters=500;
-
-		// Find the transform that roughly aligns the points
-		Eigen::Matrix4f tform = computeInitialAlignment (keypoints[0], local_descriptors[0], keypoints[1], local_descriptors[1],
-			min_sample_dist, max_correspondence_dist, nr_iters);		
-		PCL_INFO("Computed initial alignment\n");
-
-		return tform;
-	}
-
-	Eigen::Matrix4f icp_alignment(PointCloudPtr src_points, PointCloudPtr dst_points, Eigen::Matrix4f& tform)
-	{// Refine the initial alignment
-		float max_correspondence_distance = 0.05;
-		float outlier_rejection_threshold = 0.05;
-		float transformation_epsilon = 0;
-		int max_iterations = 100;
-
-		tform = refineAlignment (src_points, dst_points, tform, max_correspondence_distance,  
-			outlier_rejection_threshold, transformation_epsilon, max_iterations);
-
-		PCL_INFO("Refined alignment\n");
-
-		if (0)
-		{
-			// Transform the source point to align them with the target points
-			pcl::transformPointCloud (*src_points, *src_points, tform);
-
-			 // Merge the two clouds
-			(*src_points) += (*dst_points);
-		}
-
-		return tform;
-	}
-
-	void onDepthEvent(const cv::Mat& depth_u16)
-	{
-		static int fps = 0;
-		FPS_CALC (fps);
-		boost::mutex::scoped_lock lock (mtx_);
-
-		mat2cloud<ushort>(depth_u16, *cloud_raw_);
-
-		cloud_ = model_;
-
-	//	pcl::io::savePLYFile("kinect.ply", *cloud_);
-	}
-	PointCloudPtr cloud_;
-	PointCloudPtr cloud_raw_;
-	PointCloudPtr cloud_registered_;
-	PointCloudPtr model_;
-
-	Eigen::Matrix4f tform;
-
-	boost::mutex mtx_;
+	vector<Point3f> _vertices; 
+	GlArrays _glCloud;
+	PointCloud<PointXYZ>& _pclCloud;
 };
-
  
 int main(int argc, char** argv)
 {
-	MyKinectDevice device;
+	PCL_INFO("Syntax is %s [-i pcd file]\n", argv[0]);
+
+	PointCloud<PointXYZ> cloud;
+	std::string pcd_file;
+	if (console::parse_argument (argc, argv, "-i", pcd_file) > 0)
+	{
+		PCL_INFO ("Reading %s\n",pcd_file.c_str());		
+		int r = io::loadPCDFile(pcd_file, cloud);
+		if (r <0)
+		{
+			PCL_ERROR("Please specify a valid pcd file\n");
+			return -1;
+		}
+	}
+	else
+	{
+		PCL_ERROR("Please specify a pcd file\n");
+		return -1;
+	}
+
+	PcdViewer renderer(cloud);
 
 	while (true)
 	{
-		//do some rendering
-		::Sleep(30);
+		updateWindow(windowName);
+
+		int key = waitKey(1);
+		if (key == VK_ESCAPE)
+			break;
 	}
+
+	destroyAllWindows();
 
  	return 0;
 }
