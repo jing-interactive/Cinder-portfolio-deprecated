@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 {
 	PCL_INFO("Syntax is %s [pcd file]\n", argv[0]);
 
-	PointCloud<PointXYZ> raw;
+	PointCloudPtr raw(new PointCloudT);
 	std::vector<int> pcd_indices;
 	pcd_indices = pcl::console::parse_file_extension_argument (argc, argv, ".pcd");
 	
@@ -19,7 +19,7 @@ int main(int argc, char** argv)
 	{
 		char* input_pcd = argv[pcd_indices[0]];
 		PCL_INFO ("Reading %s\n",input_pcd);		
-		int r = io::loadPCDFile(input_pcd, raw);
+		int r = io::loadPCDFile(input_pcd, *raw);
 		if (r <0)
 		{
 			PCL_ERROR("Please specify a valid pcd file\n");

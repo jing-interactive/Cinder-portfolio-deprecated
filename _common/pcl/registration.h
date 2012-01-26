@@ -41,7 +41,7 @@ computeInitialAlignment (const PointCloudPtr & source_points, const LocalDescrip
   sac_ia.setInputTarget (target_points);
   sac_ia.setTargetFeatures (target_descriptors);
 
-  PointCloud registration_output;
+  PointCloudT registration_output;
   sac_ia.align (registration_output);
 
   return (sac_ia.getFinalTransformation ());
@@ -79,13 +79,13 @@ refineAlignment (const PointCloudPtr & source_points, const PointCloudPtr & targ
   icp.setTransformationEpsilon (transformation_epsilon);
   icp.setMaximumIterations (max_iterations);
 
-  PointCloudPtr source_points_transformed (new PointCloud);
+  PointCloudPtr source_points_transformed (new PointCloudT);
   pcl::transformPointCloud (*source_points, *source_points_transformed, initial_alignment);
 
   icp.setInputCloud (source_points_transformed);
   icp.setInputTarget (target_points);
 
-  PointCloud registration_output;
+  PointCloudT registration_output;
   icp.align (registration_output);
 
   return (icp.getFinalTransformation () * initial_alignment);

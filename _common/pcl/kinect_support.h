@@ -3,20 +3,22 @@
 #define _KINECT_SUPPORT_H_
 
 #include <opencv2/opencv.hpp>
-#include <pcl/point_types.h>
-#include <pcl/point_cloud.h>
+#include "../vOpenCV/OpenGL.h"
+// #include <pcl/point_types.h>
+// #include <pcl/point_cloud.h>
+#include "pcl.h"
 #include <vector>
 
 const float range_dx = 4400;//mm
 const float range_dy = 3200;//mm
 
 template <typename CvPointType>
-cv::Point3_<CvPointType> to_cv(const pcl::PointXYZ& point)
+cv::Point3_<CvPointType> to_cv(const PointT& point)
 {
 	return cv::Point3_<CvPointType>(point.x, point.y, point.z);
 }
 
-void mat_to_cloud(const cv::Mat& depth_u16, pcl::PointCloud<pcl::PointXYZ>& cloud )
+void mat_to_cloud(const cv::Mat& depth_u16, PointCloudT& cloud )
 {
 	cloud.width = depth_u16.cols;
 	cloud.height = depth_u16.rows;
@@ -33,7 +35,7 @@ void mat_to_cloud(const cv::Mat& depth_u16, pcl::PointCloud<pcl::PointXYZ>& clou
 	}
 }
 
-void cloud_to_points(const pcl::PointCloud<pcl::PointXYZ>& cloud, std::vector<cv::Point3f>& points)
+void cloud_to_points(const PointCloudT& cloud, std::vector<cv::Point3f>& points)
 {
 	points.clear();
 	points.reserve(cloud.width * cloud.height);
@@ -41,7 +43,7 @@ void cloud_to_points(const pcl::PointCloud<pcl::PointXYZ>& cloud, std::vector<cv
 
 	for(int i=0;i<n_points;i++)
 	{
-		const pcl::PointXYZ& p = cloud[i];
+		const PointT& p = cloud[i];
 		points.push_back(cv::Point3f(p.x,p.y,p.z));
 	}
 }
@@ -56,15 +58,15 @@ void cloud_to_points(const pcl::PointCloud<pcl::PointXYZ>& cloud, std::vector<cv
 // 	if (key == VK_ESCAPE)
 // 		break;
 // }
-#define NEW_CLOUD_VIEWER(cloud_ref) new PointCloudViewer(cloud_ref, #cloud_ref)
+#define NEW_CLOUD_VIEWER(cloud_ptr) new PointCloudViewer(cloud_ptr, #cloud_ptr)
 
 struct PointCloudViewer : public cv::I3DRenderer
 {
-	PointCloudViewer(pcl::PointCloud<pcl::PointXYZ>& cloud, const string& name ="CloudViewer", float distance = 20.f)
+	PointCloudViewer(PointCloudPtr cloud, const string& name ="CloudViewer", float distance = 20.f)
 		:cv::I3DRenderer(name),_pclCloud(cloud),_distance(distance)
 	{
-		pcl::PointXYZ min,max;
-		pcl::getMinMax3D(_pclCloud, min, max);
+		PointT min,max;
+		pcl::getMinMax3D(*_pclCloud, min, max);
 		_min = to_cv<double>(min);
 		_max = to_cv<double>(max);
 		_center = (_min + _max)*0.5f;
@@ -94,14 +96,14 @@ struct PointCloudViewer : public cv::I3DRenderer
 		glTranslated(-_center.x,-_center.y,-_center.z);
 		glRotatef(-_sum_mouse_dx, 0,1.0f,0);
 		glRotatef(-_sum_mouse_dy, 1.0f,0,0);
-		cloud_to_points(_pclCloud, _vertices);
+		cloud_to_points(*_pclCloud, _vertices);
 		_glCloud.setVertexArray(_vertices);
 		cv::render(_glCloud, cv::RenderMode::POINTS);
 	}
 
 	std::vector<cv::Point3f> _vertices; 
 	cv::GlArrays _glCloud;
-	pcl::PointCloud<pcl::PointXYZ>& _pclCloud;
+	PointCloudPtr _pclCloud;
 	cv::Point3d _min,_max,_center,_box;
 	float _distance;
 	float _sum_mouse_dx;

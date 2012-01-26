@@ -60,7 +60,7 @@ detectKeypoints (const PointCloudPtr & points, const SurfaceNormalsPtr & normals
 	sift_detect.setInputCloud (points);
 	pcl::PointCloud<pcl::PointWithScale> keypoints_temp;
 	sift_detect.compute (keypoints_temp);
-	PointCloudPtr keypoints (new PointCloud);
+	PointCloudPtr keypoints (new PointCloudT);
 	pcl::copyPointCloud (keypoints_temp, *keypoints);
 
 	return (keypoints);
