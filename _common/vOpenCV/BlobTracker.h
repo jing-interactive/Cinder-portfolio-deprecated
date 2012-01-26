@@ -40,7 +40,7 @@ struct vBlobListener
 // areaScale 	Area = image (width*height)*areaScale.  If contour area < this, delete that contour (DEFAULT: 0.1)
 //
 
-void vFindBlobs(IplImage *src, vector<vBlob>& blobs, int minArea, int maxArea, bool convexHull=true, bool (*sort_func)(const vBlob& a, const vBlob& b)  = NULL);
+void vFindBlobs(IplImage *src, vector<vBlob>& blobs, int minArea = 1, int maxArea = 3072000, bool convexHull=true, bool (*sort_func)(const vBlob& a, const vBlob& b)  = NULL);
 
 void vFindBlobs(IplImage *mask,
 				int minArea = 1, int maxArea = 3072000, bool convexHull=true);//draw trackedBlobs only
