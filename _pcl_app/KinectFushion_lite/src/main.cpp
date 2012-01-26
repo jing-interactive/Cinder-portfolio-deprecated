@@ -9,42 +9,26 @@
 #include "../../_common/pcl/registration.h"
 #include "../../_common/pcl/feature_estimation.h"
 
+#include "../../_common/pcl/kinect_support.h"
+
 #include <windows.h>
 
-template <typename type>
-void mat2cloud(const cv::Mat& depth, PointCloud& cloud )
-{
-	cloud.width = depth.cols;
-	cloud.height = depth.rows;
-	cloud.resize(cloud.width*cloud.height);
-	cloud.is_dense = true;
-
-	cv::Mat_<type> M(depth);
-	for(int j = 0; j < M.cols; j++)
-		for(int i = 0; i < M.rows; i++)
-	{
-		cloud(j,i).x = 4400/320.0f*j;
-		cloud(j,i).y = 3200/240.0f*i;
-		cloud(j,i).z = M(i,j);
-	}
-}
-
-struct MyKinectDevice : public KinectDevice
+struct KinectFushionApp : public KinectDevice
 { 
-	MyKinectDevice()
+	KinectFushionApp()
 		:KinectDevice(0)
 	{
 		setup(false, true, false);
 
-		cloud_ = PointCloudPtr(new PointCloud);
-		cloud_raw_ = PointCloudPtr(new PointCloud);
-		cloud_registered_ = PointCloudPtr(new PointCloud);
-		model_ = PointCloudPtr(new PointCloud);
+		cloud_ = PointCloudRgbPtr(new PointCloudRgb);
+		cloud_raw_ = PointCloudRgbPtr(new PointCloudRgb);
+		cloud_registered_ = PointCloudRgbPtr(new PointCloudRgb);
+		model_ = PointCloudRgbPtr(new PointCloudRgb);
 
 		tform = Eigen::Matrix4f::Identity();
 	}
 
-	void compute_features(PointCloudPtr cloud, PointCloudPtr keypoints, LocalDescriptorsPtr local_descriptors)
+	void compute_features(PointCloudRgbPtr cloud, PointCloudRgbPtr keypoints, LocalDescriptorsPtr local_descriptors)
 	{
 		// Estimate surface normals
 		float surface_radius = 0.03;
@@ -70,9 +54,9 @@ struct MyKinectDevice : public KinectDevice
 // 		PCL_INFO ("Computed global descriptor\n");
 	}
 
-	Eigen::Matrix4f initial_alignment(PointCloudPtr src_points, PointCloudPtr dst_points)
+	Eigen::Matrix4f initial_alignment(PointCloudRgbPtr src_points, PointCloudRgbPtr dst_points)
 	{ // Compute the intial alignment
-		PointCloudPtr keypoints[2];
+		PointCloudRgbPtr keypoints[2];
 		LocalDescriptorsPtr local_descriptors[2];
 		compute_features(src_points, keypoints[0], local_descriptors[0]);
 		compute_features(dst_points, keypoints[1], local_descriptors[1]);
@@ -88,7 +72,7 @@ struct MyKinectDevice : public KinectDevice
 		return tform;
 	}
 
-	Eigen::Matrix4f icp_alignment(PointCloudPtr src_points, PointCloudPtr dst_points, Eigen::Matrix4f& tform)
+	Eigen::Matrix4f icp_alignment(PointCloudRgbPtr src_points, PointCloudRgbPtr dst_points, Eigen::Matrix4f& tform)
 	{// Refine the initial alignment
 		float max_correspondence_distance = 0.05;
 		float outlier_rejection_threshold = 0.05;
@@ -112,37 +96,54 @@ struct MyKinectDevice : public KinectDevice
 		return tform;
 	}
 
-	void onDepthEvent(const cv::Mat& depth_u16)
+	void onDepthData(const cv::Mat& depth_u16)
 	{
 		static int fps = 0;
 		FPS_CALC (fps);
 		boost::mutex::scoped_lock lock (mtx_);
 
-		mat2cloud<ushort>(depth_u16, *cloud_raw_);
+		mat_to_cloud(depth_u16, *cloud_raw_);
+
+		if (_raw_viewer.empty())
+		{
+			_raw_viewer = NEW_XYZRGB_CLOUD_VIEWER(cloud_raw_);
+		}
+		else
+		{
+		//	_raw_viewer->update();
+		}
 
 		cloud_ = model_;
 
 	//	pcl::io::savePLYFile("kinect.ply", *cloud_);
 	}
-	PointCloudPtr cloud_;
-	PointCloudPtr cloud_raw_;
-	PointCloudPtr cloud_registered_;
-	PointCloudPtr model_;
+	PointCloudRgbPtr cloud_;
+	PointCloudRgbPtr cloud_raw_;
+	PointCloudRgbPtr cloud_registered_;
+	PointCloudRgbPtr model_;
 
 	Eigen::Matrix4f tform;
 
 	boost::mutex mtx_;
+
+	//OpenGL
+	cv::Ptr<PointCloudViewer<pcl::PointXYZRGB> > _raw_viewer;
+	cv::Ptr<PointCloudViewer<pcl::PointXYZRGB> > _icp_viewer;
 };
 
  
 int main(int argc, char** argv)
 {
-	MyKinectDevice device;
+	KinectFushionApp fushion;
 
 	while (true)
 	{
-		//do some rendering
-		::Sleep(30);
+		if (!fushion._raw_viewer.empty())
+			fushion._raw_viewer->update();
+
+		int key = cv::waitKey(1);
+		if (key == VK_ESCAPE)
+			break;
 	}
 
  	return 0;

@@ -17,9 +17,9 @@ typedef pcl::PointCloud<PointT>::ConstPtr PointCloudConstPtr;
 
 // Define "PointCloud" to be a pcl::PointCloud of pcl::PointXYZRGB points
 typedef pcl::PointXYZRGB PointRgb;
-typedef pcl::PointCloud<PointT> PointCloudRrb;
-typedef pcl::PointCloud<PointT>::Ptr PointCloudRgbPtr;
-typedef pcl::PointCloud<PointT>::ConstPtr PointCloudRgbConstPtr;
+typedef pcl::PointCloud<PointRgb> PointCloudRgb;
+typedef pcl::PointCloud<PointRgb>::Ptr PointCloudRgbPtr;
+typedef pcl::PointCloud<PointRgb>::ConstPtr PointCloudRgbConstPtr;
 
 // Define "SurfaceNormals" to be a pcl::PointCloud of pcl::Normal points
 typedef pcl::Normal NormalT;

@@ -10,7 +10,7 @@
 #include "pcl/features/vfh.h"
 #include "pcl/search/kdtree.h"
 
-static pcl::search::KdTree<PointT>::Ptr search_method (new pcl::search::KdTree<PointT>);
+static pcl::search::KdTree<PointRgb>::Ptr search_method (new pcl::search::KdTree<PointRgb>);
 
 /* Use NormalEstimation to estimate a cloud's surface normals 
 * Inputs:
@@ -21,9 +21,9 @@ static pcl::search::KdTree<PointT>::Ptr search_method (new pcl::search::KdTree<P
 * Return: A pointer to a SurfaceNormals point cloud
 */
 SurfaceNormalsPtr
-estimateSurfaceNormals (const PointCloudPtr & input, float radius)
+estimateSurfaceNormals (const PointCloudRgbPtr & input, float radius)
 { 
-	pcl::NormalEstimation<PointT, NormalT> normal_estimation; 
+	pcl::NormalEstimation<PointRgb, NormalT> normal_estimation; 
 	normal_estimation.setSearchMethod (search_method);
 	normal_estimation.setRadiusSearch (radius);
 	normal_estimation.setInputCloud (input);
@@ -49,18 +49,18 @@ estimateSurfaceNormals (const PointCloudPtr & input, float radius)
 *     The minimum local contrast that must be present for a keypoint to be detected
 * Return: A pointer to a point cloud of keypoints
 */
-PointCloudPtr
-detectKeypoints (const PointCloudPtr & points, const SurfaceNormalsPtr & normals,
+PointCloudRgbPtr
+detectKeypoints (const PointCloudRgbPtr & points, const SurfaceNormalsPtr & normals,
 				 float min_scale, int nr_octaves, int nr_scales_per_octave, float min_contrast)
 {
-	pcl::SIFTKeypoint<PointT, pcl::PointWithScale> sift_detect;
+	pcl::SIFTKeypoint<PointRgb, pcl::PointWithScale> sift_detect;
 	sift_detect.setSearchMethod (search_method);
 	sift_detect.setScales (min_scale, nr_octaves, nr_scales_per_octave);
 	sift_detect.setMinimumContrast (min_contrast);
 	sift_detect.setInputCloud (points);
 	pcl::PointCloud<pcl::PointWithScale> keypoints_temp;
 	sift_detect.compute (keypoints_temp);
-	PointCloudPtr keypoints (new PointCloudT);
+	PointCloudRgbPtr keypoints (new PointCloudRgb);
 	pcl::copyPointCloud (keypoints_temp, *keypoints);
 
 	return (keypoints);
@@ -79,10 +79,10 @@ detectKeypoints (const PointCloudPtr & points, const SurfaceNormalsPtr & normals
 * Return: A pointer to a LocalDescriptors (a cloud of LocalDescriptorT points)
 */
 LocalDescriptorsPtr
-computeLocalDescriptors (const PointCloudPtr & points, const SurfaceNormalsPtr & normals, 
-						 const PointCloudPtr & keypoints, float feature_radius)
+computeLocalDescriptors (const PointCloudRgbPtr & points, const SurfaceNormalsPtr & normals, 
+						 const PointCloudRgbPtr & keypoints, float feature_radius)
 {
-	pcl::FPFHEstimation<PointT, NormalT, LocalDescriptorT> fpfh_estimation;
+	pcl::FPFHEstimation<PointRgb, NormalT, LocalDescriptorT> fpfh_estimation;
 	fpfh_estimation.setSearchMethod (search_method);
 	fpfh_estimation.setRadiusSearch (feature_radius);
 	fpfh_estimation.setSearchSurface (points);  
@@ -103,9 +103,9 @@ computeLocalDescriptors (const PointCloudPtr & points, const SurfaceNormalsPtr &
 * Return: A pointer to a GlobalDescriptors point cloud (a cloud containing a single GlobalDescriptorT point)
 */
 GlobalDescriptorsPtr
-computeGlobalDescriptor (const PointCloudPtr & points, const SurfaceNormalsPtr & normals)
+computeGlobalDescriptor (const PointCloudRgbPtr & points, const SurfaceNormalsPtr & normals)
 {
-	pcl::VFHEstimation<PointT, NormalT, GlobalDescriptorT> vfh_estimation;
+	pcl::VFHEstimation<PointRgb, NormalT, GlobalDescriptorT> vfh_estimation;
 	vfh_estimation.setSearchMethod(search_method);
 	vfh_estimation.setInputCloud (points);
 	vfh_estimation.setInputNormals (normals);
@@ -118,9 +118,9 @@ computeGlobalDescriptor (const PointCloudPtr & points, const SurfaceNormalsPtr &
 /* A simple structure for storing all of a cloud's features */
 struct ObjectFeatures
 {
-	PointCloudPtr points;
+	PointCloudRgbPtr points;
 	SurfaceNormalsPtr normals;
-	PointCloudPtr keypoints;
+	PointCloudRgbPtr keypoints;
 	LocalDescriptorsPtr local_descriptors;
 	GlobalDescriptorsPtr global_descriptor;
 };
@@ -129,7 +129,7 @@ struct ObjectFeatures
 * Return: An ObjectFeatures struct containing all the features
 */
 ObjectFeatures
-computeFeatures (const PointCloudPtr & input)
+computeFeatures (const PointCloudRgbPtr & input)
 {
 	ObjectFeatures features;
 	features.points = input;

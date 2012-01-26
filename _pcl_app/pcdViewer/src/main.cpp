@@ -32,7 +32,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	Ptr<PointCloudViewer> renderer = NEW_CLOUD_VIEWER(raw);
+	Ptr<PointCloudViewer<PointT> > renderer = NEW_XYZ_CLOUD_VIEWER(raw);
 
 	while (true)
 	{

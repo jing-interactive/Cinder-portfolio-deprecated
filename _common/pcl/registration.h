@@ -26,11 +26,11 @@
  * Return: A transformation matrix that will roughly align the points in source to the points in target
  */
 Eigen::Matrix4f
-computeInitialAlignment (const PointCloudPtr & source_points, const LocalDescriptorsPtr & source_descriptors,
-                         const PointCloudPtr & target_points, const LocalDescriptorsPtr & target_descriptors,
+computeInitialAlignment (const PointCloudRgbPtr & source_points, const LocalDescriptorsPtr & source_descriptors,
+                         const PointCloudRgbPtr & target_points, const LocalDescriptorsPtr & target_descriptors,
                          float min_sample_distance, float max_correspondence_distance, int nr_iterations)
 {
-  pcl::SampleConsensusInitialAlignment<PointT, PointT, LocalDescriptorT> sac_ia;
+  pcl::SampleConsensusInitialAlignment<PointRgb, PointRgb, LocalDescriptorT> sac_ia;
   sac_ia.setMinSampleDistance (min_sample_distance);
   sac_ia.setMaxCorrespondenceDistance (max_correspondence_distance);
   sac_ia.setMaximumIterations (nr_iterations);
@@ -41,7 +41,7 @@ computeInitialAlignment (const PointCloudPtr & source_points, const LocalDescrip
   sac_ia.setInputTarget (target_points);
   sac_ia.setTargetFeatures (target_descriptors);
 
-  PointCloudT registration_output;
+  PointCloudRgb registration_output;
   sac_ia.align (registration_output);
 
   return (sac_ia.getFinalTransformation ());
@@ -68,24 +68,24 @@ computeInitialAlignment (const PointCloudPtr & source_points, const LocalDescrip
  * Return: A transformation matrix that will precisely align the points in source to the points in target
  */
 Eigen::Matrix4f
-refineAlignment (const PointCloudPtr & source_points, const PointCloudPtr & target_points, 
+refineAlignment (const PointCloudRgbPtr & source_points, const PointCloudRgbPtr & target_points, 
                  const Eigen::Matrix4f& initial_alignment, float max_correspondence_distance,
                  float outlier_rejection_threshold, float transformation_epsilon, float max_iterations)
 {
 
-  pcl::IterativeClosestPoint<PointT, PointT> icp;
+  pcl::IterativeClosestPoint<PointRgb, PointRgb> icp;
   icp.setMaxCorrespondenceDistance (max_correspondence_distance);
   icp.setRANSACOutlierRejectionThreshold (outlier_rejection_threshold);
   icp.setTransformationEpsilon (transformation_epsilon);
   icp.setMaximumIterations (max_iterations);
 
-  PointCloudPtr source_points_transformed (new PointCloudT);
+  PointCloudRgbPtr source_points_transformed (new PointCloudRgb);
   pcl::transformPointCloud (*source_points, *source_points_transformed, initial_alignment);
 
   icp.setInputCloud (source_points_transformed);
   icp.setInputTarget (target_points);
 
-  PointCloudT registration_output;
+  PointCloudRgb registration_output;
   icp.align (registration_output);
 
   return (icp.getFinalTransformation () * initial_alignment);
