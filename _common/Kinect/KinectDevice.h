@@ -118,6 +118,8 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	//basic callbacks
 	//called when depth stream comes, which stored at cv::Mat& depth_u16
+    //A depth data value of 0 indicates that no depth data is available at that position because all the objects 
+    //were either too close to the camera or too far away from it.
 	virtual void onDepthData(const cv::Mat& depth_u16){}
 
 	//called when rgb stream comes, which stored at cv::Mat& rgb
@@ -301,6 +303,8 @@ void KinectDevice::Nui_GotDepthAlert( )
 		int i=0;
 		for( int i =0;i<DEPTH_WIDTH*DEPTH_HEIGHT;i++,pBufferRun++,pRaw++)
 		{ 
+            //The low-order 3 bits (bits 0-2) contain the skeleton (player) ID.
+            //The high-order bits (bits 3¨C15) contain the depth value in millimeters. 
 			cv::Scalar_<uchar> quad = Nui_ShortToQuad_Depth( *pBufferRun );
 
 			pixels[i*3+0] = quad.val[0];

@@ -3,12 +3,15 @@
 
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
+#include <pcl/console/parse.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/common/common.h>
 
 /* Define some custom types to make the rest of our code easier to read */
 
 // Define "PointCloud" to be a pcl::PointCloud of pcl::PointXYZRGB points
 typedef pcl::PointXYZRGB PointT;
-typedef pcl::PointCloud<PointT> PointCloud;
+typedef pcl::PointCloud<PointT> PointCloudXYZ;
 typedef pcl::PointCloud<PointT>::Ptr PointCloudPtr;
 typedef pcl::PointCloud<PointT>::ConstPtr PointCloudConstPtr;
 

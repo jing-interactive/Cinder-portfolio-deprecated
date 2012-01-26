@@ -15,9 +15,3 @@
 #pragma comment(lib, "pcl_search.lib")
 #pragma comment(lib, "pcl_filters.lib")
 #endif
-
-#ifdef _DEBUG
-#pragma comment(lib, "opencv_core232d.lib")
-#else
-#pragma comment(lib, "opencv_core232.lib")
-#endif

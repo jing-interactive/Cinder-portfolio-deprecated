@@ -166,11 +166,15 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\src\main.cpp"
+			RelativePath="main.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\_common\pcl\pcl.h"
+			RelativePath="..\..\..\_common\pcl\pcl.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\..\_common\pcl\pcl.h"
 			>
 		</File>
 	</Files>
