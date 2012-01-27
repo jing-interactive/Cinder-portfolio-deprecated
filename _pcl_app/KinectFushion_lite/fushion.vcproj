@@ -190,6 +190,18 @@
 			</File>
 		</Filter>
 		<File
+			RelativePath=".\src\Fushion.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\src\Fushion.h"
+			>
+		</File>
+		<File
+			RelativePath=".\src\Fushion.onDepthData.cpp"
+			>
+		</File>
+		<File
 			RelativePath="..\..\_common\pcl\kinect_support.h"
 			>
 		</File>

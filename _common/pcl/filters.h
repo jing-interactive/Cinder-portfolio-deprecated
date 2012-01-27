@@ -8,57 +8,45 @@
 #include "pcl.h"
 
 /* Use a PassThrough filter to remove points with depth values that are too large or too small */
-PointCloudRgbPtr
-thresholdDepth (const PointCloudRgbPtr & input, float min_depth, float max_depth)
+void
+thresholdDepth (const PointCloudRgbPtr & input, PointCloudRgbPtr& output, float min_depth, float max_depth)
 {
   pcl::PassThrough<PointRgb> pass_through;
   pass_through.setInputCloud (input);
   pass_through.setFilterFieldName ("z");
-  pass_through.setFilterLimits (min_depth, max_depth);
-  PointCloudRgbPtr thresholded (new PointCloudRgb);
-  pass_through.filter (*thresholded);
-
-  return (thresholded);
+  pass_through.setFilterLimits (min_depth, max_depth); 
+  pass_through.filter (*output);
 }
 
 /* Use a VoxelGrid filter to reduce the number of points */
-PointCloudRgbPtr
-downsample (const PointCloudRgbPtr & input, float leaf_size)
+void
+downsample (const PointCloudRgbPtr & input, PointCloudRgbPtr& output, float leaf_size)
 {
   pcl::VoxelGrid<PointRgb> voxel_grid;
   voxel_grid.setInputCloud (input);
   voxel_grid.setLeafSize (leaf_size, leaf_size, leaf_size);
-  PointCloudRgbPtr downsampled (new PointCloudRgb);
-  voxel_grid.filter (*downsampled);
-
-  return (downsampled);
+  voxel_grid.filter (*output);
 }
 
 /* Use a RadiusOutlierRemoval filter to remove all points with too few local neighbors */
-PointCloudRgbPtr
-removeOutliers (const PointCloudRgbPtr & input, float radius, int min_neighbors)
+void
+removeOutliers (const PointCloudRgbPtr & input, PointCloudRgbPtr& output, float radius, int min_neighbors)
 {
   pcl::RadiusOutlierRemoval<PointRgb> radius_outlier_removal;
   radius_outlier_removal.setInputCloud (input);
   radius_outlier_removal.setRadiusSearch (radius);
   radius_outlier_removal.setMinNeighborsInRadius (min_neighbors);
-  PointCloudRgbPtr inliers (new PointCloudRgb);
-  radius_outlier_removal.filter (*inliers);
-
-  return (inliers);
+  radius_outlier_removal.filter (*output);
 }
 
 /* Apply a series of filters (threshold depth, downsample, and remove outliers) */
-PointCloudRgbPtr
-applyFilters (const PointCloudRgbPtr & input, float min_depth, float max_depth, float leaf_size, float radius, 
+void
+applyFilters (const PointCloudRgbPtr & input, PointCloudRgbPtr& output, float min_depth, float max_depth, float leaf_size, float radius, 
               float min_neighbors)
 {
-  PointCloudRgbPtr filtered;
-  filtered = thresholdDepth (input, min_depth, max_depth);
-  filtered = downsample (filtered, leaf_size);
-  filtered = removeOutliers (filtered, radius, min_neighbors);
-
-  return (filtered);
+  thresholdDepth (input, output, min_depth, max_depth);
+  downsample (output, output, leaf_size);
+  removeOutliers (output, output, radius, min_neighbors);
 }
 
 #endif

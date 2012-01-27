@@ -70,15 +70,17 @@ struct PointCloudViewer : public cv::I3DRenderer
 {
  	typedef typename pcl::PointCloud<PointType>::Ptr TheCloudPtr;
 
-	PointCloudViewer(TheCloudPtr cloud, const string& name ="CloudViewer", int w = 640, int h = 480, float distance = 20.f)
-		:cv::I3DRenderer(name,w,h),_pclCloud(cloud),_distance(distance)
+	PointCloudViewer(const TheCloudPtr& cloud, const string& name ="CloudViewer", int w = 640, int h = 480, float distance = 20.f)
+		:cv::I3DRenderer(name,w,h),_distance(distance)
 	{
 		PointType min,max;
-		pcl::getMinMax3D(*_pclCloud, min, max);
+		pcl::getMinMax3D(*cloud, min, max);
 		_min = to_cv<double>(min);
 		_max = to_cv<double>(max);
 		_center = (_min + _max)*0.5f;
 		_box = _max - _min;
+
+		setInputCloud(cloud);
 
 		_sum_mouse_dx = _sum_mouse_dy = 0;
 	}
@@ -91,8 +93,16 @@ struct PointCloudViewer : public cv::I3DRenderer
 		}
 	}
 
+	void setInputCloud(const TheCloudPtr& cloud)
+	{
+		cloud_to_points(*cloud, _vertices);
+	}
+
 	void draw()
 	{
+		if (_vertices.empty())
+			return;
+
 		_sum_mouse_dx += _mouse_dx*0.1f;
 		_sum_mouse_dy += _mouse_dy*0.1f;
 
@@ -104,14 +114,12 @@ struct PointCloudViewer : public cv::I3DRenderer
 		glTranslated(-_center.x,-_center.y,-_center.z);
 		glRotatef(-_sum_mouse_dx, 0,1.0f,0);
 		glRotatef(-_sum_mouse_dy, 1.0f,0,0);
-		cloud_to_points(*_pclCloud, _vertices);
 		_glCloud.setVertexArray(_vertices);
 		cv::render(_glCloud, cv::RenderMode::POINTS);
 	}
 
 	std::vector<cv::Point3f> _vertices; 
 	cv::GlArrays _glCloud;
-	TheCloudPtr _pclCloud;
 	cv::Point3d _min,_max,_center,_box;
 	float _distance;
 	float _sum_mouse_dx;
