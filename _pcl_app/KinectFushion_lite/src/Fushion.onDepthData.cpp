@@ -1,5 +1,7 @@
 #include "Fushion.h"
 #include "../../_common/pcl/filters.h"
+#include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/surface/mls.h>
 
 #define PARAM_WINDOW "param_panel"
 
@@ -14,12 +16,12 @@ bool KinectFushionApp::setup()
 	_evt.wait();
 	boost::mutex::scoped_lock lock (_mtx);
 	{
-		_raw_viewer = NEW_XYZRGB_CLOUD_VIEWER_SMALL(_cloud_raw);
-		_raw_viewer->_distance = 10;
+		_raw_viewer = NEW_XYZRGB_CLOUD_VIEWER(_cloud_raw);
+		_raw_viewer->_distance = 7;
 		_raw_viewer->_far = 100000;
 
-		_icp_viewer = NEW_XYZRGB_CLOUD_VIEWER_SMALL(_cloud_registered);
-		_icp_viewer->_distance = 10;
+		_icp_viewer = NEW_XYZRGB_CLOUD_VIEWER(_cloud_registered);
+		_icp_viewer->_distance = 7;
 		_icp_viewer->_far = 100000;
 
 		cv::createTrackbar("near", PARAM_WINDOW, &_thresh_near, 100);
