@@ -22,6 +22,11 @@ namespace cv
 class I3DRenderer
 {
 public:
+
+	float _near;
+	float _far;
+	float _fov;
+
 	I3DRenderer(const string& title, int w=800,int h = 600):_window_name(title)
 	{ 
 		namedWindow(title, WINDOW_OPENGL);
@@ -109,9 +114,6 @@ private:
 		}
 	}
 protected:
-	float _near;
-	float _far;
-	float _fov;
 	GlCamera _camera;
 	string _window_name;
 	int _mouse_dx;

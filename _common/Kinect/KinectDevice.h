@@ -572,12 +572,9 @@ HRESULT KinectDevice::setup(bool isColor, bool isDepth, bool isSkeleton)
 	renderedDepth.create(cv::Size(DEPTH_WIDTH,DEPTH_HEIGHT), CV_8UC3);
 	rawDepth.create(cv::Size(DEPTH_WIDTH,DEPTH_HEIGHT), CV_16UC1);
 
-	evt_nextRgb = CreateEvent( NULL, TRUE, FALSE, NULL );
-	evt_nextDepth = CreateEvent( NULL, TRUE, FALSE, NULL );
-	evt_nextSkeleton = CreateEvent( NULL, TRUE, FALSE, NULL );
-
 	if (isColor)
 	{
+		evt_nextRgb = CreateEvent( NULL, TRUE, FALSE, NULL );
 		hr = m_pNuiInstance->NuiImageStreamOpen(
 			NUI_IMAGE_TYPE_COLOR,
 			NUI_IMAGE_RESOLUTION_640x480,
@@ -596,6 +593,7 @@ HRESULT KinectDevice::setup(bool isColor, bool isDepth, bool isSkeleton)
 
 	if (isDepth)
 	{
+		evt_nextDepth = CreateEvent( NULL, TRUE, FALSE, NULL );
 		hr = m_pNuiInstance->NuiImageStreamOpen(
 			HasSkeletalEngine(m_pNuiInstance) ? NUI_IMAGE_TYPE_DEPTH_AND_PLAYER_INDEX : NUI_IMAGE_TYPE_DEPTH,
 			NUI_IMAGE_RESOLUTION_320x240,
@@ -614,6 +612,7 @@ HRESULT KinectDevice::setup(bool isColor, bool isDepth, bool isSkeleton)
 
 	if (isSkeleton && HasSkeletalEngine(m_pNuiInstance))
 	{
+		evt_nextSkeleton = CreateEvent( NULL, TRUE, FALSE, NULL );
 		hr = m_pNuiInstance->NuiSkeletonTrackingEnable( evt_nextSkeleton, 0 );
 		if( FAILED( hr ) )
 		{

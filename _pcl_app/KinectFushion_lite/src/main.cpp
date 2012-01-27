@@ -1,31 +1,52 @@
 #include <boost/thread/thread.hpp>
 #include <pcl/common/time.h>
-#include <pcl/filters/approximate_voxel_grid.h>
 #include <pcl/io/ply_io.h>
-#include <pcl/registration/registration.h> 
 
 #include "../../_common/Kinect/KinectDevice.h"
 #include "../../_common/pcl/pcl.h"
 #include "../../_common/pcl/registration.h"
 #include "../../_common/pcl/feature_estimation.h"
+#include "../../_common/pcl/filters.h"
 
 #include "../../_common/pcl/kinect_support.h"
 
-#include <windows.h>
-
 struct KinectFushionApp : public KinectDevice
 { 
+	bool exit;
+
 	KinectFushionApp()
 		:KinectDevice(0)
 	{
-		setup(false, true, false);
+		exit = false;
 
-		cloud_ = PointCloudRgbPtr(new PointCloudRgb);
-		cloud_raw_ = PointCloudRgbPtr(new PointCloudRgb);
-		cloud_registered_ = PointCloudRgbPtr(new PointCloudRgb);
-		model_ = PointCloudRgbPtr(new PointCloudRgb);
+		_cloud = PointCloudRgbPtr(new PointCloudRgb);
+		_cloud_raw = PointCloudRgbPtr(new PointCloudRgb);
+		_cloud_registered = PointCloudRgbPtr(new PointCloudRgb);
+		_model = PointCloudRgbPtr(new PointCloudRgb);
 
 		tform = Eigen::Matrix4f::Identity();
+	}
+
+	bool setup()
+	{
+		HRESULT hr = KinectDevice::setup(false, true, false);
+		if (FAILED(hr))
+			return false;
+
+		//wait
+		_evt.wait();
+		boost::mutex::scoped_lock lock (_mtx);
+		{
+			_raw_viewer = NEW_XYZRGB_CLOUD_VIEWER_SMALL(_cloud_raw);
+			_raw_viewer->_distance = 10;
+			_raw_viewer->_far = 100000;
+
+			_icp_viewer = NEW_XYZRGB_CLOUD_VIEWER_SMALL(_cloud_registered);
+			_icp_viewer->_distance = 10;
+			_icp_viewer->_far = 100000;
+		}
+
+		return true;
 	}
 
 	void compute_features(PointCloudRgbPtr cloud, PointCloudRgbPtr keypoints, LocalDescriptorsPtr local_descriptors)
@@ -98,53 +119,65 @@ struct KinectFushionApp : public KinectDevice
 
 	void onDepthData(const cv::Mat& depth_u16)
 	{
+		if (exit)
+			return;
+
 		static int fps = 0;
 		FPS_CALC (fps);
-		boost::mutex::scoped_lock lock (mtx_);
-
-		mat_to_cloud(depth_u16, *cloud_raw_);
+		 
+		boost::mutex::scoped_lock lock (_mtx);
+		{
+			mat_to_cloud(depth_u16, *_cloud_raw);
+			_cloud_registered = thresholdDepth(_cloud_raw, 1000,2000);
+		}
 
 		if (_raw_viewer.empty())
 		{
-			_raw_viewer = NEW_XYZRGB_CLOUD_VIEWER(cloud_raw_);
+			_evt.set();
 		}
 		else
 		{
-		//	_raw_viewer->update();
+			_raw_viewer->update();
+			_icp_viewer->update();
+
+			_icp_viewer->_sum_mouse_dx = _raw_viewer->_sum_mouse_dx;
+			_icp_viewer->_sum_mouse_dy = _raw_viewer->_sum_mouse_dy;
 		}
 
-		cloud_ = model_;
+		_cloud = _model;
 
-	//	pcl::io::savePLYFile("kinect.ply", *cloud_);
+	//	pcl::io::savePLYFile("kinect_raw.ply", *_cloud_raw);
+	//	pcl::io::savePLYFile("kinect_reg.ply", *_cloud_registered);
 	}
-	PointCloudRgbPtr cloud_;
-	PointCloudRgbPtr cloud_raw_;
-	PointCloudRgbPtr cloud_registered_;
-	PointCloudRgbPtr model_;
+	PointCloudRgbPtr _cloud;
+	PointCloudRgbPtr _cloud_raw;
+	PointCloudRgbPtr _cloud_registered;
+	PointCloudRgbPtr _model;
 
 	Eigen::Matrix4f tform;
 
-	boost::mutex mtx_;
+	boost::mutex _mtx;
+	CSimpleEvent _evt;
 
 	//OpenGL
 	cv::Ptr<PointCloudViewer<pcl::PointXYZRGB> > _raw_viewer;
 	cv::Ptr<PointCloudViewer<pcl::PointXYZRGB> > _icp_viewer;
 };
 
- 
+
 int main(int argc, char** argv)
 {
 	KinectFushionApp fushion;
+	if (!fushion.setup())
+		return -1;
 
 	while (true)
 	{
-		if (!fushion._raw_viewer.empty())
-			fushion._raw_viewer->update();
-
 		int key = cv::waitKey(1);
 		if (key == VK_ESCAPE)
 			break;
 	}
+	fushion.exit = true;
 
  	return 0;
 }

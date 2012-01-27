@@ -190,6 +190,10 @@
 			</File>
 		</Filter>
 		<File
+			RelativePath="..\..\_common\pcl\kinect_support.h"
+			>
+		</File>
+		<File
 			RelativePath=".\src\main.cpp"
 			>
 		</File>

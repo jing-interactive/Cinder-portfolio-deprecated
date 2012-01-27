@@ -30,8 +30,8 @@ void mat_to_cloud(const cv::Mat& depth_u16, pcl::PointCloud<PointType>& cloud )
 	for(int j = 0; j < M.cols; j++)
 		for(int i = 0; i < M.rows; i++)
 	{
-		cloud(j,i).x = range_dx/320.0f*i/*-range_dx*0.5f*/;
-		cloud(j,i).y = range_dy/240.0f*j/*-range_dy*0.5f*/;
+		cloud(j,i).x = range_dx/320.0f*i-range_dx*0.5f;
+		cloud(j,i).y = range_dy/240.0f*j-range_dy*0.5f;
 		cloud(j,i).z = M(i,j);
 	}
 }
@@ -62,14 +62,16 @@ void cloud_to_points(const pcl::PointCloud<PointType>& cloud, std::vector<cv::Po
 // }
 #define NEW_XYZ_CLOUD_VIEWER(cloud_ptr) new PointCloudViewer<pcl::PointXYZ>(cloud_ptr, #cloud_ptr)
 #define NEW_XYZRGB_CLOUD_VIEWER(cloud_ptr) new PointCloudViewer<pcl::PointXYZRGB>(cloud_ptr, #cloud_ptr)
+#define NEW_XYZ_CLOUD_VIEWER_SMALL(cloud_ptr) new PointCloudViewer<pcl::PointXYZ>(cloud_ptr, #cloud_ptr, 400, 300)
+#define NEW_XYZRGB_CLOUD_VIEWER_SMALL(cloud_ptr) new PointCloudViewer<pcl::PointXYZRGB>(cloud_ptr, #cloud_ptr, 400, 300)
 
 template <typename PointType>
 struct PointCloudViewer : public cv::I3DRenderer
 {
  	typedef typename pcl::PointCloud<PointType>::Ptr TheCloudPtr;
 
-	PointCloudViewer(TheCloudPtr cloud, const string& name ="CloudViewer", float distance = 20.f)
-		:cv::I3DRenderer(name),_pclCloud(cloud),_distance(distance)
+	PointCloudViewer(TheCloudPtr cloud, const string& name ="CloudViewer", int w = 640, int h = 480, float distance = 20.f)
+		:cv::I3DRenderer(name,w,h),_pclCloud(cloud),_distance(distance)
 	{
 		PointType min,max;
 		pcl::getMinMax3D(*_pclCloud, min, max);
@@ -98,7 +100,7 @@ struct PointCloudViewer : public cv::I3DRenderer
 		_camera.setScale(cv::Point3d(5,5,5));
 		_camera.setupProjectionMatrix();
 		_camera.setupModelViewMatrix();
-		glPointSize(4);
+		//glPointSize(4);
 		glTranslated(-_center.x,-_center.y,-_center.z);
 		glRotatef(-_sum_mouse_dx, 0,1.0f,0);
 		glRotatef(-_sum_mouse_dy, 1.0f,0,0);
