@@ -6,8 +6,8 @@
 //
 
 #include <opencv2/opencv.hpp>
-#include "../../_common/Kinect/KinectDevice.h"
-#include "../../_common/vOpenCV/OpenGL.h"
+#include "../../../_common/Kinect/KinectDevice.h"
+#include "../../../_common/vOpenCV/OpenGL.h"
 
 using namespace cv;
 
