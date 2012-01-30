@@ -82,3 +82,5 @@ cinder_0.8.3_vc2008
 /_PCL/VS2008/lib/pcl_segmentation-gd.lib
 /_PCL/VS2008/lib/pcl_surface-gd.exp
 /_PCL/VS2008/lib/pcl_surface-gd.lib
+/NghiaAR/Debug
+/NghiaAR/Release
