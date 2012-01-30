@@ -39,6 +39,8 @@ using std::map;
  
 void vFlip(CvArr* src, int flipX, int flipY);
 
+void FindBlobs(const cv::Mat &binary, vector < vector<cv::Point2i>  > &blobs);
+
 template<class T> class Image
 {
 private:
