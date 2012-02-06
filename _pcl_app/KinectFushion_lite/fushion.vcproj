@@ -176,16 +176,13 @@
 				RelativePath="..\..\..\_CRE_\_common\Kinect\MSRKinectNUI.lib"
 				>
 			</File>
+			</File>
 			<File
-				RelativePath="..\..\_common\ofxThread.cpp"
+				RelativePath="..\..\_common\MiniThread.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\_common\ofxThread.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\_common\SimpleMutex.h"
+				RelativePath="..\..\_common\MiniMutex.h"
 				>
 			</File>
 		</Filter>

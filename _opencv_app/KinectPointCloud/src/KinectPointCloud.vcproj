@@ -176,12 +176,9 @@
 				RelativePath="..\..\..\_common\Kinect\MSRKinectNUI.lib"
 				>
 			</File>
-			<File
-				RelativePath="..\..\..\_common\ofxThread.cpp"
-				>
 			</File>
 			<File
-				RelativePath="..\..\..\_common\ofxThread.h"
+				RelativePath="..\..\..\_common\MiniThread.h"
 				>
 			</File>
 		</Filter>

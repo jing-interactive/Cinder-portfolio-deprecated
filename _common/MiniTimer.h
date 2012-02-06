@@ -1,19 +1,22 @@
-#ifdef MINITIMER_H
-#define MINITIMER_H
+#ifndef _MINI_TIMER_H_
+#define _MINI_TIMER_H_
 
+#ifdef WIN32
 #include <windows.h>
+#pragma comment(lib,"winmm.lib")
+#else
+#include <sys/time.h>
+#endif
+ 
+//uncomment this if u have "MiniLog.h"
+//#define USING_FLO_WRITE
 
-
-//uncomment this if u have "FloDebug.h"
-//#define USING_FLO_DEBUG
-
-#ifdef USING_FLO_DEBUG
-#include "FloDebug.h"
+#ifdef USING_FLO_WRITE
+#include "MiniLog.h"
 #else
 #include <stdio.h>
+#define FloWrite(str) 
 #endif
-
-#pragma comment(lib,"winmm.lib")
 
 class MiniTimer
 {
@@ -22,24 +25,37 @@ public:
 	{
 		resetStartTime();
 	}
-
-	DWORD getTimeElapsedMS()//mil-seconds
+    
+    static unsigned int getGlobalTime()
+    {
+#ifdef WIN32
+        return timeGetTime();
+#else
+        timeval tv;
+        gettimeofday(&tv, 0 );
+        return tv.tv_usec;
+#endif
+    }
+    
+	unsigned int getTimeElapsedMS()//mil-seconds
 	{
-		return ::timeGetTime() - _start_time;
+		return getGlobalTime() - _start_time;
 	}
+    
 	void resetStartTime()
 	{
-		_start_time = ::timeGetTime();
+		_start_time = getGlobalTime();
 	}
+    
 	float getTimeElapsed()//seconds
 	{
-		return 0.001f*(::timeGetTime() - _start_time);
+		return 0.001f*(getGlobalTime() - _start_time);
 	}
 
 	void profileFunction(char* funcName)
 	{
-#ifdef USING_FLO_DEBUG
-		FloWrite("%s[%s] : %d ms\n", getProperBlank(), funcName, getTimeElapsedMS());
+#ifdef USING_FLO_WRITE
+		MiniLog("%s[%s] : %d ms\n", getProperBlank(), funcName, getTimeElapsedMS());
 #else
 		printf("%s[%s] : %d ms\n", getProperBlank(), funcName, getTimeElapsedMS());	
 #endif
@@ -52,8 +68,7 @@ public:
 	}
 
 private:
-	DWORD _start_time;
+	unsigned int _start_time;
 };
 
-
-#endif // MINITIMER_H
+#endif
