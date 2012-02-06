@@ -19,19 +19,31 @@ using namespace cv;
 
 bool try_use_gpu = false;
 std::vector<Mat> imgs;
-std::string result_name = "result.jpg";
+std::string result_name = "result.png";
 
 int main(int argc, char* argv[])
 {
+	if (argc < 2)
+	{
+		printf("usage: %s folder_contains_images the_output_image=\"result.png\" \n", argv[0]);
+		return -1;
+	}
+
+	string folder = argv[1];
+	if (argc == 3)
+		result_name = argv[2];
+	
 	ofxDirList DIR;
 	DIR.allowExt("png");
 	DIR.allowExt("jpg");
-	int n_images = DIR.listDir("../media/tsucuba");
+	int n_images = DIR.listDir(folder);
 	for (int i=0;i<n_images;i++)
 	{
-		Mat img = imread(DIR.getPath(i));
-		if (!img.empty())
-			imgs.push_back(img);
+		Mat raw = imread(DIR.getPath(i));
+		if (!raw.empty())
+		{
+			imgs.push_back(raw);
+		}
 	}
 
     Mat pano;
@@ -44,8 +56,8 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-//    imwrite(result_name, pano);
-	imshow("result", pano);
+    imwrite(result_name, pano);
+	imshow(result_name, pano);
 
 	waitKey();
 
