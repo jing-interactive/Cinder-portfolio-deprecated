@@ -3,11 +3,11 @@
 #include <list>
 
 #if defined _DEBUG
-#pragma comment(lib,"opencv_video231d.lib")
-#pragma comment(lib,"opencv_objdetect231d.lib")
+#pragma comment(lib,"opencv_video232d.lib")
+#pragma comment(lib,"opencv_objdetect232d.lib")
 #else
-#pragma comment(lib,"opencv_video231.lib")
-#pragma comment(lib,"opencv_objdetect231.lib")
+#pragma comment(lib,"opencv_video232.lib")
+#pragma comment(lib,"opencv_objdetect232.lib")
 #endif
 
 using namespace cv;
@@ -404,36 +404,18 @@ bool vFingerDetector::findHands(const vBlob& smblob, int k)
 
 
 vHaarFinder::vHaarFinder()
-{
-	cascade = NULL;
-	storage = NULL;
+{ 
 	scale = 1.2;
 }
-
-vHaarFinder::~vHaarFinder()
-{
-	if (cascade) cvReleaseHaarClassifierCascade(&this->cascade);
-	if (storage) cvReleaseMemStorage(&this->storage);
-}
-
+ 
 bool vHaarFinder::init(char* cascade_name)
 {
-	cascade = (CvHaarClassifierCascade*)cvLoad( cascade_name, 0, 0, 0 );
-	if (cascade)
-	{
-		printf("%s loaded\n", cascade_name);
-		storage = cvCreateMemStorage(0);
-	}
-
-	return cascade && storage;
+	return _cascade.load(cascade_name);
 }
 
 
 void vHaarFinder::find(IplImage* img, int minArea, bool findAllFaces)
 {
-	if (!cascade)
-		return;
-
 	blobs.clear();
 
 	Ptr<IplImage> gray = cvCreateImage( cvSize(img->width,img->height), 8, 1 );
@@ -443,23 +425,24 @@ void vHaarFinder::find(IplImage* img, int minArea, bool findAllFaces)
 	vGrayScale(img, gray);
 	cvResize( gray, tiny );
 	cvEqualizeHist( tiny, tiny );
-	cvClearMemStorage( storage );
 
-	CvSeq* found = cvHaarDetectObjects( tiny, cascade, storage,
-		1.2, 2,
-		findAllFaces ? CV_HAAR_FIND_BIGGEST_OBJECT|CV_HAAR_DO_CANNY_PRUNING : CV_HAAR_DO_CANNY_PRUNING
+	vector<Rect> faces;
+
+	_cascade.detectMultiScale( (IplImage*)tiny, faces,
+		1.1, 2, 0
+		| findAllFaces ? CV_HAAR_FIND_BIGGEST_OBJECT|CV_HAAR_DO_CANNY_PRUNING : CV_HAAR_DO_CANNY_PRUNING
 		//|CV_HAAR_FIND_BIGGEST_OBJECT
 		//|CV_HAAR_DO_ROUGH_SEARCH
-		//|CV_HAAR_DO_CANNY_PRUNING
-		//|CV_HAAR_SCALE_IMAGE
-		//,
-		//cvSize(30, 30)
-		);
-	//printf( "detection time = %gms\n", t/((double)cvGetTickFrequency()*1000.) );
-	for(int i = 0; i < (found ? found->total : 0); i++ )
+		|CV_HAAR_SCALE_IMAGE
+		,
+		Size(30, 30) );
+
+	int n_faces = faces.size();
+
+	for(int i = 0; i < n_faces; i++ )
 	{
-		CvRect* _r = (CvRect*)cvGetSeqElem( found, i );
-		CvRect r = cvRect(_r->x*scale, _r->y*scale, _r->width*scale,_r->height*scale);
+		Rect& _r = faces[i];
+		Rect r = Rect(_r.x*scale, _r.y*scale, _r.width*scale,_r.height*scale);
 
 		float area          = r.width * r.height;
 		if (area < minArea)
@@ -562,13 +545,7 @@ vBlobTracker::vBlobTracker()
 {
 	IDCounter = 0;
 }
-
-//Setup a listener
-void vBlobTracker::setListener( vBlobListener* _listener )
-{
-	listener = _listener;
-}
-
+ 
 //assigns IDs to each blob in the contourFinder
 void vBlobTracker::trackBlobs(const vector<vBlob>& _newBlobs)
 {
@@ -813,33 +790,20 @@ int vBlobTracker::trackKnn(const vector<vTrackedBlob>& newBlobs, vTrackedBlob& t
 
 void vBlobTracker::doBlobOn( vTrackedBlob& b ) {
 	b.status = statusEnter;
-	if( listener != NULL ) {
-		listener->blobOn( b.center.x, b.center.y, b.id, 0/*findOrder(b.id)*/ );
-	} else {
-		printf("blob: %d enter+\n" , b.id);
-	}
+	printf("blob: %d enter+\n" , b.id);
 }
 
 void vBlobTracker::doBlobMoved( vTrackedBlob& b ) {
 	b.status = statusMove;
-	if( listener != NULL ) {
-		listener->blobMoved( b.center.x, b.center.y, b.id, 0/*findOrder(b.id)*/ );
-	} else {
 	//	printf("blob: %d move\n" , b.id);
-	}
 }
+
 void vBlobTracker::doBlobOff( vTrackedBlob& b ) {
 	b.status = statusLeave;
 	leaveBlobs.push_back(b);
-	if( listener != NULL ) {
-		listener->blobOff( b.center.x, b.center.y, b.id, 0/*findOrder(b.id)*/ );
-	} else {
-		printf("blob: %d leave-\n" , b.id);
-	}
+	printf("blob: %d leave-\n" , b.id);
 	b.id = vTrackedBlob::BLOB_TO_DELETE;
 }
-
-
 
 CvFGDStatModelParams cvFGDStatModelParams()
 {

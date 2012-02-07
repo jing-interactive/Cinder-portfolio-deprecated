@@ -20,18 +20,9 @@
 
 #include "Blob.h"
 
-struct vBlobListener
-{
-	virtual void blobOn( int x, int y, int id, int order ) = 0;
-	virtual void blobMoved( int x, int y, int id, int order ) = 0;
-	virtual void blobOff( int x, int y, int id, int order ) = 0;
-};
-
-
-
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-// This cleans up the forground segmentation mask derived from calls to cvBackCodeBookDiff
+// This cleans up the foreground segmentation mask derived from calls to cvBackCodeBookDiff
 //
 // mask			Is a grayscale (8 bit depth) "raw" mask image which will be cleaned up
 //
@@ -40,10 +31,11 @@ struct vBlobListener
 // areaScale 	Area = image (width*height)*areaScale.  If contour area < this, delete that contour (DEFAULT: 0.1)
 //
 
-void vFindBlobs(IplImage *src, vector<vBlob>& blobs, int minArea = 1, int maxArea = 3072000, bool convexHull=true, bool (*sort_func)(const vBlob& a, const vBlob& b)  = NULL);
+void vFindBlobs(IplImage *src, vector<vBlob>& blobs, int minArea = 1, int maxArea = 3072000, bool convexHull=false, bool (*sort_func)(const vBlob& a, const vBlob& b)  = NULL);
 
 void vFindBlobs(IplImage *mask,
-				int minArea = 1, int maxArea = 3072000, bool convexHull=true);//draw trackedBlobs only
+				int minArea = 1, int maxArea = 3072000, bool convexHull=false);//draw trackedBlobs only
+//void vFindBlobs(IplImage *src, vector<vBlob>& blobs, int minArea, int maxArea, bool convexHull=true, bool (*sort_func)(const vBlob& a, const vBlob& b)  = NULL);
 
 // parameters:
 //  silh - input video frame
@@ -60,9 +52,6 @@ public:
 
 	vBlobTracker();
 
-	//setup a event listener
-	void setListener( vBlobListener* _listener );
-
 	//assigns IDs to each blob in the contourFinder
 	void trackBlobs(const vector<vBlob>& newBlobs);
 
@@ -74,8 +63,6 @@ private:
 	int						IDCounter;	  //counter of last blob
 
 protected:
-
-	vBlobListener* listener;
 
 	//blob Events
 	void doBlobOn(vTrackedBlob& b );
@@ -114,8 +101,6 @@ struct vFingerDetector
 	 float teta,lhd;
 };
 
-
-
 struct vHaarFinder
 {
 	vector<vBlob> blobs;
@@ -125,11 +110,10 @@ struct vHaarFinder
 	void find(IplImage* img, int minArea = 1, bool findAllFaces = true);
 
 	vHaarFinder();
-	~vHaarFinder();
 
 protected:
-	CvHaarClassifierCascade* cascade;
-	CvMemStorage* storage;
+
+	CascadeClassifier _cascade;
 };
 
 struct vOpticalFlowLK

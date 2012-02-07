@@ -39,8 +39,6 @@ using std::map;
  
 void vFlip(CvArr* src, int flipX, int flipY);
 
-void FindBlobs(const cv::Mat &binary, vector < vector<cv::Point2i>  > &blobs);
-
 template<class T> class Image
 {
 private:
@@ -86,8 +84,8 @@ imgA[i][j].r = 111;
 */
 void vCopyImageTo(CvArr* small_image, IplImage* big_image, const CvRect& region);
 
-void vDrawText(IplImage* img, int x,int y,char* str, CvScalar clr=CV_RGB(255,255,255));
-void vPolyLine(IplImage* dst, vector<cv::Point>& pts, CvScalar clr=CV_RGB(255,255,255), int thick = 1);
+void vDrawText(cv::Mat& img, int x,int y,char* str, CvScalar clr=CV_RGB(255,255,255));
+void vPolyLine(cv::Mat& dst, vector<cv::Point>& pts, CvScalar clr=CV_RGB(255,255,255), int thick = 1);
 CvScalar vDefaultColor(int idx);
 
 #define show_image(img_name) do{\
