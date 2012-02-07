@@ -113,7 +113,7 @@ struct vHaarFinder
 
 protected:
 
-	CascadeClassifier _cascade;
+	cv::CascadeClassifier _cascade;
 };
 
 struct vOpticalFlowLK
