@@ -33,13 +33,13 @@
 
 void vFindBlobs(IplImage *src, vector<vBlob>& blobs, int minArea = 1, int maxArea = 3072000, bool convexHull=false, bool (*sort_func)(const vBlob& a, const vBlob& b)  = NULL);
 
-void vFindBlobs(IplImage *mask,
-				int minArea = 1, int maxArea = 3072000, bool convexHull=false);//draw trackedBlobs only
-//void vFindBlobs(IplImage *src, vector<vBlob>& blobs, int minArea, int maxArea, bool convexHull=true, bool (*sort_func)(const vBlob& a, const vBlob& b)  = NULL);
+void vFindBlobs(IplImage *mask,	int minArea = 1, int maxArea = 3072000, bool convexHull=false);//draw trackedBlobs only
+
+void vFindBlobs(IplImage *src, vector<vBlob>& blobs, vector<vector<vDefect>>& defects, int minArea=1, int maxArea=3072000);
 
 // parameters:
 //  silh - input video frame
-//  dst - resultant motion picture
+//  dst - resultant motion picture43
 //  args - optional parameters
 vector<vBlob>  vUpdateMhi( IplImage* silh, IplImage* dst);
 
@@ -98,7 +98,7 @@ struct vFingerDetector
 	cv::Vec3f	v1D,vxv;
 	cv::Vec3f	v2D;
 
-	 float teta,lhd;
+	float teta,lhd;
 };
 
 struct vHaarFinder
@@ -140,8 +140,6 @@ struct vOpticalFlowLK
 		int block_size;
 };
 
-
-
 struct IBackGround
 {
 	CvBGStatModel* bg_model;
@@ -176,7 +174,6 @@ struct IBackGround
 			cvReleaseBGStatModel(&bg_model);
 	}
 };
-
 
 struct vBackFGDStat: public IBackGround
 {

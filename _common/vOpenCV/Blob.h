@@ -106,10 +106,19 @@ enum E_status
 struct vDefect
 {
 	vDefect( const Point& _start, const Point& _end, const Point& _depth, float _depthVal):
-	  startPoint(_start), endPoint(_end), depthPoint(_depth), depth(_depthVal){}
+	  startPoint(_start), endPoint(_end), depthPoint(_depth), depth(_depthVal),
+		  midPoint((startPoint.x+endPoint.x)/2, (startPoint.y+endPoint.y)/2){}
 
 	  Point startPoint, endPoint, depthPoint;
+	  Point midPoint;
 	  float depth;
+
+	  void draw(cv::Mat& img, const cv::Scalar& clr)
+	  {
+		  cv::line(img, depthPoint, midPoint, clr);
+		//  cv::line(img, depthPoint, endPoint, clr);
+		  cv::circle(img, midPoint,3, clr);
+	  }
 };
 
 struct vTrackedBlob : public vBlob 
