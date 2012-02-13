@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tinderbox>
+    <targets>
+        <target name="Basic App" path="Templates/BasicApp" active="true" win="true" mac="true" >
+            <template name="OpenGL" path="OpenGL" />
+        </target>
+		<!--
+        <target name="Cocoa Touch" path="Templates/CocoaTouch" active="true" win="false" mac="true" >
+            <template name="Simple" path="Simple" />
+        </target>
+        <target name="Screen Saver" path="Templates/ScreenSaver" active="true" win="true" mac="true" >
+            <template name="OpenGL" path="OpenGL" />
+        </target>
+		-->
+    </targets>
+</tinderbox>

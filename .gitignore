@@ -15,7 +15,9 @@
 *.ipch
 *.slnx
 
-cinder_0.8.3_vc2008
+cinder_0.8.3_vc2008/docs
+_common/SDAR
+
 /arPlusApp/Debug
 /arPlusApp/Release
 /arPlusApp/arPlusApp/Release
