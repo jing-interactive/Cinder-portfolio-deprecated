@@ -31,6 +31,7 @@
 #define AR_CONFIG_H
 
 #define AR_STATIC
+#define _USE_DOUBLE_
 
 // may be changed to double, float is particularly useful for PDA's
 #ifdef _USE_DOUBLE_

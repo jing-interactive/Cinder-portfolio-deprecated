@@ -228,8 +228,8 @@ void atkpMultipleApp::draw()
 	std::vector<ARToolKitPlus::ARMarkerInfo> _marker_infos;
 
 	//lock
-	boost::lock_guard<boost::mutex> lock(mtx_AR);
 	{
+        boost::lock_guard<boost::mutex> lock(mtx_AR);
 		_n_marks = marker_infos.size();
 		_marker_infos = marker_infos;
 	}

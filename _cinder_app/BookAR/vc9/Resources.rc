@@ -1,0 +1,14 @@
+#include "..\include\Resources.h"
+
+ID ICON "cinder_app_icon.ico"
+
+//RES_MY_RESOURCE
+IMG_BRAVE
+IMG_PIRATES
+IMG_TINTIN
+IMG_ANDROID
+MDL_BRAVE
+MDL_PIRATES
+MDL_TINTIN
+MDL_TRANSFORMER
+
