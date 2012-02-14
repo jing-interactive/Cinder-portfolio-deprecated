@@ -3,7 +3,7 @@
 #include "cinder/ImageIo.h"
 #include "cinder/params/Params.h"
 
-#include "../../_common/SDAR/ModelDLL.h"
+#include "../../_common/SDAR/SDARLib.h"
 
 void BookARApp::prepareSettings( Settings *settings )
 {
@@ -34,12 +34,13 @@ void BookARApp::setup()
 		bRet = SDARLoad((getAppPath()+"../../resources/movie_braveb.mdl").c_str());       if(!bRet) return;
 		bRet = SDARLoad((getAppPath()+"../../resources/movie_piratesb.mdl").c_str());     if(!bRet) return;
 		bRet = SDARLoad((getAppPath()+"../../resources/movie_tintinb.mdl").c_str());      if(!bRet) return;
-#if 0
-		_tex_android = loadImage(loadResource(IMG_ANDROID));
-#else
-		_tex_android = loadImage(getAppPath()+"../../resources/ocvcookbook.png");
-#endif
 	}
+
+#if 0
+	_tex_android = loadImage(loadResource(IMG_ANDROID));
+#else
+	_tex_android = loadImage(getAppPath()+"../../resources/ocvcookbook.png");
+#endif
 
 	_artk_tracker = shared_ptr<ARToolKitPlus::TrackerSingleMarker>(new ARToolKitPlus::TrackerSingleMarker(CAM_W, CAM_H, 8, 6, 6, 6, 0));
 	{
@@ -67,6 +68,8 @@ void BookARApp::setup()
 
 		_artk_tracker->setPoseEstimator(ARToolKitPlus::POSE_ESTIMATOR_RPP);
 	}
+
+	_book_mesh = gl::VboMesh
 
 	//param	
 	mParams = shared_ptr<params::InterfaceGl>(new params::InterfaceGl( "App parameters", Vec2i( 200, 200 ) ));

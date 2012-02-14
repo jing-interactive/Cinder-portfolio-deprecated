@@ -1,6 +1,7 @@
 #include "BookARApp.h"
 #include "cinder/params/Params.h"
 #include "cinder/gl/gl.h"
+#include "Teapotf.h"
 
 void BookARApp::draw()
 {

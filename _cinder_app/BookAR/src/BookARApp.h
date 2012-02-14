@@ -1,11 +1,12 @@
 #include "cinder/app/AppBasic.h"
-#include "cinder/gl/gl.h"
 #include "cinder/Capture.h"
 #include "cinder/Surface.h"
-#include "cinder/gl/Texture.h"
 #include "cinder/Matrix44.h"
 #include "cinder/Thread.h"
 
+#include "cinder/gl/gl.h"
+#include "cinder/gl/Texture.h"
+#include "cinder/gl/Vbo.h"
 #include "Resources.h"
 
 using namespace ci;
@@ -26,8 +27,8 @@ class BookARApp : public AppBasic
 	{
 		APP_W = 800,
 		APP_H = 600,
-		CAM_W = 640,
-		CAM_H = 480,
+		CAM_W = 320,
+		CAM_H = 240,
 	};
   public:
 	void setup();
@@ -56,8 +57,11 @@ private:
 
 	shared_ptr<ARToolKitPlus::TrackerSingleMarker> _artk_tracker;
 
+private: //rendering
 	bool _2dbook_visible;
 	bool _3dbook_visible;
+	gl::VboMesh _book_mesh;
+	uint8_t 
 
 private:
 	bool _using_sdar;

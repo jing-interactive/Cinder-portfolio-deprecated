@@ -1,12 +1,7 @@
 #include <ARToolKitPlus/TrackerSingleMarker.h>
 #include "BookARApp.h"
 #include "cinder/ip/Grayscale.h"
-#include "../../_common/SDAR/ModelDLL.h"
-
-ci::Vec2f toCinder(const IPoint& rhs)
-{
-	return ci::Vec2f(rhs.x, rhs.y);;
-}
+#include "../../_common/SDAR/SDARLib.h"
 
 void BookARApp::update()
 {	
@@ -33,8 +28,11 @@ void BookARApp::update()
 					{
 						_mat_modelview = Matrix44d(getModelViewMatrix(tid));
 
-						for(int i=0; i<4; i++) 
-							_pts_corner[i] = toCinder(getCorner(tid, i));
+						for(int i=0; i<4; i++)
+						{
+							_pts_corner[i].x = getVertexX(tid, i);
+							_pts_corner[i].y = getVertexY(tid, i);
+						}
 					}
 				}
 			}
