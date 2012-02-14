@@ -24,11 +24,6 @@ class BookARApp : public AppBasic
 {
 	enum
 	{
-		ENGINE_ARTK,
-		ENGINE_SNDA,
-	};
-	enum
-	{
 		APP_W = 800,
 		APP_H = 600,
 		CAM_W = 640,
@@ -61,8 +56,15 @@ private:
 
 	shared_ptr<ARToolKitPlus::TrackerSingleMarker> _artk_tracker;
 
+	bool _2dbook_visible;
+	bool _3dbook_visible;
+
 private:
-	int _ar_engine;
+	bool _using_sdar;
+	ci::Vec3f _light_dir;
+	ci::ColorA _cube_clr;
+	float _proj_near;
+	float _proj_far;
 
 private:
 	float cameraXToScreenX(float cx)
