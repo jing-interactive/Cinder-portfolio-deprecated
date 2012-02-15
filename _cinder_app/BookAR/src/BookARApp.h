@@ -44,10 +44,12 @@ class BookARApp : public AppBasic
 private:
 	Capture _capture;
 	bool _capture_visible;
+	int _device_id;
+private:
 
 	gl::Texture _tex_bg;
 	gl::Texture _tex_android;
-	ci::Surface32f _img_android;
+	ci::Surface32f _img_replacer;
 
 	std::mutex _mtx_ar;
 	Matrix44d _mat_modelview;
@@ -78,13 +80,6 @@ private:
 	float _proj_far;
 
 private:
-	float cameraXToScreenX(float cx)
-	{
-		return cx*APP_W/CAM_W;
-	}
-
-	float cameraYToScreenY(float cy)
-	{
-		return cy*APP_H/CAM_H;
-	}
+	float cameraXToScreenX(float cx);
+	float cameraYToScreenY(float cy);
 };

@@ -18,31 +18,54 @@ void BookARApp::draw()
 		gl::popMatrices();
 	}
 
+
 	if (_n_trackables > 0)
 	{
 		std::lock_guard<mutex> lock(_mtx_ar);
 
 		if (_2dbook_visible)
 		{//rendering.2d
+#if 1
+			gl::disableDepthWrite();
 			_tex_android.enableAndBind();
 			gl::pushMatrices();			
 			{
+				glMatrixMode(GL_PROJECTION);
+				glLoadIdentity();
+				glMatrixMode(GL_MODELVIEW);
+				glLoadIdentity();
+
 				glBegin(GL_QUADS);
-				glTexCoord2f(0,0);
-				//glColor3f(1,0,0);
-				glVertex3f(cameraXToScreenX(_pts_corner[0].x),cameraYToScreenY(_pts_corner[0].y),1);
-				glTexCoord2f(1,0);
-				//glColor3f(0,1,0);
-				glVertex3f(cameraXToScreenX(_pts_corner[1].x),cameraYToScreenY(_pts_corner[1].y),1);
-				glTexCoord2f(1,1);
-				//glColor3f(0,0,1);
-				glVertex3f(cameraXToScreenX(_pts_corner[2].x),cameraYToScreenY(_pts_corner[2].y),1);
-				glTexCoord2f(0,1);
-				//glColor3f(1,1,1);
-				glVertex3f(cameraXToScreenX(_pts_corner[3].x),cameraYToScreenY(_pts_corner[3].y),1);
+				gl::color(Color8u(0,0,0));
+				glTexCoord2f(0.0f, 0.0f);
+				glVertex3f(cameraXToScreenX(_pts_corner[0].x),cameraYToScreenY(_pts_corner[0].y),0.5);
+				glTexCoord2f(1.0f, 0.0f);
+				glVertex3f(cameraXToScreenX(_pts_corner[1].x),cameraYToScreenY(_pts_corner[1].y),0.5);
+				glTexCoord2f(1.0f, 1.0f);
+				glVertex3f(cameraXToScreenX(_pts_corner[2].x),cameraYToScreenY(_pts_corner[2].y),0.5);
+				glTexCoord2f(0.0f, 1.0f);
+				glVertex3f(cameraXToScreenX(_pts_corner[3].x),cameraYToScreenY(_pts_corner[3].y),0.5);
 				glEnd();
 			}
 			gl::popMatrices();
+			_tex_android.disable();
+#else
+			gl::pushMatrices();			
+			{
+				glMatrixMode(GL_PROJECTION);
+				glLoadIdentity();
+				glMatrixMode(GL_MODELVIEW);
+				glLoadIdentity();
+				glBegin(GL_QUADS);
+				glColor3f(1,1,1);
+				glVertex3f(cameraXToScreenX(_pts_corner[0].x),cameraYToScreenY(_pts_corner[0].y),0.5);
+				glVertex3f(cameraXToScreenX(_pts_corner[1].x),cameraYToScreenY(_pts_corner[1].y),0.5);
+				glVertex3f(cameraXToScreenX(_pts_corner[2].x),cameraYToScreenY(_pts_corner[2].y),0.5);
+				glVertex3f(cameraXToScreenX(_pts_corner[3].x),cameraYToScreenY(_pts_corner[3].y),0.5);
+				glEnd();
+			}
+			gl::popMatrices();
+#endif
 		}
 
 		if (_3dbook_visible)
@@ -54,12 +77,14 @@ void BookARApp::draw()
 			glLoadMatrixd( _mat_modelview );
 			gl::enableDepthWrite();
 			gl::enableDepthRead();
+			gl::disableAlphaBlending();
 
 			gl::pushModelView();
 			gl::color(Color8u(255,255,255));
 
 			if( _mesh_book )
 			{
+				gl::translate(_mesh_translate);
 				gl::scale(Vec3f(_cube_scale,_cube_scale,_cube_scale));
 				gl::rotate(Vec3f(90,0,0));
 				gl::draw( _mesh_book );

@@ -6,6 +6,15 @@
 #include "cinder/ip/Grayscale.h"
 #include "../../../_common/SDAR/SDARLib.h"
 
+float BookARApp::cameraXToScreenX(float cx)
+{
+	return cx*2.0f/CAM_W-1.0f;
+}
+
+float BookARApp::cameraYToScreenY(float cy)
+{
+	return 1.0f-cy*2.0f/CAM_H;
+}
 
 void BookARApp::updateData(ci::Surface32f& image, gl::VboMesh& mesh, float max_height)
 {
@@ -40,6 +49,7 @@ void BookARApp::updateData(ci::Surface32f& image, gl::VboMesh& mesh, float max_h
 
 void BookARApp::update()
 {	
+	static float sin_counter = 0.0f;
 	if( _capture && _capture.checkNewFrame() ) 
 	{
 		Surface8u& frame_clr = _capture.getSurface();
@@ -55,6 +65,8 @@ void BookARApp::update()
 				_n_trackables = numActiveTrackables;
 				if (_n_trackables > 0)
 				{
+					sin_counter += 0.5f;
+					updateData(_img_replacer, _mesh_book, 200*sinf(sin_counter));
 					console() << _n_trackables << std::endl;
 
 					_mat_proj = Matrix44d(getProjectionMatrix(_proj_near,_proj_far));
@@ -97,7 +109,14 @@ void BookARApp::update()
 				}
 			}
 		}
+#else
+		else
+		{
+			_n_trackables = 0;
+		}
 #endif
+		if (_n_trackables == 0)
+			sin_counter = 0;
 		_tex_bg = gl::Texture(frame_clr);
 	}
 }

@@ -16,19 +16,26 @@ void BookARApp::prepareSettings( Settings *settings )
 	settings->setFrameRate( 60 );
 }
 
+#include "cinder/Utilities.h"
 void BookARApp::setup()
 {
+	_device_id = 0;
+
+	vector<Capture::DeviceRef> devices( Capture::getDevices() ); 
+	if (getArgs().size() == 2)
+	{
+		string arg = getArgs().back();
+		_device_id = fromString<int>(arg);
+		ci::constrain<int>(_device_id, 0, devices.size()-1);
+	}
+
 	try {
-		_capture = Capture( CAM_W, CAM_H );
+		_capture = Capture( CAM_W, CAM_H, devices[_device_id] );
 		_capture.start();
 	}
 	catch( ... ) {
 		console() << "Failed to initialize capture" << std::endl;
 	}
-
-	_using_sdar = true;
-	if (getArgs().size() == 2 && getArgs().back()=="artk")
-		_using_sdar = false;
 
 	SDARStart(CAM_W, CAM_H);
 	{
@@ -39,14 +46,10 @@ void BookARApp::setup()
 		bRet = SDARLoad((getAppPath()+"../../resources/movie_tintinb.mdl").c_str());      if(!bRet) return;
 	}
 
-#if 0
-	_img_android = loadImage(loadResource(IMG_ANDROID));
-#else
-	_img_android = loadImage(getAppPath()+"../../resources/ocvcookbook.png");
-#endif
-	_tex_android = _img_android;
+	_tex_android = loadImage(getAppPath()+"../../resources/android.png");
 
-	updateData(_img_android, _mesh_book, 100);
+	_img_replacer = loadImage(getAppPath()+"../../resources/brave.jpg");
+	updateData(_img_replacer, _mesh_book, 200);
 
 #ifdef USING_ARTK
 	_artk_tracker = shared_ptr<ARToolKitPlus::TrackerSingleMarker>(new ARToolKitPlus::TrackerSingleMarker(CAM_W, CAM_H, 8, 6, 6, 6, 0));
@@ -86,7 +89,7 @@ void BookARApp::setup()
 		_cube_clr = ColorA( 0.25f, 0.5f, 1.0f, 1.0f );
 		mParams->addParam( "Cube Color", &_cube_clr, "" );
 
-		_mesh_translate = Vec3f( 0, 0, 50 );
+		_mesh_translate = Vec3f( 32, -35, 50 );
 		mParams->addParam( "Mesh Translate", &_mesh_translate, "");
 
 		mParams->addSeparator();
@@ -97,13 +100,14 @@ void BookARApp::setup()
 		_capture_visible = true;
 		mParams->addParam( "capture stream visible", &_capture_visible, "");
 
-		_2dbook_visible = false;
+		_2dbook_visible = true;
 		mParams->addParam( "2d texture visible", &_2dbook_visible, "");
 
 		_3dbook_visible = true;
-		mParams->addParam( "3d mesh visible", &_3dbook_visible, "");
+		mParams->addParam( "3d mesh visible", &_3dbook_visible, ""); 
 
-		mParams->addParam( "SNDA AR", &_using_sdar, "");
+		_using_sdar = true;
+		mParams->addParam( "SNDA SDK", &_using_sdar, ""); 
 
 		_proj_near = 10;
 		mParams->addParam( "_proj_near", &_proj_near, "min=1.0 max=100 step=1");
