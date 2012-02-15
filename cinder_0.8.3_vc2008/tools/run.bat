@@ -1,2 +1,0 @@
-cd tools
-TinderBox.exe
