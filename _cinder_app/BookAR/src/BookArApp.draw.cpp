@@ -1,14 +1,14 @@
 #include "BookARApp.h"
 #include "cinder/params/Params.h"
 #include "cinder/gl/gl.h"
-#include "Teapotf.h"
+//#include "Teapotf.h"
 
 void BookARApp::draw()
 {
 	// clear out the window with black
 	gl::clear( Color( 0, 0, 0 ) ); 
 
-	if ( _tex_bg ) 
+	if (_capture_visible && _tex_bg ) 
 	{
 		gl::disableDepthWrite();
 		gl::pushMatrices();
@@ -23,7 +23,7 @@ void BookARApp::draw()
 		std::lock_guard<mutex> lock(_mtx_ar);
 
 		if (_2dbook_visible)
-		{
+		{//rendering.2d
 			_tex_android.enableAndBind();
 			gl::pushMatrices();			
 			{
@@ -46,7 +46,27 @@ void BookARApp::draw()
 		}
 
 		if (_3dbook_visible)
-		{
+		{//rendering.3d			
+#if 1
+			glMatrixMode( GL_PROJECTION );
+			glLoadMatrixd(_mat_proj);
+			glMatrixMode( GL_MODELVIEW );
+			glLoadMatrixd( _mat_modelview );
+			gl::enableDepthWrite();
+			gl::enableDepthRead();
+
+			gl::pushModelView();
+			gl::color(Color8u(255,255,255));
+
+			if( _mesh_book )
+			{
+				gl::scale(Vec3f(_cube_scale,_cube_scale,_cube_scale));
+				gl::rotate(Vec3f(90,0,0));
+				gl::draw( _mesh_book );
+			}
+			gl::popModelView();
+
+#else
 			// now draw 3D cube at marker location with proper scale
 			gl::enableDepthWrite();
 			gl::enableDepthRead();
@@ -69,6 +89,7 @@ void BookARApp::draw()
 			//glDisable(GL_TEXTURE_2D);
 			gl::drawCube(Vec3f(0.0f,0.0f,0.0f), Vec3f(_cube_scale,_cube_scale,_cube_scale));
 			gl::popMatrices();
+#endif
 		}
 	}
 	params::InterfaceGl::draw();

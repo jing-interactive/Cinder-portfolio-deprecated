@@ -1,7 +1,42 @@
+#ifdef USING_ARTK
 #include <ARToolKitPlus/TrackerSingleMarker.h>
+#endif
+
 #include "BookARApp.h"
 #include "cinder/ip/Grayscale.h"
-#include "../../_common/SDAR/SDARLib.h"
+#include "../../../_common/SDAR/SDARLib.h"
+
+
+void BookARApp::updateData(ci::Surface32f& image, gl::VboMesh& mesh, float max_height)
+{
+	uint32_t book_w = image.getWidth();
+	uint32_t book_h = image.getHeight();
+
+	if (!mesh)
+	{
+		gl::VboMesh::Layout layout;
+		layout.setDynamicColorsRGB();
+		layout.setDynamicPositions();
+		_mesh_book = gl::VboMesh( book_w * book_h, 0, layout, GL_POINTS );
+	}
+	Surface32f::Iter pixelIter = image.getIter();
+	gl::VboMesh::VertexIter vertexIter( mesh );
+
+	while( pixelIter.line() ) {
+		while( pixelIter.pixel() ) {
+			Color color( pixelIter.r(), pixelIter.g(), pixelIter.b() );
+			float height = color.dot( Color( 0.3333f, 0.3333f, 0.3333f ) );
+
+			// the x and the z coordinates correspond to the pixel's x & y
+			float x = pixelIter.x() - book_h / 2.0f;
+			float z = pixelIter.y() - book_h / 2.0f;
+
+			vertexIter.setPosition( x, height * max_height, z );
+			vertexIter.setColorRGB( color );
+			++vertexIter;
+		}
+	}
+}
 
 void BookARApp::update()
 {	
@@ -37,6 +72,7 @@ void BookARApp::update()
 				}
 			}
 		}
+#ifdef USING_ARTK
 		else
 		{
 			ARToolKitPlus::ARMarkerInfo* m_infos;
@@ -61,7 +97,7 @@ void BookARApp::update()
 				}
 			}
 		}
-
+#endif
 		_tex_bg = gl::Texture(frame_clr);
 	}
 }

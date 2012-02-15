@@ -1,9 +1,12 @@
+#ifdef USING_ARTK
 #include <ARToolKitPlus/TrackerSingleMarker.h>
+#endif
+
 #include "BookARApp.h"
 #include "cinder/ImageIo.h"
 #include "cinder/params/Params.h"
 
-#include "../../_common/SDAR/SDARLib.h"
+#include "../../../_common/SDAR/SDARLib.h"
 
 void BookARApp::prepareSettings( Settings *settings )
 {
@@ -37,11 +40,15 @@ void BookARApp::setup()
 	}
 
 #if 0
-	_tex_android = loadImage(loadResource(IMG_ANDROID));
+	_img_android = loadImage(loadResource(IMG_ANDROID));
 #else
-	_tex_android = loadImage(getAppPath()+"../../resources/ocvcookbook.png");
+	_img_android = loadImage(getAppPath()+"../../resources/ocvcookbook.png");
 #endif
+	_tex_android = _img_android;
 
+	updateData(_img_android, _mesh_book, 100);
+
+#ifdef USING_ARTK
 	_artk_tracker = shared_ptr<ARToolKitPlus::TrackerSingleMarker>(new ARToolKitPlus::TrackerSingleMarker(CAM_W, CAM_H, 8, 6, 6, 6, 0));
 	{
 		_artk_tracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_LUM);
@@ -68,28 +75,33 @@ void BookARApp::setup()
 
 		_artk_tracker->setPoseEstimator(ARToolKitPlus::POSE_ESTIMATOR_RPP);
 	}
-
-	_book_mesh = gl::VboMesh
+#endif
 
 	//param	
 	mParams = shared_ptr<params::InterfaceGl>(new params::InterfaceGl( "App parameters", Vec2i( 200, 200 ) ));
 	{
-		_cube_scale = 1.0f;
-		mParams->addParam( "Cube Scale", &_cube_scale, "min=1.0 max=20.0 step=0.5 keyIncr=s keyDecr=S");
+		_cube_scale = 0.5;
+		mParams->addParam( "Cube Scale", &_cube_scale, "min=0.1 max=2.0 step=0.1 keyIncr=s keyDecr=S");
 
 		_cube_clr = ColorA( 0.25f, 0.5f, 1.0f, 1.0f );
 		mParams->addParam( "Cube Color", &_cube_clr, "" );
+
+		_mesh_translate = Vec3f( 0, 0, 50 );
+		mParams->addParam( "Mesh Translate", &_mesh_translate, "");
 
 		mParams->addSeparator();
 
 		_light_dir = Vec3f( .5f, -.5f, -.6f );
 		mParams->addParam( "Light Direction", &_light_dir, "" );
 
+		_capture_visible = true;
+		mParams->addParam( "capture stream visible", &_capture_visible, "");
+
 		_2dbook_visible = false;
-		mParams->addParam( "book visible", &_2dbook_visible, "");
+		mParams->addParam( "2d texture visible", &_2dbook_visible, "");
 
 		_3dbook_visible = true;
-		mParams->addParam( "model visible", &_3dbook_visible, "");
+		mParams->addParam( "3d mesh visible", &_3dbook_visible, "");
 
 		mParams->addParam( "SNDA AR", &_using_sdar, "");
 

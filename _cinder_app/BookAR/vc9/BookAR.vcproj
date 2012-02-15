@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../_common/ARToolKitPlus-2.2.1/include;..\include;..\..\..\cinder_0.8.3_vc2008\include;..\..\..\cinder_0.8.3_vc2008\boost"
+				AdditionalIncludeDirectories="..\include;..\..\..\cinder_0.8.3_vc2008\include;..\..\..\cinder_0.8.3_vc2008\boost"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -119,7 +119,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../../_common/ARToolKitPlus-2.2.1/include;..\include;..\..\..\cinder_0.8.3_vc2008\include;..\..\..\cinder_0.8.3_vc2008\boost"
+				AdditionalIncludeDirectories="..\include;..\..\..\cinder_0.8.3_vc2008\include;..\..\..\cinder_0.8.3_vc2008\boost"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -176,174 +176,6 @@
 	<References>
 	</References>
 	<Files>
-		<Filter
-			Name="ArToolkitPlus"
-			>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\arBitFieldPattern.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\arDetectMarker.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\arDetectMarker2.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\arGetCode.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\arGetInitRot2.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\librpp\arGetInitRot2Sub.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\arGetMarkerInfo.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\arGetTransMat.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\arGetTransMat2.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\arGetTransMat3.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\arGetTransMatCont.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\arLabeling.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\arLabelingImpl.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\arMultiActivate.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\arMultiGetTransMat.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\arMultiGetTransMatHull.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\arMultiReadConfigFile.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\arUtil.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\extra\BCH.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\Camera.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\extra\Hull.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\librpp\librpp.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\librpp\librpp.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\matrix.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\mPCA.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\paramDecomp.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\paramDistortion.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\librpp\rpp.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\librpp\rpp.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\librpp\rpp_const.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\librpp\rpp_quintic.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\librpp\rpp_svd.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\librpp\rpp_types.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\librpp\rpp_vecmat.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\librpp\rpp_vecmat.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\rppGetTransMat.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\rppMultiGetTransMat.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\Tracker.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\TrackerMultiMarker.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\TrackerSingleMarker.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\_common\ARToolKitPlus-2.2.1\src\core\vector.cpp"
-				>
-			</File>
-		</Filter>
 		<Filter
 			Name="main"
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"

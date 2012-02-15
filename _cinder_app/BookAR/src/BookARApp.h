@@ -9,6 +9,8 @@
 #include "cinder/gl/Vbo.h"
 #include "Resources.h"
 
+//#define USING_ARTK 
+
 using namespace ci;
 using namespace ci::app;
 using namespace std;
@@ -41,8 +43,11 @@ class BookARApp : public AppBasic
 
 private:
 	Capture _capture;
+	bool _capture_visible;
+
 	gl::Texture _tex_bg;
 	gl::Texture _tex_android;
+	ci::Surface32f _img_android;
 
 	std::mutex _mtx_ar;
 	Matrix44d _mat_modelview;
@@ -54,14 +59,16 @@ private:
 
 	shared_ptr<params::InterfaceGl>	mParams;
 	float _cube_scale;
-
+#ifdef USING_ARTK
 	shared_ptr<ARToolKitPlus::TrackerSingleMarker> _artk_tracker;
+#endif
 
-private: //rendering
+private: //book rendering
 	bool _2dbook_visible;
 	bool _3dbook_visible;
-	gl::VboMesh _book_mesh;
-	uint8_t 
+	gl::VboMesh _mesh_book;
+	void updateData(ci::Surface32f& image, gl::VboMesh& mesh, float max_height);
+	ci::Vec3f _mesh_translate;
 
 private:
 	bool _using_sdar;
