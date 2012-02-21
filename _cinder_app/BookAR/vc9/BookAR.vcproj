@@ -217,7 +217,7 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath="..\..\..\_common\SDAR\ModelDLL.lib"
+			RelativePath="..\..\..\_common\SDAR\SDAR.lib"
 			>
 		</File>
 	</Files>

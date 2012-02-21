@@ -66,7 +66,7 @@ OutputImplXAudio::Track::Track( SourceRef source, OutputImplXAudio * output )
 		mVoiceDescription.nSamplesPerSec = masterVoiceDetails.InputSampleRate;
 		mVoiceDescription.nChannels = masterVoiceDetails.InputChannels;
 		mVoiceDescription.wBitsPerSample = 16;
-		mVoiceDescription.nBlockAlign = math<float>::ceil( ( mVoiceDescription.nChannels * mVoiceDescription.wBitsPerSample ) / 8.0f );
+		mVoiceDescription.nBlockAlign = math<float>::ceil( ( mVoiceDescription.nChannels * mVoiceDescription.wBitsPerSample ) / 8.0 );
 		mVoiceDescription.nAvgBytesPerSec = ( mVoiceDescription.nBlockAlign * mVoiceDescription.nSamplesPerSec );
 		mVoiceDescription.cbSize = 0;
 	} else {

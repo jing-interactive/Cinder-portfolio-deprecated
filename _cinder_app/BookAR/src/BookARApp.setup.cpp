@@ -5,8 +5,8 @@
 #include "BookARApp.h"
 #include "cinder/ImageIo.h"
 #include "cinder/params/Params.h"
-
-#include "../../../_common/SDAR/SDARLib.h"
+#include "cinder/Utilities.h"
+#include "../../../_common/SDAR/SDAR.h"
 
 void BookARApp::prepareSettings( Settings *settings )
 {
@@ -15,10 +15,18 @@ void BookARApp::prepareSettings( Settings *settings )
 	settings->setResizable( true );
 	settings->setFrameRate( 60 );
 }
-
-#include "cinder/Utilities.h"
 void BookARApp::setup()
 {
+	mdl_files[0] = "movie_transformerb.mdl";
+	mdl_files[1] = "movie_braveb.mdl";
+	mdl_files[2] = "movie_piratesb.mdl";
+	mdl_files[3] = "movie_tintinb.mdl";
+
+	post_files[0] = "transformer.jpg";
+	post_files[1] = "brave.jpg";
+	post_files[2] = "pirates.jpg";
+	post_files[3] = "tintin.jpg";
+
 	_device_id = 0;
 
 	vector<Capture::DeviceRef> devices( Capture::getDevices() ); 
@@ -40,16 +48,17 @@ void BookARApp::setup()
 	SDARStart(CAM_W, CAM_H);
 	{
 		int bRet = 0;
-		bRet = SDARLoad((getAppPath()+"../../resources/movie_transformerb.mdl").c_str()); if(!bRet) return;
-		bRet = SDARLoad((getAppPath()+"../../resources/movie_braveb.mdl").c_str());       if(!bRet) return;
-		bRet = SDARLoad((getAppPath()+"../../resources/movie_piratesb.mdl").c_str());     if(!bRet) return;
-		bRet = SDARLoad((getAppPath()+"../../resources/movie_tintinb.mdl").c_str());      if(!bRet) return;
+		for (int i=0;i<4;i++)
+			bRet = SDARLoad((char*)(getAppPath().generic_string()+"../../resources/"+mdl_files[i]).c_str()); if(!bRet) return;
 	}
 
-	_tex_android = loadImage(getAppPath()+"../../resources/android.png");
 
-	_img_replacer = loadImage(getAppPath()+"../../resources/brave.jpg");
-	updateData(_img_replacer, _mesh_book, 200);
+	_tex_android = loadImage(getAppPath().generic_string()+"../../resources/android.png");
+
+	for (int i=0;i<4;i++)
+	{
+		_img_posters[i] = loadImage(getAppPath().generic_string()+"../../resources/"+post_files[i]);
+	}
 
 #ifdef USING_ARTK
 	_artk_tracker = shared_ptr<ARToolKitPlus::TrackerSingleMarker>(new ARToolKitPlus::TrackerSingleMarker(CAM_W, CAM_H, 8, 6, 6, 6, 0));
@@ -89,7 +98,7 @@ void BookARApp::setup()
 		_cube_clr = ColorA( 0.25f, 0.5f, 1.0f, 1.0f );
 		mParams->addParam( "Cube Color", &_cube_clr, "" );
 
-		_mesh_translate = Vec3f( 32, -35, 50 );
+		_mesh_translate = Vec3f( 0, 0, 50 );
 		mParams->addParam( "Mesh Translate", &_mesh_translate, "");
 
 		mParams->addSeparator();
@@ -117,5 +126,10 @@ void BookARApp::setup()
 	}
 }
 
+
+void BookARApp::shutdown()
+{
+	SDAREnd();
+}
 
 CINDER_APP_CONSOLE( BookARApp, RendererGl )

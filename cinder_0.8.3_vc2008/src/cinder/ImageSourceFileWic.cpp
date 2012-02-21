@@ -56,7 +56,7 @@ ImageSourceFileWic::ImageSourceFileWic( DataSourceRef dataSourceRef, ImageSource
 	IWICBitmapDecoder *decoderP = NULL;
 	if( dataSourceRef->isFilePath() ) {
 		hr = IWICFactory->CreateDecoderFromFilename(
-				toUtf16( dataSourceRef->getFilePath() ).c_str(),                      // Image to be decoded
+				toUtf16( dataSourceRef->getFilePath().string() ).c_str(),                      // Image to be decoded
 				NULL,                            // Do not prefer a particular vendor
 				GENERIC_READ,                    // Desired read access to the file
 				WICDecodeMetadataCacheOnDemand,  // Cache metadata when needed
@@ -166,7 +166,9 @@ bool ImageSourceFileWic::processFormat( const ::GUID &guid, ::GUID *convertGUID 
 	else if( guid == GUID_WICPixelFormat32bppGrayFloat ) {
 		setChannelOrder( ImageIo::Y ); setColorModel( ImageIo::CM_GRAY ); setDataType( ImageIo::FLOAT32 );
 	}
-	
+	else
+		throw ImageIoExceptionFailedLoad(); // a format we can't process
+
 	return false;
 }
 

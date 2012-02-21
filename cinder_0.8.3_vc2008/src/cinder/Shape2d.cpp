@@ -51,6 +51,8 @@ void Shape2d::curveTo( const Vec2f &p1, const Vec2f &p2, const Vec2f &p3 )
 
 void Shape2d::arc( const Vec2f &center, float radius, float startRadians, float endRadians, bool forward )
 {
+	if( mContours.empty() )
+		mContours.push_back( Path2d() );
 	mContours.back().arc( center, radius, startRadians, endRadians, forward );
 }
 
@@ -63,6 +65,13 @@ void Shape2d::close()
 {
 	mContours.back().close();
 }
+
+void Shape2d::scale( const Vec2f &amount, Vec2f scaleCenter )
+{
+	for( vector<Path2d>::iterator contIt = mContours.begin(); contIt != mContours.end(); ++contIt )
+		contIt->scale( amount, scaleCenter );
+}
+
 
 Rectf Shape2d::calcBoundingBox() const
 {
@@ -82,6 +91,37 @@ Rectf Shape2d::calcBoundingBox() const
 	}
 	
 	return result;
+}
+
+Rectf Shape2d::calcPreciseBoundingBox() const
+{
+	Rectf result( Vec2f::zero(), Vec2f::zero() );
+
+	// find the first point and initialize the result with that
+	for( vector<Path2d>::const_iterator contIt = mContours.begin(); contIt != mContours.end(); ++contIt ) {
+		if( ! contIt->mPoints.empty() ) {
+			result = Rectf( contIt->mPoints[0], contIt->mPoints[0] );
+			break;
+		}
+	}
+
+	// now iterate all the contours and expand the result to include their points
+	for( vector<Path2d>::const_iterator contIt = mContours.begin(); contIt != mContours.end(); ++contIt ) {
+		result.include( contIt->calcPreciseBoundingBox() );
+	}
+	
+	return result;
+}
+
+bool Shape2d::contains( const Vec2f &pt ) const
+{
+	int numPathsInside = 0;
+	for( vector<Path2d>::const_iterator contIt = mContours.begin(); contIt != mContours.end(); ++contIt ) {
+		if( contIt->contains( pt ) )
+			numPathsInside++;
+	}
+	
+	return ( numPathsInside % 2 ) == 1;
 }
 
 } // namespace cinder

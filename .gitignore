@@ -90,3 +90,5 @@ _common/SDAR
 /_cinder_app/BookAR/vc9/Debug/Resources.res
 /_cinder_app/BookAR/vc9/Release/Resources.res
 /_cinder_app/BookAR/BookAR_bin
+/cinder_0.8.3_vc2008/lib/cinder.lib
+/cinder_0.8.3_vc2008/lib/cinder_d.lib

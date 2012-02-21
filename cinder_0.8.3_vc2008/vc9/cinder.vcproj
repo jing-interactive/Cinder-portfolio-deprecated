@@ -178,6 +178,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\cinder\Base64.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\cinder\BSpline.cpp"
 				>
 			</File>
@@ -206,6 +210,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\cinder\CinderMath.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\cinder\Clipboard.cpp"
 				>
 			</File>
@@ -231,6 +239,10 @@
 			</File>
 			<File
 				RelativePath="..\src\cinder\Font.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\cinder\Frustum.cpp"
 				>
 			</File>
 			<File
@@ -310,6 +322,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\cinder\Timeline.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\cinder\TimelineItem.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\cinder\Timer.cpp"
 				>
 			</File>
@@ -319,6 +339,10 @@
 			</File>
 			<File
 				RelativePath="..\src\cinder\TriMesh.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\cinder\Tween.cpp"
 				>
 			</File>
 			<File
@@ -704,6 +728,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\cinder\Base64.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\cinder\BSpline.h"
 				>
 			</File>
@@ -788,6 +816,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\cinder\Frustum.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\cinder\ImageIo.h"
 				>
 			</File>
@@ -844,6 +876,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\cinder\Plane.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\cinder\PolyLine.h"
 				>
 			</File>
@@ -896,6 +932,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\cinder\Timeline.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\cinder\TimelineItem.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\cinder\Timer.h"
 				>
 			</File>
@@ -905,6 +949,10 @@
 			</File>
 			<File
 				RelativePath="..\include\cinder\TriMesh.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\cinder\Tween.h"
 				>
 			</File>
 			<File

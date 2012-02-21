@@ -4,7 +4,7 @@
 
 #include "BookARApp.h"
 #include "cinder/ip/Grayscale.h"
-#include "../../../_common/SDAR/SDARLib.h"
+#include "../../../_common/SDAR/SDAR.h"
 
 float BookARApp::cameraXToScreenX(float cx)
 {
@@ -16,19 +16,19 @@ float BookARApp::cameraYToScreenY(float cy)
 	return 1.0f-cy*2.0f/CAM_H;
 }
 
-void BookARApp::updateData(ci::Surface32f& image, gl::VboMesh& mesh, float max_height)
+void BookARApp::updateData(const ci::Surface32f& image, gl::VboMesh& mesh, float max_height)
 {
 	uint32_t book_w = image.getWidth();
 	uint32_t book_h = image.getHeight();
 
-	if (!mesh)
-	{
+	if (!mesh || mesh.getNumVertices() != book_w * book_h)
+	{//needs refresh
 		gl::VboMesh::Layout layout;
 		layout.setDynamicColorsRGB();
 		layout.setDynamicPositions();
 		_mesh_book = gl::VboMesh( book_w * book_h, 0, layout, GL_POINTS );
 	}
-	Surface32f::Iter pixelIter = image.getIter();
+	Surface32f::ConstIter pixelIter = image.getIter();
 	gl::VboMesh::VertexIter vertexIter( mesh );
 
 	while( pixelIter.line() ) {
@@ -66,7 +66,8 @@ void BookARApp::update()
 				if (_n_trackables > 0)
 				{
 					sin_counter += 0.5f;
-					updateData(_img_replacer, _mesh_book, 200*sinf(sin_counter));
+					unsigned int obj_id = getActiveTrackableID(0);
+					updateData(_img_posters[obj_id], _mesh_book, 200*sinf(sin_counter));
 					console() << _n_trackables << std::endl;
 
 					_mat_proj = Matrix44d(getProjectionMatrix(_proj_near,_proj_far));

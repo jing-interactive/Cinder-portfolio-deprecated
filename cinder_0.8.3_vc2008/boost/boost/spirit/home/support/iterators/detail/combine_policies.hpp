@@ -1,4 +1,4 @@
-//  Copyright (c) 2001-2010 Hartmut Kaiser
+//  Copyright (c) 2001-2011 Hartmut Kaiser
 // 
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -95,7 +95,7 @@ namespace boost { namespace spirit { namespace iterator_policies
       : Ownership, Checking, Storage
     {
         multi_pass_unique() {}
-        multi_pass_unique(T const& x) {}
+        multi_pass_unique(T const&) {}
 
         template <typename MultiPass>
         static void destroy(MultiPass& mp)
@@ -173,7 +173,7 @@ namespace boost { namespace spirit { namespace iterator_policies
       : Ownership, Storage
     {
         multi_pass_unique() {}
-        multi_pass_unique(T const& x) {}
+        multi_pass_unique(T const&) {}
 
         template <typename MultiPass>
         static void destroy(MultiPass& mp)
@@ -262,7 +262,7 @@ namespace boost { namespace spirit { namespace iterator_policies
       : Checking, Storage
     {
         multi_pass_unique() {}
-        multi_pass_unique(T const& x) {}
+        multi_pass_unique(T const&) {}
 
         template <typename MultiPass>
         static void destroy(MultiPass& mp)

@@ -24,12 +24,11 @@
 #include <boost/config.hpp>
 #include <cstring> // for memcpy
 #include <limits>
-#include <memory.h>
 #include <ctime> // for time_t, time, clock_t, clock
 #include <cstdlib> // for rand
 #include <cstdio> // for FILE, fopen, fread, fclose
 #include <boost/uuid/sha1.hpp>
-//#include <boost/nondet_random.hpp> //forward declare boost::random_device
+//#include <boost/nondet_random.hpp> //forward declare boost::random::random_device
 
 // can't use boost::generator_iterator since boost::random number seed(Iter&, Iter)
 // functions need a last iterator
@@ -57,9 +56,9 @@ namespace std {
 #endif
 
 // forward declare random number generators
-namespace boost {
+namespace boost { namespace random {
 class random_device;
-} //namespace boost
+}} //namespace boost::random
 
 namespace boost {
 namespace uuids {
@@ -247,7 +246,7 @@ inline void seed(UniformRandomNumberGenerator& rng)
 
 // random_device does not / can not be seeded
 template <>
-inline void seed<boost::random_device>(boost::random_device&) {}
+inline void seed<boost::random::random_device>(boost::random::random_device&) {}
 
 // random_device does not / can not be seeded
 template <>

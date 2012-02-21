@@ -1,4 +1,4 @@
-//  ---------------------------------------------------------------------------
+ï»¿//  ---------------------------------------------------------------------------
 //
 //  @file       TwFonts.h
 //  @brief      Bitmaps fonts
@@ -23,10 +23,10 @@ A source bitmap includes 224 characters starting from ascii char 32 (i.e. space)
  !"#$%&'()*+,-./0123456789:;<=>?
 @ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_
 `abcdefghijklmnopqrstuvwxyz{|}~
-€‚ƒ„…†‡ˆ‰Š‹Œ‘’“”•–—˜™š›œŸ
- ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿
-ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞß
-àáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ
+â‚¬äº—å„å—å™²å¢›åª½å´•å½æ†­æ‘‚æ™¼æ£™æ«„æ´”æ½ª?
+ç‰â…²ã…Î—Ä«î€Šîƒˆî††æ°¨æ¸¤å¹æ–—è…¹å¤¯å†€ç©¶
+æ‡’æ—…å‘é­„å£¬ä»•æèœ—é†’çŸ£å“‰è‚¿åˆ­è°¯èŒŒæ±
+å™Œå¿æº´éªæ è§Œç¥‰é“’ç˜ƒè®è¶±é²¼îŠŒîŠîˆ?
 
 First column of a source bitmap is a delimiter with color=zero at the end of each line of characters.
 Last row of a line of characters is a delimiter with color=zero at the last pixel of each character.

@@ -59,6 +59,10 @@
 #include <vector>
 #include <algorithm>
 
+namespace cinder {
+class Timeline;
+} // namespace cinder
+
 namespace cinder { namespace app { 
 
 class App {
@@ -71,6 +75,25 @@ class App {
 		//! width and height of the window when applicable
 		void	setWindowSize( int aWindowSizeX, int aWindowSizeY );
 
+		//! Sets the position of the window on the screen
+		void    setWindowPos( int windowPositionX, int windowPositionY ) { setWindowPos( Vec2i( windowPositionX, windowPositionY ) ); }
+		//! Sets the position of the window on the screen
+		void    setWindowPos( const Vec2i &windowPos );
+		//! Returns whether a non-default window position has been requested
+		bool	isWindowPosSpecified() const { return mWindowPosSpecified; }
+		//! Marks the window position setting as unspecified, effectively requesting the default
+		void	unspecifyWindowPos() { mWindowPosSpecified = false; }
+
+		//! Returns whether the window will be created without a border (chrome/frame)
+		bool	isBorderless() const { return mBorderless; }
+		//! Sets the window to be created without a border (chrome/frame)
+		void	setBorderless( bool borderless = true ) { mBorderless = borderless; }
+		//! Returns whether the window always remains above all other windows
+		bool	isAlwaysOnTop() const { return mAlwaysOnTop; }
+		//! Sets whether the window always remains above all other windows
+		void	setAlwaysOnTop( bool alwaysOnTop = true ) { mAlwaysOnTop = alwaysOnTop; }
+		
+        
 		//! The maximum frameRate the update/draw loop will execute at, specified in frames per second. Default value is 30 FPS
 		void	setFrameRate( float aFrameRate );
 
@@ -88,6 +111,13 @@ class App {
 		//! the size of the application's window specified in pixels. \return cinder::Area( 0, 0, width in pixels, height in pixels )
 		Area	getWindowBounds() const { return Area( 0, 0, mWindowSizeX, mWindowSizeY ); }
 		
+		//! Returns the position of the window in pixels on screen from left in pixels
+		int getWindowPosX() const { return mWindowPositionX; }
+		//! Returns the position of the window on screen from top in pixels
+		int getWindowPosY() const { return mWindowPositionY; }
+		//! Returns the position of the window on screen in pixels
+		Vec2i getWindowPos() const { return Vec2i( mWindowPositionX, mWindowPositionY ); }
+        
 		//! the title of the app reflected in ways particular to the app type and platform (such as its Window or menu)
 		const std::string& getTitle() const { return mTitle; }
 		//! the title of the app reflected in ways particular to the app type and platform (such as its Window or menu)
@@ -106,9 +136,15 @@ class App {
 	  
 		bool			mShouldQuit; // defaults to false, facilitates early termination
 		int				mWindowSizeX, mWindowSizeY; // default: 640x480
+
+		bool			mWindowPosSpecified;
+        int             mWindowPositionX, mWindowPositionY;
+            
 		bool			mFullScreen; // window covers screen. default: false
 		float			mFrameRate;
 		bool			mResizable; // window is Resizable. default: true
+		bool			mBorderless; // window is borderless (frameless / chromeless). default: false
+		bool			mAlwaysOnTop; // window is always on top. default: false
 		bool			mPowerManagement; // allow screensavers or power management to hide app. default: false
 		std::string		mTitle;
 	};
@@ -249,6 +285,18 @@ class App {
 	//! Returns the bounding area of the App's window or the screen in full-screen mode.
 	/** Equivalent to \code Area( 0, 0, getWindowWidth(), getWindowHeight() ); \endcode **/	
 	Area				getWindowBounds() const { return Area( 0, 0, getWindowWidth(), getWindowHeight() ); }
+
+	//! Returns the X & Y coordinate of the top-left-corner of the window contents.
+	virtual Vec2i		getWindowPos() const { return Vec2i::zero(); }
+	//! Returns the X coordinate of the top-left-corner of the window contents.
+	int         		getWindowPosX() const { return getWindowPos().x; }
+	//! Returns the Y coordinate of the top-left corner of the window contents.
+	int         		getWindowPosY() const { return getWindowPos().y; }
+	//! Sets the X & Y coordinates of the top-left corner of the window contents.
+	void        		setWindowPos( int x, int y ) { setWindowPos( Vec2i( x, y ) ); }
+	//! Sets the X & Y coordinates of the top-left corner of the window's contents.
+	virtual void        setWindowPos( const Vec2i &windowPos ) {}
+    
 	//! Returns the maximum frame-rate the App will attempt to maintain.
 	virtual float		getFrameRate() const = 0;
 	//! Sets the maximum frame-rate the App will attempt to maintain.
@@ -265,6 +313,15 @@ class App {
 	//! Sets whether the active App is in full-screen mode based on \a fullScreen
 	virtual void		setFullScreen( bool aFullScreen ) = 0;
 
+	//! Returns whether the has no border (chrome/frame)
+	virtual bool		isBorderless() const { return false; }
+	//! Sets whether the window has a border (chrome/frame)
+	virtual void		setBorderless( bool borderless = true ) { }
+	//! Returns whether the window always remains above all other windows
+	virtual bool		isAlwaysOnTop() const { return false; }
+	//! Sets whether the window always remains above all other windows
+	virtual void		setAlwaysOnTop( bool alwaysOnTop = true ) { }
+
 	//! Returns the number of seconds which have elapsed since application launch
 	double				getElapsedSeconds() const { return mTimer.getSeconds(); }
 	//! Returns the number of animation frames which have elapsed since application launch
@@ -275,33 +332,43 @@ class App {
 	static DataSourceRef		loadResource( const std::string &macPath, int mswID, const std::string &mswType );
 #if defined( CINDER_COCOA )
 	//! Returns a DataSourceRef to an application resource. \a macPath is a path relative to the bundle's resources folder. Throws ResourceLoadExc on failure. \sa \ref CinderResources
-	static DataSourcePathRef	loadResource( const std::string &macPath );
+	static DataSourceRef		loadResource( const std::string &macPath );
 	//! Returns the absolute file path to a resource located at \a rsrcRelativePath inside the bundle's resources folder. Throws ResourceLoadExc on failure. \sa \ref CinderResources
-	static std::string			getResourcePath( const std::string &rsrcRelativePath );
+	static fs::path				getResourcePath( const fs::path &rsrcRelativePath );
 	//! Returns the absolute file path to the bundle's resources folder. \sa \ref CinderResources
-	static std::string			getResourcePath();
+	static fs::path				getResourcePath();
 #else
 	//! Returns a DataSourceRef to an application resource. \a mswID and \a mswType identify the resource as defined the application's .rc file(s). \sa \ref CinderResources
-	static DataSourceBufferRef	loadResource( int mswID, const std::string &mswType );
+	static DataSourceRef		loadResource( int mswID, const std::string &mswType );
 #endif
 	
+	//! Returns a DataSourceRef to an application asset. Throws a AssetLoadExc on failure.
+	DataSourceRef			loadAsset( const fs::path &relativePath );
+	//! Returns a fs::path to an application asset. Returns an empty path on failure.
+	fs::path				getAssetPath( const fs::path &relativePath );
+	//! Adds an absolute path 'dirPath' to the list of directories which are searched for assets.
+	void					addAssetDirectory( const fs::path &dirPath );
+	
 	//! Returns the path to the application on disk
-	virtual std::string			getAppPath() = 0;
+	virtual fs::path			getAppPath() = 0;
 	//! Presents the user with a file-open dialog and returns the selected file path.
 	/** The dialog optionally begins at the path \a initialPath and can be limited to allow selection of files ending in the extensions enumerated in \a extensions.
 		If the active app is in full-screen mode it will temporarily switch to windowed-mode to present the dialog.
 		\return the selected file path or an empty string if the user cancelled. **/
-	std::string		getOpenFilePath( const std::string &initialPath = "", std::vector<std::string> extensions = std::vector<std::string>() );
+	fs::path		getOpenFilePath( const fs::path &initialPath = "", std::vector<std::string> extensions = std::vector<std::string>() );
 	//! Presents the user with a folder-open dialog and returns the selected folder.
-	std::string		getFolderPath(const std::string &initialPath="");
+	fs::path		getFolderPath(const fs::path &initialPath="");
 	//! Presents the user with a file-save dialog and returns the selected file path.
 	/** The dialog optionally begins at the path \a initialPath and can be limited to allow selection of files ending in the extensions enumerated in \a extensions.
 		If the active app is in full-screen mode it will temporarily switch to windowed-mode to present the dialog.
 		\return the selected file path or an empty string if the user cancelled. **/
-	std::string		getSaveFilePath( const std::string &initialPath = "", std::vector<std::string> extensions = std::vector<std::string>() );
+	fs::path		getSaveFilePath( const fs::path &initialPath = "", std::vector<std::string> extensions = std::vector<std::string>() );
 
 	//! Returns a reference to an output console, which is an alias to std::cout on the mac, and a wrapper around OutputDebugString on MSW
 	std::ostream&	console();
+	
+	//! Returns a reference to the App's Timeline
+	Timeline&		timeline() { return *mTimeline; }
 
 	/** \return a copy of the window's contents as a Surface8u **/
 	Surface	copyWindowSurface();
@@ -351,6 +418,8 @@ class App {
 	//! \endcond
 
   private:
+	  void 		prepareAssetLoading();
+	  fs::path	findAssetPath( const fs::path &relativePath );
   
 #if defined( CINDER_MSW )
 	friend class AppImplMsw;
@@ -366,12 +435,19 @@ class App {
 	double					mFpsLastSampleTime;
 	double					mFpsSampleInterval;
 
+	std::shared_ptr<Timeline>	mTimeline;
+
 	std::shared_ptr<Renderer>	mRenderer;
 	
 	CallbackMgr<bool (MouseEvent)>		mCallbacksMouseDown, mCallbacksMouseUp, mCallbacksMouseWheel, mCallbacksMouseMove, mCallbacksMouseDrag;
 	CallbackMgr<bool (KeyEvent)>		mCallbacksKeyDown, mCallbacksKeyUp;
 	CallbackMgr<bool (ResizeEvent)>		mCallbacksResize;
 	CallbackMgr<bool (FileDropEvent)>	mCallbacksFileDrop;
+
+	// have we already setup the default path to assets?
+	bool						mAssetDirectoriesInitialized;
+	// Path to directories which contain assets
+	std::vector<fs::path>		mAssetDirectories;
 	
 	static App*		sInstance;
 };
@@ -382,6 +458,9 @@ class App {
 //@{
 //! Returns the width of the active App's window measured in pixels, or the screen when in full-screen mode.
 inline int	getWindowWidth() { return App::get()->getWindowWidth(); }
+//! Sets the position of the active App's window measured in pixels. Ignored in full-screen mode.
+inline void		setWindowPos( const Vec2i &windowPos ) { App::get()->setWindowPos( windowPos);  }
+inline void		setWindowPos( int x, int y ) { setWindowPos( Vec2i( x, y ) );  }
 //! Sets the width of the active App's window measured in pixels. Ignored in full-screen mode.
 inline void	setWindowWidth( int windowWidth ) { App::get()->setWindowWidth( windowWidth ); }
 //! Returns the height of the active App's window measured in pixels, or the screen when in full-screen mode.
@@ -395,6 +474,8 @@ inline void		setWindowSize( int windowWidth, int windowHeight ) { App::get()->se
 inline Vec2f	getWindowCenter() { return App::get()->getWindowCenter(); }
 //! Returns the size of the active App's window or the screen in full-screen mode
 inline Vec2i	getWindowSize() { return App::get()->getWindowSize(); }
+//! Returns the position of the active App's window measured in pixels.
+inline Vec2i	getWindowPos() { return App::get()->getWindowPos(); }
 //! Returns the aspect ratio of the active App's window or the screen in full-screen mode
 inline float	getWindowAspectRatio() { return App::get()->getWindowAspectRatio(); }
 //! Returns the bounding area of the active App's window or the screen in full-screen mode.
@@ -415,33 +496,43 @@ inline double	getElapsedSeconds() { return App::get()->getElapsedSeconds(); }
 inline uint32_t	getElapsedFrames() { return App::get()->getElapsedFrames(); }
 
 //! Returns a DataSource to an application resource. On Mac OS X, \a macPath is a path relative to the bundle's resources folder. On Windows, \a mswID and \a mswType identify the resource as defined the application's .rc file(s). \sa \ref CinderResources
-inline DataSourceRef			loadResource( const std::string &macPath, int mswID, const std::string &mswType ) { return App::loadResource( macPath, mswID, mswType ); }
+inline DataSourceRef		loadResource( const std::string &macPath, int mswID, const std::string &mswType ) { return App::loadResource( macPath, mswID, mswType ); }
 #if defined( CINDER_COCOA )
 	//! Returns a DataSource to an application resource. \a macPath is a path relative to the bundle's resources folder. \sa \ref CinderResources
-	inline DataSourcePathRef	loadResource( const std::string &macPath ) { return App::loadResource( macPath ); }
+	inline DataSourceRef	loadResource( const std::string &macPath ) { return App::loadResource( macPath ); }
 #else
 	//! Returns a DataSource to an application resource. \a mswID and \a mswType identify the resource as defined the application's .rc file(s). \sa \ref CinderResources
-	inline DataSourceBufferRef	loadResource( int mswID, const std::string &mswType ) { return App::loadResource( mswID, mswType ); }
+	inline DataSourceRef	loadResource( int mswID, const std::string &mswType ) { return App::loadResource( mswID, mswType ); }
 #endif
 
+//! Returns a DataSourceRef to the active App's's asset. Throws a AssetLoadExc on failure.
+inline DataSourceRef		loadAsset( const fs::path &relativePath ) { return App::get()->loadAsset( relativePath ); }
+//! Returns a fs::path to the active App's asset. Returns an empty path on failure.
+inline fs::path				getAssetPath( const fs::path &relativePath ) { return App::get()->getAssetPath( relativePath ); }
+//! Adds an absolute path \a dirPath to the active App's list of directories which are searched for assets.
+inline void					addAssetDirectory( const fs::path &dirPath ) { App::get()->addAssetDirectory( dirPath ); }
+
 //! Returns the path to the active App on disk
-inline std::string		getAppPath() { return App::get()->getAppPath(); }
+inline fs::path		getAppPath() { return App::get()->getAppPath(); }
 //! Presents the user with a file-open dialog and returns the selected file path.
 /** The dialog optionally begins at the path \a initialPath and can be limited to allow selection of files ending in the extensions enumerated in \a extensions.
 	If the active app is in full-screen mode it will temporarily switch to windowed-mode to present the dialog.
 	\return the selected file path or an empty string if the user cancelled. **/
-inline std::string		getOpenFilePath( const std::string &initialPath = "", std::vector<std::string> extensions = std::vector<std::string>() ) { return App::get()->getOpenFilePath( initialPath, extensions ); }
+inline fs::path		getOpenFilePath( const fs::path &initialPath = "", std::vector<std::string> extensions = std::vector<std::string>() ) { return App::get()->getOpenFilePath( initialPath, extensions ); }
 //! Presents the user with a file-save dialog and returns the selected file path.
 /** The dialog optionally begins at the path \a initialPath and can be limited to allow selection of files ending in the extensions enumerated in \a extensions.
 	If the active app is in full-screen mode it will temporarily switch to windowed-mode to present the dialog.
 	\return the selected file path or an empty string if the user cancelled. **/
-inline std::string		getSaveFilePath( const std::string &initialPath = "", std::vector<std::string> extensions = std::vector<std::string>() ) { return App::get()->getSaveFilePath( initialPath, extensions ); }
+inline fs::path		getSaveFilePath( const fs::path &initialPath = "", std::vector<std::string> extensions = std::vector<std::string>() ) { return App::get()->getSaveFilePath( initialPath, extensions ); }
 
 //! Returns a reference to an output console, which is an alias to std::cout on the mac, and a wrapper around OutputDebugString on MSW
 /** On Mac OS X all output is echoed either to the Debugger Console in XCode or the system console
 	On Windows output is echoed using OutputDebugString, echoed to the Output window of the debugger or to a stream viewable with Dbgview
 	\code console() << "This line will be echoed" << std::endl; \endcode **/
 inline std::ostream&	console() { return App::get()->console(); }
+
+//! Returns a reference to the active App's Timeline
+inline Timeline&	timeline() { return App::get()->timeline(); }
 
 //! Returns a copy of the window's contents as a Surface8u
 inline Surface	copyWindowSurface() { return App::get()->copyWindowSurface(); }
@@ -466,6 +557,16 @@ class ResourceLoadExc : public Exception {
 	ResourceLoadExc( int mswID, const std::string &mswType );
 	ResourceLoadExc( const std::string &macPath, int mswID, const std::string &mswType );
 #endif
+
+	virtual const char * what() const throw() { return mMessage; }
+
+	char mMessage[4096];
+};
+
+//! Exception for failed asset loading
+class AssetLoadExc : public Exception {
+  public:
+	AssetLoadExc( const fs::path &relativePath );
 
 	virtual const char * what() const throw() { return mMessage; }
 

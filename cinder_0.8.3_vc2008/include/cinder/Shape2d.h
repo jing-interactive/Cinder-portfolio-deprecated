@@ -53,14 +53,23 @@ class Shape2d {
 	const Path2d&				getContour( size_t i ) const { return mContours[i]; }
 	Path2d&						getContour( size_t i ) { return mContours[i]; }
 	const std::vector<Path2d>&	getContours() const { return mContours; }
+	std::vector<Path2d>&		getContours() { return mContours; }
 	
 	const Vec2f&	getCurrentPoint() const { return mContours.back().getCurrentPoint(); }
 	
     void			appendContour( const Path2d &contour ) { mContours.push_back( contour ); }
 	void			removeContour( size_t i ) { mContours.erase( mContours.begin() + i ); }
 
-	//! Returns the bounding box of the path's control points. Note that this is not necessarily the bounding box of the path's shape.
-	Rectf			calcBoundingBox() const;
+	//! Scales the Shape2d by \a amount.x on X and \a amount.y on Y around the center \a scaleCenter
+	void		scale( const Vec2f &amount, Vec2f scaleCenter = Vec2f::zero() );
+
+	//! Returns the bounding box of the Shape's control points. Note that this is not necessarily the bounding box of the path's shape.
+	Rectf	calcBoundingBox() const;
+	//! Returns the precise bounding box of the Shape's curves. Slower to calculate than calcBoundingBox().
+	Rectf	calcPreciseBoundingBox() const;
+
+	//! Returns whether the point \a pt is contained within the boundaries of the shape
+	bool	contains( const Vec2f &pt ) const;
 
 	//! Iterates all of the contours and points of a Shape2d.
 	/** Expects a template parameter that implements

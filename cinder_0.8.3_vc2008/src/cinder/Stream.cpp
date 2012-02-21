@@ -68,7 +68,7 @@ void IStream::read( std::string *s )
 	*s = string( &chars[0] );
 }
 
-void IStream::read( ci::fs::path *p )
+void IStream::read( fs::path *p )
 {
 	std::string tempS;
 	read( &tempS );
@@ -153,7 +153,7 @@ void OStream::writeData( const void *src, size_t size )
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // IStreamFile
-IStreamFileRef IStreamFile::createRef( FILE *file, bool ownsFile, int32_t defaultBufferSize )
+IStreamFileRef IStreamFile::create( FILE *file, bool ownsFile, int32_t defaultBufferSize )
 {
 	return IStreamFileRef( new IStreamFile( file, ownsFile, defaultBufferSize ) );
 }
@@ -177,9 +177,36 @@ IStreamFile::~IStreamFile()
 
 size_t IStreamFile::readDataAvailable( void *dest, size_t maxSize )
 {
-	size_t bytesRead = fread( dest, 1, maxSize, mFile );
-	mBufferOffset = ftell( mFile );
-	return bytesRead;
+	return readDataImpl( dest, maxSize );
+}
+
+size_t IStreamFile::readDataImpl( void *t, size_t size )
+{
+	if( ( mBufferOffset >= mBufferFileOffset ) && ( mBufferOffset + static_cast<int32_t>( size ) < mBufferFileOffset + (off_t)mBufferSize ) ) { // entirely inside the buffer
+		memcpy( t, mBuffer.get() + ( mBufferOffset - mBufferFileOffset ), size );
+		mBufferOffset += size;
+		return size;
+	}
+	else if ( ( mBufferFileOffset < mBufferOffset ) && ( mBufferOffset < mBufferFileOffset + (off_t)mBufferSize ) ) { // partially inside
+		size_t amountInBuffer = ( mBufferFileOffset + mBufferSize ) - mBufferOffset;
+		memcpy( t, mBuffer.get() + ( mBufferOffset - mBufferFileOffset ), amountInBuffer );
+		mBufferOffset += amountInBuffer;
+		return amountInBuffer + readDataImpl( reinterpret_cast<uint8_t*>( t ) + amountInBuffer, size - amountInBuffer );
+	}
+	else if( size > mDefaultBufferSize ) { // entirely outside of buffer, and too big to buffer anyway
+		fseek( mFile, static_cast<long>( mBufferOffset ), SEEK_SET );
+		size_t bytesRead = fread( t, 1, size, mFile );
+		mBufferOffset += bytesRead;
+		return bytesRead;
+	}
+	else { // outside the current buffer, but not too big
+		fseek( mFile, static_cast<long>( mBufferOffset ), SEEK_SET );
+		mBufferFileOffset = mBufferOffset;
+		mBufferSize = fread( mBuffer.get(), 1, mDefaultBufferSize, mFile );
+		memcpy( t, mBuffer.get(), size );
+		mBufferOffset = mBufferFileOffset + size;
+		return size;
+	}
 }
 
 void IStreamFile::seekAbsolute( off_t absoluteOffset )
@@ -223,36 +250,14 @@ bool IStreamFile::isEof() const
 
 void IStreamFile::IORead( void *t, size_t size )
 {
-	if( ( mBufferOffset >= mBufferFileOffset ) && ( mBufferOffset + static_cast<int32_t>( size ) < mBufferFileOffset + (off_t)mBufferSize ) ) { // entirely inside the buffer
-		memcpy( t, mBuffer.get() + ( mBufferOffset - mBufferFileOffset ), size );
-		mBufferOffset += size;
-	}
-	else if ( ( mBufferFileOffset < mBufferOffset ) && ( mBufferOffset < mBufferFileOffset + (off_t)mBufferSize ) ) { // partially inside
-		size_t amountInBuffer = ( mBufferFileOffset + mBufferSize ) - mBufferOffset;
-		memcpy( t, mBuffer.get() + ( mBufferOffset - mBufferFileOffset ), amountInBuffer );
-		mBufferOffset += amountInBuffer;
-		IORead( reinterpret_cast<uint8_t*>( t ) + amountInBuffer, size - amountInBuffer );
-	}
-	else if( size > mDefaultBufferSize ) { // entirely outside of buffer, and too big to buffer anyway
-		fseek( mFile, static_cast<long>( mBufferOffset ), SEEK_SET );
-		if ( fread( t, size, 1, mFile ) != 1 )
-			throw StreamExc();
-		mBufferOffset += size;
-	}
-	else { // outside the current buffer, but not too big
-		fseek( mFile, static_cast<long>( mBufferOffset ), SEEK_SET );
-		mBufferFileOffset = mBufferOffset;
-		mBufferSize = fread( mBuffer.get(), 1, mDefaultBufferSize, mFile );
-		if( mBufferSize < size ) // we didn't read the whole thing
-			throw StreamExc();
-		memcpy( t, mBuffer.get(), size );
-		mBufferOffset = mBufferFileOffset + size;
-	}
+	size_t bytesRead = readDataImpl( t, size );
+	if( bytesRead != size )
+		throw StreamExc();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // OStreamFile
-OStreamFileRef OStreamFile::createRef( FILE *file, bool ownsFile )
+OStreamFileRef OStreamFile::create( FILE *file, bool ownsFile )
 {
 	return OStreamFileRef( new OStreamFile( file, ownsFile ) );
 }
@@ -297,7 +302,7 @@ void OStreamFile::IOWrite( const void *t, size_t size )
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // IoStreamFile
-IoStreamFileRef IoStreamFile::createRef( FILE *file, bool ownsFile, int32_t defaultBufferSize )
+IoStreamFileRef IoStreamFile::create( FILE *file, bool ownsFile, int32_t defaultBufferSize )
 {
 	return IoStreamFileRef( new IoStreamFile( file, ownsFile, defaultBufferSize ) );
 }
@@ -321,9 +326,7 @@ IoStreamFile::~IoStreamFile()
 
 size_t IoStreamFile::readDataAvailable( void *dest, size_t maxSize )
 {
-	size_t bytesRead = fread( dest, 1, maxSize, mFile );
-	mBufferOffset = ftell( mFile );
-	return bytesRead;
+	return readDataImpl( dest, maxSize );
 }
 
 void IoStreamFile::seekAbsolute( off_t absoluteOffset )
@@ -367,30 +370,37 @@ bool IoStreamFile::isEof() const
 
 void IoStreamFile::IORead( void *t, size_t size )
 {
-	if( ( mBufferOffset >= mBufferFileOffset ) && ( mBufferOffset + static_cast<int32_t>( size ) < mBufferFileOffset + mBufferSize ) ) { // entirely inside the buffer
+	size_t bytesRead = readDataImpl( t, size );
+	if( bytesRead != size )
+		throw StreamExc();
+}
+
+size_t IoStreamFile::readDataImpl( void *t, size_t size )
+{
+	if( ( mBufferOffset >= mBufferFileOffset ) && ( mBufferOffset + static_cast<int32_t>( size ) < mBufferFileOffset + (off_t)mBufferSize ) ) { // entirely inside the buffer
 		memcpy( t, mBuffer.get() + ( mBufferOffset - mBufferFileOffset ), size );
 		mBufferOffset += size;
+		return size;
 	}
-	else if ( ( mBufferFileOffset < mBufferOffset ) && ( mBufferOffset < mBufferFileOffset + mBufferSize ) ) { // partially inside
+	else if ( ( mBufferFileOffset < mBufferOffset ) && ( mBufferOffset < mBufferFileOffset + (off_t)mBufferSize ) ) { // partially inside
 		size_t amountInBuffer = ( mBufferFileOffset + mBufferSize ) - mBufferOffset;
 		memcpy( t, mBuffer.get() + ( mBufferOffset - mBufferFileOffset ), amountInBuffer );
 		mBufferOffset += amountInBuffer;
-		IORead( reinterpret_cast<uint8_t*>( t ) + amountInBuffer, size - amountInBuffer );
+		return amountInBuffer + readDataImpl( reinterpret_cast<uint8_t*>( t ) + amountInBuffer, size - amountInBuffer );
 	}
-	else if( static_cast<int32_t>( size ) > mDefaultBufferSize ) { // entirely outside of buffer, and too big to buffer anyway
+	else if( size > mDefaultBufferSize ) { // entirely outside of buffer, and too big to buffer anyway
 		fseek( mFile, static_cast<long>( mBufferOffset ), SEEK_SET );
-		if ( fread( t, size, 1, mFile ) != 1 )
-			throw StreamExc();
-		mBufferOffset += size;
+		size_t bytesRead = fread( t, 1, size, mFile );
+		mBufferOffset += bytesRead;
+		return bytesRead;
 	}
 	else { // outside the current buffer, but not too big
 		fseek( mFile, static_cast<long>( mBufferOffset ), SEEK_SET );
 		mBufferFileOffset = mBufferOffset;
 		mBufferSize = fread( mBuffer.get(), 1, mDefaultBufferSize, mFile );
-		if( mBufferSize < (int32_t)size ) // we didn't read the whole thing
-			throw StreamExc();
 		memcpy( t, mBuffer.get(), size );
 		mBufferOffset = mBufferFileOffset + size;
+		return size;
 	}
 }
 
@@ -403,7 +413,7 @@ void IoStreamFile::IOWrite( const void *t, size_t size )
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // StreamMem
-IStreamMemRef IStreamMem::createRef( const void *data, size_t size )
+IStreamMemRef IStreamMem::create( const void *data, size_t size )
 {
 	return IStreamMemRef( new IStreamMem( data, size ) );
 }
@@ -509,11 +519,11 @@ void OStreamMem::IOWrite( const void *t, size_t size )
 
 /////////////////////////////////////////////////////////////////////
 
-IStreamFileRef loadFileStream( const std::string &path )
+IStreamFileRef loadFileStream( const fs::path &path )
 {
-	FILE *f = fopen( path.c_str(), "rb" );
+	FILE *f = fopen( path.string().c_str(), "rb" );
 	if( f ) {
-		IStreamFileRef s = IStreamFile::createRef( f, true );
+		IStreamFileRef s = IStreamFile::create( f, true );
 		s->setFileName( path );
 		return s;
 	}
@@ -521,14 +531,14 @@ IStreamFileRef loadFileStream( const std::string &path )
 		return IStreamFileRef();
 }
 
-std::shared_ptr<OStreamFile> writeFileStream( const std::string &path, bool createParents )
+std::shared_ptr<OStreamFile> writeFileStream( const fs::path &path, bool createParents )
 {
 	if( createParents ) {
-		createDirectories( getPathDirectory( path ) );
+		createDirectories( path.parent_path() );
 	}
-	FILE *f = fopen( expandPath( path ).c_str(), "wb" );
+	FILE *f = fopen( expandPath( path ).string().c_str(), "wb" );
 	if( f ) {
-		OStreamFileRef s = OStreamFile::createRef( f, true );
+		OStreamFileRef s = OStreamFile::create( f, true );
 		s->setFileName( path );
 		return s;
 	}
@@ -536,11 +546,11 @@ std::shared_ptr<OStreamFile> writeFileStream( const std::string &path, bool crea
 		return std::shared_ptr<OStreamFile>();
 }
 
-IoStreamFileRef readWriteFileStream( const std::string &path )
+IoStreamFileRef readWriteFileStream( const fs::path &path )
 {
-	FILE *f = fopen( expandPath( path ).c_str(), "w+b" );
+	FILE *f = fopen( expandPath( path ).string().c_str(), "w+b" );
 	if( f ) {
-		IoStreamFileRef s = IoStreamFile::createRef( f, true );
+		IoStreamFileRef s = IoStreamFile::create( f, true );
 		s->setFileName( path );
 		return s;
 	}

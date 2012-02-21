@@ -34,6 +34,8 @@ class BookARApp : public AppBasic
 	};
   public:
 	void setup();
+	void shutdown();
+
 	void mouseDown( MouseEvent event );	
 	void update();
 	void draw();
@@ -49,7 +51,6 @@ private:
 
 	gl::Texture _tex_bg;
 	gl::Texture _tex_android;
-	ci::Surface32f _img_replacer;
 
 	std::mutex _mtx_ar;
 	Matrix44d _mat_modelview;
@@ -69,7 +70,7 @@ private: //book rendering
 	bool _2dbook_visible;
 	bool _3dbook_visible;
 	gl::VboMesh _mesh_book;
-	void updateData(ci::Surface32f& image, gl::VboMesh& mesh, float max_height);
+	void updateData(const ci::Surface32f& image, gl::VboMesh& mesh, float max_height);
 	ci::Vec3f _mesh_translate;
 
 private:
@@ -78,6 +79,11 @@ private:
 	ci::ColorA _cube_clr;
 	float _proj_near;
 	float _proj_far;
+
+private:
+	std::string mdl_files[4];
+	std::string post_files[4];
+	ci::Surface32f _img_posters[4];
 
 private:
 	float cameraXToScreenX(float cx);
