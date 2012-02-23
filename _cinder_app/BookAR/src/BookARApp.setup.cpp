@@ -15,12 +15,20 @@ void BookARApp::prepareSettings( Settings *settings )
 	settings->setResizable( true );
 	settings->setFrameRate( 60 );
 }
+
 void BookARApp::setup()
 {
+#if 0
 	mdl_files[0] = "movie_transformerb.mdl";
 	mdl_files[1] = "movie_braveb.mdl";
 	mdl_files[2] = "movie_piratesb.mdl";
 	mdl_files[3] = "movie_tintinb.mdl";
+#else
+	mdl_files[0] = "transformer.mdl";
+	mdl_files[1] = "brave.mdl";
+	mdl_files[2] = "pirates.mdl";
+	mdl_files[3] = "tintin.mdl";
+#endif
 
 	post_files[0] = "transformer.jpg";
 	post_files[1] = "brave.jpg";
