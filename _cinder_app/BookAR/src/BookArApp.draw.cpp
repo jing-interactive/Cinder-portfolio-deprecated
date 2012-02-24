@@ -8,16 +8,16 @@ void BookARApp::draw()
 	// clear out the window with black
 	gl::clear( Color( 0, 0, 0 ) ); 
 
+	gl::enableAlphaBlending();
+	gl::disableDepthWrite();
+
+	gl::setMatricesWindow(getWindowSize());
+	gl::draw( _tex_iphone4, getWindowBounds() );
+
 	if (_capture_visible && _tex_bg ) 
 	{
-		gl::disableDepthWrite();
-		gl::pushMatrices();
-		gl::setMatricesWindow(getWindowSize());
-		gl::color(Color8u(255,255,255));
-		gl::draw( _tex_bg, getWindowBounds() );
-		gl::popMatrices();
-	}
-
+		gl::color(Color8u(255,255,255));		gl::draw( _tex_bg, _area_capture);
+	} 
 
 	if (_n_trackables > 0)
 	{
@@ -25,18 +25,33 @@ void BookARApp::draw()
 
 		if (_2dbook_visible)
 		{//rendering.2d
-#if 1
 			gl::disableDepthWrite();
-			_tex_android.enableAndBind();
-			gl::pushMatrices();			
+		//	gl::setMatricesWindow(Vec2i(CAM_W,CAM_H));
+
+			_tex_posters[_obj_id].enableAndBind();			
+//			gl::pushMatrices();			
 			{
 				glMatrixMode(GL_PROJECTION);
 				glLoadIdentity();
 				glMatrixMode(GL_MODELVIEW);
 				glLoadIdentity();
+				gl::setViewport(_area_capture + Vec2i(0,-13));
 
 				glBegin(GL_QUADS);
-				gl::color(Color8u(0,0,0));
+				if (_obj_id == N_MODELS-1)
+					gl::color(Color8u(255,255,255));
+				else
+					gl::color(Color8u(0,0,0));
+#if 0
+				glTexCoord2f(0.0f, 0.0f);
+				glVertex3f(-1,-1,0.5);
+				glTexCoord2f(1.0f, 0.0f);
+				glVertex3f(1,-1,0.5);
+				glTexCoord2f(1.0f, 1.0f);
+				glVertex3f(1,1,0.5);
+				glTexCoord2f(0.0f, 1.0f);
+				glVertex3f(-1,1,0.5);
+#else
 				glTexCoord2f(0.0f, 0.0f);
 				glVertex3f(cameraXToScreenX(_pts_corner[0].x),cameraYToScreenY(_pts_corner[0].y),0.5);
 				glTexCoord2f(1.0f, 0.0f);
@@ -45,30 +60,14 @@ void BookARApp::draw()
 				glVertex3f(cameraXToScreenX(_pts_corner[2].x),cameraYToScreenY(_pts_corner[2].y),0.5);
 				glTexCoord2f(0.0f, 1.0f);
 				glVertex3f(cameraXToScreenX(_pts_corner[3].x),cameraYToScreenY(_pts_corner[3].y),0.5);
-				glEnd();
-			}
-			gl::popMatrices();
-			_tex_android.disable();
-#else
-			gl::pushMatrices();			
-			{
-				glMatrixMode(GL_PROJECTION);
-				glLoadIdentity();
-				glMatrixMode(GL_MODELVIEW);
-				glLoadIdentity();
-				glBegin(GL_QUADS);
-				glColor3f(1,1,1);
-				glVertex3f(cameraXToScreenX(_pts_corner[0].x),cameraYToScreenY(_pts_corner[0].y),0.5);
-				glVertex3f(cameraXToScreenX(_pts_corner[1].x),cameraYToScreenY(_pts_corner[1].y),0.5);
-				glVertex3f(cameraXToScreenX(_pts_corner[2].x),cameraYToScreenY(_pts_corner[2].y),0.5);
-				glVertex3f(cameraXToScreenX(_pts_corner[3].x),cameraYToScreenY(_pts_corner[3].y),0.5);
-				glEnd();
-			}
-			gl::popMatrices();
 #endif
+				glEnd();
+			}
+//			gl::popMatrices();
+			_tex_posters[_obj_id].disable();
 		}
 
-		if (_3dbook_visible)
+		if (_3dbook_visible && _obj_id != N_MODELS-1)
 		{//rendering.3d			
 #if 1
 			glMatrixMode( GL_PROJECTION );

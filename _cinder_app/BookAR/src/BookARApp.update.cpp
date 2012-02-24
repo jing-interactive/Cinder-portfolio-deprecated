@@ -1,20 +1,35 @@
 #ifdef USING_ARTK
 #include <ARToolKitPlus/TrackerSingleMarker.h>
 #endif
-
 #include "BookARApp.h"
 #include "cinder/ip/Grayscale.h"
-#include "../../../_common/SDAR/SDAR.h"
+#include "ARTracker.h"
 
+#if 0
 float BookARApp::cameraXToScreenX(float cx)
 {
-	return cx*2.0f/CAM_W-1.0f;
+	const int APP_W_2 = APP_W/2;
+	float temp = lmap<float>(cx, 0, CAM_W, -(APP_W_2-SPAC_LEFT)/APP_W_2, (APP_W_2-SPAC_RIGHT)/APP_W_2);
+	return temp;
 }
 
 float BookARApp::cameraYToScreenY(float cy)
 {
-	return 1.0f-cy*2.0f/CAM_H;
+	const int APP_H_2 = APP_H/2;
+	float temp = lmap<float>(cy, 0, CAM_H, (APP_H_2-SPAC_UP)/APP_H_2, -(APP_H_2-SPAC_DOWN)/APP_H_2);
+	return temp;
 }
+#else
+float BookARApp::cameraXToScreenX(float cx)
+{
+	return lmap<float>(cx, 0, CAM_W, -1, 1);
+}
+
+float BookARApp::cameraYToScreenY(float cy)
+{
+	return lmap<float>(cy, 0, CAM_H, 1, -1);
+}
+#endif
 
 void BookARApp::updateData(const ci::Surface32f& image, gl::VboMesh& mesh, float max_height)
 {
@@ -59,29 +74,23 @@ void BookARApp::update()
 
 		if (_using_sdar)
 		{
-			int numActiveTrackables = SDARTrack(frame_clr.getData(), _capture.getWidth()*3);
+			_ar_tracker->update(frame_clr.getData());
+			int numActiveTrackables = _ar_tracker->getNumTracked();
 			{
 				std::lock_guard<mutex> lock(_mtx_ar);
 				_n_trackables = numActiveTrackables;
 				if (_n_trackables > 0)
 				{
 					sin_counter += 0.5f;
-					unsigned int obj_id = getActiveTrackableID(0);
-					updateData(_img_posters[obj_id], _mesh_book, 200*sinf(sin_counter));
+					_obj_id = _ar_tracker->getID(0);
+
+					updateData(_img_posters[_obj_id], _mesh_book, 200*sinf(sin_counter));
 					console() << _n_trackables << std::endl;
 
-					_mat_proj = Matrix44d(getProjectionMatrix(_proj_near,_proj_far));
+					_ar_tracker->getProjectionMat(_mat_proj);
 
-					for (int tid = 0;tid<_n_trackables;tid++)
-					{
-						_mat_modelview = Matrix44d(getModelViewMatrix(tid));
-
-						for(int i=0; i<4; i++)
-						{
-							_pts_corner[i].x = getVertexX(tid, i);
-							_pts_corner[i].y = getVertexY(tid, i);
-						}
-					}
+					_ar_tracker->getModelViewMat(0, _mat_modelview);
+					_ar_tracker->getCorners(0, _pts_corner); 
 				}
 			}
 		}

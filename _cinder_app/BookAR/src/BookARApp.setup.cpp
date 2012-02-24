@@ -6,34 +6,35 @@
 #include "cinder/ImageIo.h"
 #include "cinder/params/Params.h"
 #include "cinder/Utilities.h"
-#include "../../../_common/SDAR/SDAR.h"
+#include "cinder/Text.h"
+#include "ARTracker.h"
 
 void BookARApp::prepareSettings( Settings *settings )
 {
 	settings->setWindowSize( APP_W, APP_H );
 	settings->setFullScreen( false );
-	settings->setResizable( true );
+	settings->setResizable( false );
 	settings->setFrameRate( 60 );
+	settings->setBorderless(false);
 }
 
 void BookARApp::setup()
 {
-#if 0
-	mdl_files[0] = "movie_transformerb.mdl";
-	mdl_files[1] = "movie_braveb.mdl";
-	mdl_files[2] = "movie_piratesb.mdl";
-	mdl_files[3] = "movie_tintinb.mdl";
-#else
-	mdl_files[0] = "transformer.mdl";
-	mdl_files[1] = "brave.mdl";
-	mdl_files[2] = "pirates.mdl";
-	mdl_files[3] = "tintin.mdl";
-#endif
+	_tex_iphone4 = loadImage(getAppPath().generic_string()+"UI/iphone4.png");
+	_area_capture.set(SPAC_LEFT,SPAC_UP,APP_W-SPAC_RIGHT,APP_H-SPAC_DOWN);
 
-	post_files[0] = "transformer.jpg";
-	post_files[1] = "brave.jpg";
-	post_files[2] = "pirates.jpg";
-	post_files[3] = "tintin.jpg";
+	mdl_files.resize(N_MODELS);
+	mdl_files[0] = "/resources/transformer.mdl";
+	mdl_files[1] = "/resources/tintin.mdl";
+	mdl_files[2] = "/resources/MooseJaw.mdl";
+
+	post_files[0] = "/poster/transformer.jpg";
+	post_files[1] = "/poster/tintin.jpg";
+	post_files[2] = "/resources/MooseJawMask.jpg";
+
+	_ar_tracker = shared_ptr<ARTracker>(ARTracker::create("SDAR"));
+
+	_obj_id = -1;
 
 	_device_id = 0;
 
@@ -45,27 +46,41 @@ void BookARApp::setup()
 		ci::constrain<int>(_device_id, 0, devices.size()-1);
 	}
 
-	try {
-		_capture = Capture( CAM_W, CAM_H, devices[_device_id] );
-		_capture.start();
-	}
-	catch( ... ) {
-		console() << "Failed to initialize capture" << std::endl;
-	}
-
-	SDARStart(CAM_W, CAM_H);
+	if (_device_id < devices.size())
 	{
-		int bRet = 0;
-		for (int i=0;i<4;i++)
-			bRet = SDARLoad((char*)(getAppPath().generic_string()+"../../resources/"+mdl_files[i]).c_str()); if(!bRet) return;
+		try {
+			_capture = Capture( CAM_W, CAM_H, devices[_device_id] );
+			_capture.start();
+		}
+		catch( ... ) {
+			console() << "Failed to initialize capture" << std::endl;
+		}
+	}
+	else
+	{
+		TextLayout layout;
+		layout.setFont( Font( "Arial", 24 ) );
+		layout.setColor( Color( 1, 1, 1 ) );
+		layout.addLine("");
+		layout.addLine("");
+		layout.addLine( "No camera connection!");
+		layout.addLine("");
+		layout.addLine("");
+		_tex_bg = layout.render(true);
 	}
 
+	_ar_tracker->setup(CAM_W, CAM_H, 10, 1000, static_cast<void*>(&mdl_files));
 
-	_tex_android = loadImage(getAppPath().generic_string()+"../../resources/android.png");
+	_tex_default = loadImage(getAppPath().generic_string()+"resources/android.png");
 
-	for (int i=0;i<4;i++)
+	
+	for (int i=0;i<N_MODELS;i++)
 	{
-		_img_posters[i] = loadImage(getAppPath().generic_string()+"../../resources/"+post_files[i]);
+		_img_posters[i] = loadImage(getAppPath().generic_string()+post_files[i]);
+		if (i==N_MODELS-1)
+			_tex_posters[i] = _img_posters[i];
+		else
+			_tex_posters[i] = _tex_default;
 	}
 
 #ifdef USING_ARTK
@@ -98,7 +113,7 @@ void BookARApp::setup()
 #endif
 
 	//param	
-	mParams = shared_ptr<params::InterfaceGl>(new params::InterfaceGl( "App parameters", Vec2i( 200, 200 ) ));
+	mParams = shared_ptr<params::InterfaceGl>(new params::InterfaceGl( "App parameters", Vec2i( 200, 100 ) ));
 	{
 		_cube_scale = 0.5;
 		mParams->addParam( "Cube Scale", &_cube_scale, "min=0.1 max=2.0 step=0.1 keyIncr=s keyDecr=S");
@@ -109,13 +124,13 @@ void BookARApp::setup()
 		_mesh_translate = Vec3f( 0, 0, 50 );
 		mParams->addParam( "Mesh Translate", &_mesh_translate, "");
 
-		mParams->addSeparator();
+		//mParams->addSeparator();
 
 		_light_dir = Vec3f( .5f, -.5f, -.6f );
 		mParams->addParam( "Light Direction", &_light_dir, "" );
 
 		_capture_visible = true;
-		mParams->addParam( "capture stream visible", &_capture_visible, "");
+		//mParams->addParam( "capture stream visible", &_capture_visible, "");
 
 		_2dbook_visible = true;
 		mParams->addParam( "2d texture visible", &_2dbook_visible, "");
@@ -124,20 +139,20 @@ void BookARApp::setup()
 		mParams->addParam( "3d mesh visible", &_3dbook_visible, ""); 
 
 		_using_sdar = true;
-		mParams->addParam( "SNDA SDK", &_using_sdar, ""); 
+		//mParams->addParam( "SNDA SDK", &_using_sdar, ""); 
 
-		_proj_near = 10;
-		mParams->addParam( "_proj_near", &_proj_near, "min=1.0 max=100 step=1");
+	//	_proj_near = 10;
+	//	mParams->addParam( "_proj_near", &_proj_near, "min=1.0 max=100 step=1");
 
-		_proj_far = 1000;
-		mParams->addParam( "_proj_far", &_proj_far, "min=10 max=10000 step=10");
+	//	_proj_far = 1000;
+	//	mParams->addParam( "_proj_far", &_proj_far, "min=10 max=10000 step=10");
 	}
 }
 
 
 void BookARApp::shutdown()
 {
-	SDAREnd();
+
 }
 
 CINDER_APP_CONSOLE( BookARApp, RendererGl )

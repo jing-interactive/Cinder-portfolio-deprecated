@@ -208,11 +208,31 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath="..\include\Resources.h"
+				RelativePath=".\Resources.rc"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="AR"
+			>
+			<File
+				RelativePath="..\src\ARTracker.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Resources.rc"
+				RelativePath="..\src\ARTracker.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\_common\SDAR\SDAR.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\SDARTracker.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\SDARTracker.h"
 				>
 			</File>
 		</Filter>
