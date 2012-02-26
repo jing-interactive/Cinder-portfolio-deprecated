@@ -24,7 +24,7 @@
  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "OscMessage.h"
+#include "../include/OscMessage.h"
 
 namespace cinder { namespace osc {
 

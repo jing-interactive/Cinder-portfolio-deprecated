@@ -1,29 +1,34 @@
 #include "States.h"
 #include "PuzzleApp.h"
+#include "cinder/Utilities.h"
 
 namespace
 {
-	int seconds;
-	string info;
 	Vec2f pos;
-	Color8u clr(0,0,255);
+	Color8u clr(255,255,255);
+	Font font;
+	const int n_countdown = 1;
 }
 
 void StateCountdown::enter()
 {
-	seconds = _app.getElapsedSeconds();
+	resetTimer();
 	pos.set(_app.getWindowSize()/2);
+	if (!font)
+		font = Font("Times New Roman", 64);
 }
 
 void StateCountdown::update()
 {
-
+	if (getElapsedSeconds() > n_countdown)
+		_app.changeToState(_app._state_shuffle);
 }
 
 void StateCountdown::draw()
 {
-	info = _app.getElapsedSeconds() - seconds;
-	gl::drawStringCentered(info, pos, clr);
+	gl::color(Color8u::gray(255));
+	gl::draw(_app._tex_selected, _app.getWindowBounds());
+	gl::drawStringCentered(toString(n_countdown-(int)getElapsedSeconds()), pos, clr, font);
 }
 
 void StateCountdown::exit()

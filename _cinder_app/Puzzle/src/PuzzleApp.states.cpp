@@ -12,13 +12,13 @@ void PuzzleApp::setupStates()
 	_state_takephoto	= shared_ptr<State>(new StateTakephoto(*this));
 	_state_sharepic		= shared_ptr<State>(new StateSharepic(*this));
 
-	changeToState(_state_idle);
+	changeToState(_state_init);
 }
 
 void PuzzleApp::updateStates()
 {
-	if (_current_state == _state_idle)
-		changeToState(_state_countdown);
+	//global state change is updated here
+	//local change is updated inside related class 		
 
 	_current_state->update();
 }

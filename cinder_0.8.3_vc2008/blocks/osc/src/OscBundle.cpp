@@ -25,7 +25,7 @@
  */
 
 
-#include "OscBundle.h"
+#include "../include/OscBundle.h"
 
 namespace cinder { namespace osc {
 

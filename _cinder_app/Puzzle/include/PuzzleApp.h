@@ -12,12 +12,19 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
+enum{
+	LEFT = 0,
+	RIGHT,
+	N_HANDS,
+};
+
 struct Hand
-{ 
+{
 	Hand()
 	{
 		push = false;
 	}
+	void draw();
 	Vec2i pos;
 	bool push;
 };
@@ -34,6 +41,9 @@ class PuzzleApp : public AppBasic
 	void mouseWheel( MouseEvent event );
 	void mouseMove( MouseEvent event );
 	void mouseDown( MouseEvent event );
+	void mouseUp( MouseEvent event );
+	void mouseDrag( MouseEvent event );
+
 	void keyDown(KeyEvent event);
 	void update();
 	void draw();
@@ -42,25 +52,24 @@ class PuzzleApp : public AppBasic
 
 private:
 	shared_ptr<osc::Listener> listener;
-	enum{
-		LEFT = 0,
-		RIGHT,
-		N_HANDS,
-	};
+public:
 	Hand _hands[N_HANDS];
-private: 
 	float _scale;
 	float _rotate;
-private://image
+private:
 	vector<Surface8u> _img_list;
+	//img -> size*size Sprite
+public://image
+	int _next_z; 
+	void selectRandomImage();
+	void shuffleSelectedImage(int size);
 	vector<shared_ptr<Sprite>> _sprites;
+	gl::Texture _tex_selected;
+	Surface8u _img_selected;
 
-	void shuffleImage(const Surface8u& img);
-
-private://game over
 	gl::Texture _tex_player;
 
-private://state machine
+public://state machine
 	shared_ptr<State> _state_idle;
 	shared_ptr<State> _state_init;
 	shared_ptr<State> _state_countdown;
@@ -71,6 +80,7 @@ private://state machine
 	shared_ptr<State> _state_sharepic;
 
 	shared_ptr<State> _current_state;
+	shared_ptr<Sprite> _sprite_selected;
 
 	void setupStates();
 	void updateStates();

@@ -25,11 +25,11 @@
  */
 
 
-#include "OscSender.h"
+#include "../include/OscSender.h"
 
-#include "osc/OscOutboundPacketStream.h"
-#include "osc/OscTypes.h"
-#include "ip/UdpSocket.h"
+#include "../include/osc/OscOutboundPacketStream.h"
+#include "../include/osc/OscTypes.h"
+#include "../include/ip/UdpSocket.h"
 
 #include <assert.h>
 namespace cinder { namespace osc {

@@ -26,11 +26,11 @@
 
 #include "cinder/Thread.h" 
 #include "cinder/Utilities.h"
-#include "OscListener.h"
-#include "osc/OscTypes.h"
-#include "osc/OscPacketListener.h"
-#include "osc/OscReceivedElements.h"
-#include "ip/UdpSocket.h"
+#include "../include/OscListener.h"
+#include "../include/osc/OscTypes.h"
+#include "../include/osc/OscPacketListener.h"
+#include "../include/osc/OscReceivedElements.h"
+#include "../include/ip/UdpSocket.h"
 
 #include <iostream>
 #include <assert.h>

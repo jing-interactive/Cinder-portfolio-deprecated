@@ -4,12 +4,14 @@
 
 void PuzzleApp::prepareSettings(Settings *settings){
 	settings->setFrameRate(60.0f);
-	settings->setWindowSize(800, 600);
+	settings->setWindowSize(848, 564);
 	settings->setResizable(false);
 }
 
 void PuzzleApp::setup()
 {
+	_next_z = 0;
+
 	hideCursor();
 
 	listener = shared_ptr<osc::Listener>(new osc::Listener());
@@ -20,11 +22,6 @@ void PuzzleApp::setup()
 	_img_list.push_back(loadImage(getAppPath().generic_string()+"/media/photo_4.jpg"));
 
 	setupStates();
-}
-
-void PuzzleApp::shuffleImage( const Surface8u& img )
-{
-
 }
  
 CINDER_APP_BASIC( PuzzleApp, RendererGl )

@@ -1,20 +1,27 @@
 #include "PuzzleApp.h"
 #include "State.h"
 
+void Hand::draw()
+{
+	if (push)
+	{
+		gl::color(Color8u(100,255,0));
+		gl::drawSolidCircle(pos, 20);
+	}
+	gl::color(Color8u(255,0,0));
+	gl::drawSolidCircle(pos, 15);
+}
+
 void PuzzleApp::draw()
 {
 	gl::enableAlphaBlending();
 	gl::clear( Color( 0.1f, 0.1f, 0.1f ) );
 	gl::setMatricesWindow( getWindowSize());
 
-	gl::color(Color8u(255,0,0));
+	_current_state->draw();
 
 	for (int i=0;i<N_HANDS;i++)
 	{
-		gl::drawStrokedCircle(_hands[i].pos, 10);
-		if (_hands[i].push)
-			gl::drawStrokedCircle(_hands[i].pos, 20);
+		_hands[i].draw();
 	}
-
-	_current_state->draw();
 }

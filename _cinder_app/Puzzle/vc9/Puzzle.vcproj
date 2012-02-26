@@ -182,6 +182,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath="..\src\PuzzleApp.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\PuzzleApp.draw.cpp"
 				>
 			</File>
@@ -213,50 +217,6 @@
 				RelativePath="..\include\Sprite.h"
 				>
 			</File>
-			<Filter
-				Name="State"
-				>
-				<File
-					RelativePath="..\include\State.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\State\StateCountdown.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\State\StateGame.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\State\StateGameover.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\State\StateIdle.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\State\StateInit.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\include\States.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\State\StateSharepic.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\State\StateShuffle.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\State\StateTakephoto.cpp"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -289,6 +249,54 @@
 			</File>
 			<File
 				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\osc\src\OscSender.cpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="State"
+			>
+			<File
+				RelativePath="..\src\State\State.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\State.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\State\StateCountdown.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\State\StateGame.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\State\StateGameover.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\State\StateIdle.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\State\StateInit.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\States.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\State\StateSharepic.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\State\StateShuffle.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\State\StateTakephoto.cpp"
 				>
 			</File>
 		</Filter>
