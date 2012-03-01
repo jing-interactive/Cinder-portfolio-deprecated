@@ -236,6 +236,18 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="UI"
+			>
+			<File
+				RelativePath="..\src\UIElement.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\UIElement.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath="..\..\..\_common\SDAR\SDAR.lib"
 			>

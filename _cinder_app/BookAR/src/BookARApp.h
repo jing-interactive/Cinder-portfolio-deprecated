@@ -18,14 +18,11 @@ namespace cinder{namespace params{
 
 class BookARApp : public AppBasic
 {
+public:
 	enum
 	{
 		APP_W = 400,
 		APP_H = 750,
-		SPAC_LEFT = 42,
-		SPAC_RIGHT = 37,
-		SPAC_UP = 197,
-		SPAC_DOWN = 181,
 		CAM_W = 320,
 		CAM_H = 240,
 		N_MODELS = 3,
@@ -34,7 +31,9 @@ class BookARApp : public AppBasic
 	void setup();
 	void shutdown();
 
-	void mouseDown( MouseEvent event );	
+	void mouseDown( MouseEvent event );
+	void mouseMove( MouseEvent event );
+
 	void update();
 	void draw();
 	void keyDown(KeyEvent event);
@@ -73,6 +72,9 @@ private: //InterfaceGl
 	bool _using_sdar;
 	ci::Vec3f _light_dir;
 	ci::ColorA _cube_clr;
+
+private: //UI
+	vector<shared_ptr<class UIElement>> _buttons;
 
 private:
 	std::vector<std::string> mdl_files;

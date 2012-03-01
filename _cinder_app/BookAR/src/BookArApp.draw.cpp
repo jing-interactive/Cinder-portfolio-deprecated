@@ -1,7 +1,8 @@
 #include "BookARApp.h"
 #include "cinder/params/Params.h"
 #include "cinder/gl/gl.h"
-//#include "Teapotf.h"
+#include "UIElement.h"
+#include <boost/foreach.hpp>
 
 void BookARApp::draw()
 {
@@ -16,8 +17,15 @@ void BookARApp::draw()
 
 	if (_capture_visible && _tex_bg ) 
 	{
-		gl::color(Color8u(255,255,255));		gl::draw( _tex_bg, _area_capture);
+		gl::color(1,1,1);		gl::draw( _tex_bg, _area_capture);
 	} 
+
+	BOOST_FOREACH(shared_ptr<UIElement> e, _buttons)
+	{
+		e->draw();
+	}
+
+	gl::color(1,1,1);
 
 	if (_n_trackables > 0)
 	{

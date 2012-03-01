@@ -8,6 +8,30 @@
 #include "cinder/Utilities.h"
 #include "cinder/Text.h"
 #include "ARTracker.h"
+#include "UIElement.h"
+
+namespace
+{
+	enum{
+		SPAC_LEFT = 41,
+		SPAC_RIGHT = 38,
+		SPAC_UP = 154,
+		SPAC_DOWN = 247,	
+		BUTTON_W = 64,
+		BUTTON_H = 55,
+		BUTTON_X0 = SPAC_LEFT,
+		BUTTON_Y0 = 563,
+	};
+	char* ui_button_images[] = {
+		"UI/view2.png",
+		"UI/make2.png",
+		"UI/camera.png",
+		"UI/share2.png",
+		"UI/friend2.png"
+	};
+	const int N_BUTTONS = _countof(ui_button_images);
+
+}
 
 void BookARApp::prepareSettings( Settings *settings )
 {
@@ -20,6 +44,13 @@ void BookARApp::prepareSettings( Settings *settings )
 
 void BookARApp::setup()
 {
+	for (int i=0;i<N_BUTTONS;i++)
+	{
+		ImageSourceRef img = loadImage(getAppPath().generic_string()+ui_button_images[i]);
+	//	UIElement* e = ;
+		_buttons.push_back(shared_ptr<UIElement>(new UIElement(BUTTON_X0+BUTTON_W*i, BUTTON_Y0, BUTTON_W, BUTTON_H, img)));
+	}
+	
 	_tex_iphone4 = loadImage(getAppPath().generic_string()+"UI/iphone4.png");
 	_area_capture.set(SPAC_LEFT,SPAC_UP,APP_W-SPAC_RIGHT,APP_H-SPAC_DOWN);
 
