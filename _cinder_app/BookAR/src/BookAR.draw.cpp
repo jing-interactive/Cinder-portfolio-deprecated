@@ -1,10 +1,10 @@
-#include "BookARApp.h"
+#include "BookAR.h"
 #include "cinder/params/Params.h"
 #include "cinder/gl/gl.h"
-#include "UIElement.h"
+#include "UI/UIElement.h"
 #include <boost/foreach.hpp>
 
-void BookARApp::draw()
+void BookAR::draw()
 {
 	// clear out the window with black
 	gl::clear( Color( 0, 0, 0 ) ); 
@@ -21,6 +21,10 @@ void BookARApp::draw()
 	} 
 
 	BOOST_FOREACH(shared_ptr<UIElement> e, _buttons)
+	{
+		e->draw();
+	}
+	BOOST_FOREACH(shared_ptr<UIElement> e, _thumbs)
 	{
 		e->draw();
 	}
@@ -43,7 +47,7 @@ void BookARApp::draw()
 				glLoadIdentity();
 				glMatrixMode(GL_MODELVIEW);
 				glLoadIdentity();
-				gl::setViewport(_area_capture + Vec2i(0,-13));
+				gl::setViewport(_area_capture + Vec2i(0,93));
 
 				glBegin(GL_QUADS);
 				if (_obj_id == N_MODELS-1)

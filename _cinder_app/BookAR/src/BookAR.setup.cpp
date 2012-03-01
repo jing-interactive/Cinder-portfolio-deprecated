@@ -2,25 +2,32 @@
 #include <ARToolKitPlus/TrackerSingleMarker.h>
 #endif
 
-#include "BookARApp.h"
+#include "BookAR.h"
 #include "cinder/ImageIo.h"
 #include "cinder/params/Params.h"
 #include "cinder/Utilities.h"
 #include "cinder/Text.h"
-#include "ARTracker.h"
-#include "UIElement.h"
+#include "ARTracker/ARTracker.h"
+#include "UI/UIElement.h"
 
 namespace
 {
 	enum{
+		//main layout
 		SPAC_LEFT = 41,
 		SPAC_RIGHT = 38,
 		SPAC_UP = 154,
-		SPAC_DOWN = 247,	
+		SPAC_DOWN = 247,
+		//button
 		BUTTON_W = 64,
 		BUTTON_H = 55,
 		BUTTON_X0 = SPAC_LEFT,
 		BUTTON_Y0 = 563,
+		//thumb view
+		THUMB_X0 = BUTTON_X0,
+		THUMB_Y0 = 508,
+		THUMB_H = 50,
+		THUMB_SPAC = 5,
 	};
 	char* ui_button_images[] = {
 		"UI/view2.png",
@@ -29,26 +36,38 @@ namespace
 		"UI/share2.png",
 		"UI/friend2.png"
 	};
+	char* thumb_files[BookAR::N_MODELS]=
+	{
+		"/poster/thumb_transformer.jpg",
+		"/poster/thumb_tintin.jpg",
+		"/poster/thumb_MooseJaw.jpg",
+	};
 	const int N_BUTTONS = _countof(ui_button_images);
-
+	std::vector<std::string> mdl_files;
+	char* post_files[BookAR::N_MODELS]=
+	{
+		"/poster/transformer.jpg",
+		"/poster/tintin.jpg",
+		"/resources/MooseJawMask.jpg",
+	};
 }
 
-void BookARApp::prepareSettings( Settings *settings )
+void BookAR::prepareSettings( Settings *settings )
 {
 	settings->setWindowSize( APP_W, APP_H );
 	settings->setFullScreen( false );
 	settings->setResizable( false );
 	settings->setFrameRate( 60 );
 	settings->setBorderless(false);
+	settings->setTitle("SDAR App");
 }
 
-void BookARApp::setup()
+void BookAR::setup()
 {
 	for (int i=0;i<N_BUTTONS;i++)
 	{
-		ImageSourceRef img = loadImage(getAppPath().generic_string()+ui_button_images[i]);
-	//	UIElement* e = ;
-		_buttons.push_back(shared_ptr<UIElement>(new UIElement(BUTTON_X0+BUTTON_W*i, BUTTON_Y0, BUTTON_W, BUTTON_H, img)));
+	//	ImageSourceRef img = loadImage(getAppPath().generic_string()+ui_button_images[i]);
+		_buttons.push_back(shared_ptr<UIElement>(new UIElement(BUTTON_X0+BUTTON_W*i, BUTTON_Y0, BUTTON_W, BUTTON_H/*, img*/)));
 	}
 	
 	_tex_iphone4 = loadImage(getAppPath().generic_string()+"UI/iphone4.png");
@@ -58,10 +77,6 @@ void BookARApp::setup()
 	mdl_files[0] = "/resources/transformer.mdl";
 	mdl_files[1] = "/resources/tintin.mdl";
 	mdl_files[2] = "/resources/MooseJaw.mdl";
-
-	post_files[0] = "/poster/transformer.jpg";
-	post_files[1] = "/poster/tintin.jpg";
-	post_files[2] = "/resources/MooseJawMask.jpg";
 
 	_ar_tracker = shared_ptr<ARTracker>(ARTracker::create("SDAR"));
 
@@ -114,6 +129,16 @@ void BookARApp::setup()
 			_tex_posters[i] = _tex_default;
 	}
 
+	//thumbs
+	int thumb_x = THUMB_X0;
+	for (int i=0;i<N_MODELS;i++)
+	{
+		Surface thumb_img = loadImage(getAppPath().generic_string()+thumb_files[i]);
+		float ratio = thumb_img.getAspectRatio();
+		int thumb_w = THUMB_H*ratio;
+		_thumbs.push_back(shared_ptr<UIElement>(new UIElement(thumb_x, THUMB_Y0, thumb_w, THUMB_H, thumb_img)));
+		thumb_x += thumb_w+THUMB_SPAC;
+	}
 #ifdef USING_ARTK
 	_artk_tracker = shared_ptr<ARToolKitPlus::TrackerSingleMarker>(new ARToolKitPlus::TrackerSingleMarker(CAM_W, CAM_H, 8, 6, 6, 6, 0));
 	{
@@ -181,9 +206,9 @@ void BookARApp::setup()
 }
 
 
-void BookARApp::shutdown()
+void BookAR::shutdown()
 {
 
 }
 
-CINDER_APP_CONSOLE( BookARApp, RendererGl )
+CINDER_APP_CONSOLE( BookAR, RendererGl )

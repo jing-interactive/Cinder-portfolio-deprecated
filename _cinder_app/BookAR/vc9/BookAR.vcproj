@@ -182,23 +182,23 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\src\BookArApp.draw.cpp"
+				RelativePath="..\src\BookAR.draw.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\BookARApp.event.cpp"
+				RelativePath="..\src\BookAR.event.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\BookARApp.h"
+				RelativePath="..\src\BookAR.h"
 				>
 			</File>
 			<File
-				RelativePath="..\src\BookARApp.setup.cpp"
+				RelativePath="..\src\BookAR.setup.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\BookARApp.update.cpp"
+				RelativePath="..\src\BookAR.update.cpp"
 				>
 			</File>
 		</Filter>
@@ -213,26 +213,26 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="AR"
+			Name="ARTracker"
 			>
 			<File
-				RelativePath="..\src\ARTracker.cpp"
+				RelativePath="..\src\ARTracker\ARTracker.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\ARTracker.h"
+				RelativePath="..\src\ARTracker\ARTracker.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\_common\SDAR\SDAR.h"
+				RelativePath="..\src\ARTracker\SDAR.h"
 				>
 			</File>
 			<File
-				RelativePath="..\src\SDARTracker.cpp"
+				RelativePath="..\src\ARTracker\SDARTracker.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\SDARTracker.h"
+				RelativePath="..\src\ARTracker\SDARTracker.h"
 				>
 			</File>
 		</Filter>
@@ -240,11 +240,39 @@
 			Name="UI"
 			>
 			<File
-				RelativePath="..\src\UIElement.cpp"
+				RelativePath="..\src\UI\UIElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\UIElement.h"
+				RelativePath="..\src\UI\UIElement.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\UI\UIElementManager.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="State"
+			>
+			<File
+				RelativePath="..\src\State\State.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\State\StateCreating.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\State\States.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\State\StateSharing.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\State\StateTracking.cpp"
 				>
 			</File>
 		</Filter>

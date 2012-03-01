@@ -35,7 +35,11 @@ bool UIElement::mouseDown( app::MouseEvent event )
 
 void UIElement::draw()
 {	
-//	gl::draw( _tex, _area);
+	if (_tex)
+	{
+		gl::color(1,1,1);
+		gl::draw( _tex, _area);
+	}
 	if (_state != NORMAL)
 	{	
 		gl::color(0.0, 0.1, 1, 0.2);
@@ -46,4 +50,9 @@ void UIElement::draw()
 		gl::color(1,1,1);
 		gl::drawStrokedRoundedRect(_area, 10);
 	}
+}
+
+UIElement::State UIElement::getState()
+{
+	return _state;
 }

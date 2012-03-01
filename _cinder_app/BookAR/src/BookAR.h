@@ -7,6 +7,7 @@
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
 #include "cinder/gl/Vbo.h"
+#include "State/State.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -16,7 +17,9 @@ namespace cinder{namespace params{
 	class InterfaceGl;
 }}
 
-class BookARApp : public AppBasic
+class UserGenContent;
+
+class BookAR : public AppBasic, public StateMachine<BookAR>
 {
 public:
 	enum
@@ -75,10 +78,8 @@ private: //InterfaceGl
 
 private: //UI
 	vector<shared_ptr<class UIElement>> _buttons;
-
+	vector<shared_ptr<class UIElement>> _thumbs;
 private:
-	std::vector<std::string> mdl_files;
-	std::string post_files[N_MODELS];
 	ci::Surface32f _img_posters[N_MODELS];
 	gl::Texture _tex_posters[N_MODELS];
 

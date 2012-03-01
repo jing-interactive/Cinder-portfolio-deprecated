@@ -1,5 +1,5 @@
 #include "SDARTracker.h"
-#include "../../../_common/SDAR/SDAR.h"
+#include "SDAR.h"
 #include <vector>
 #include "cinder/Matrix.h"
 #include "cinder/app/App.h"

@@ -1,9 +1,9 @@
 #ifdef USING_ARTK
 #include <ARToolKitPlus/TrackerSingleMarker.h>
 #endif
-#include "BookARApp.h"
+#include "BookAR.h"
 #include "cinder/ip/Grayscale.h"
-#include "ARTracker.h"
+#include "ARTracker/ARTracker.h"
 
 #if 0
 float BookARApp::cameraXToScreenX(float cx)
@@ -20,18 +20,18 @@ float BookARApp::cameraYToScreenY(float cy)
 	return temp;
 }
 #else
-float BookARApp::cameraXToScreenX(float cx)
+float BookAR::cameraXToScreenX(float cx)
 {
 	return lmap<float>(cx, 0, CAM_W, -1, 1);
 }
 
-float BookARApp::cameraYToScreenY(float cy)
+float BookAR::cameraYToScreenY(float cy)
 {
 	return lmap<float>(cy, 0, CAM_H, 1, -1);
 }
 #endif
 
-void BookARApp::updateData(const ci::Surface32f& image, gl::VboMesh& mesh, float max_height)
+void BookAR::updateData(const ci::Surface32f& image, gl::VboMesh& mesh, float max_height)
 {
 	uint32_t book_w = image.getWidth();
 	uint32_t book_h = image.getHeight();
@@ -62,7 +62,7 @@ void BookARApp::updateData(const ci::Surface32f& image, gl::VboMesh& mesh, float
 	}
 }
 
-void BookARApp::update()
+void BookAR::update()
 {	
 	static float sin_counter = 0.0f;
 	if( _capture && _capture.checkNewFrame() ) 

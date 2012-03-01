@@ -1,24 +1,34 @@
-#include "BookARApp.h"
-#include "UIElement.h"
+#include "BookAR.h"
+#include "UI/UIElement.h"
 #include <boost/foreach.hpp>
 
-void BookARApp::mouseDown( MouseEvent event )
+void BookAR::mouseDown( MouseEvent event )
 {
 	BOOST_FOREACH(shared_ptr<UIElement> e, _buttons)
 	{
 		e->mouseDown(event);
 	}
+
+	BOOST_FOREACH(shared_ptr<UIElement> e, _thumbs)
+	{
+		e->mouseDown(event);
+	}
 }
 
-void BookARApp::mouseMove( MouseEvent event )
+void BookAR::mouseMove( MouseEvent event )
 {
 	BOOST_FOREACH(shared_ptr<UIElement> e, _buttons)
 	{
 		e->mouseMove(event);
 	}
+
+	BOOST_FOREACH(shared_ptr<UIElement> e, _thumbs)
+	{
+		e->mouseMove(event);
+	}
 }
 
-void BookARApp::keyDown( KeyEvent event )
+void BookAR::keyDown( KeyEvent event )
 {
 // 	if (event.getChar() == 'f' )
 // 		setFullScreen( ! isFullScreen() 
