@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<QCARConfig xsi:noNamespaceSchemaLocation="qcar_config.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Tracking>
+        <ImageTarget name="shred_front1" size="526 800"/>
+        <ImageTarget name="dominos_6sheet1" size="531 800"/>
+        <ImageTarget name="ipc_19" size="600 800"/>
+        <ImageTarget name="bo_marker2" size="564 800"/>
+        <ImageTarget name="virgin1_page2" size="400 484"/>
+        <ImageTarget name="virgin1_page3" size="400 484"/>
+        <ImageTarget name="virgin1_page4" size="400 484"/>
+        <ImageTarget name="virgin1_page1" size="561 800"/>
+        <ImageTarget name="kitkat_2" size="700.22876 1051"/>
+        <ImageTarget name="kitkat_4" size="800 225"/>
+        <ImageTarget name="kitkat_5" size="760 800"/>
+        <ImageTarget name="asos_l1" size="395 800"/>
+        <ImageTarget name="asos_l2" size="395 800"/>
+        <ImageTarget name="asos_l3" size="394 800"/>
+        <ImageTarget name="asos_l4" size="393 800"/>
+        <ImageTarget name="redones2_1" size="444 444"/>
+        <ImageTarget name="redones2_5" size="800 134"/>
+        <ImageTarget name="redones2_6" size="476 476"/>
+        <ImageTarget name="redones2_7" size="512 400"/>
+        <ImageTarget name="5gum2" size="800 658"/>
+        <ImageTarget name="5gum3" size="800 648"/>
+        <ImageTarget name="5gum5" size="800 645"/>
+        <ImageTarget name="5gum8" size="800 668"/>
+        <ImageTarget name="tf_3" size="619.88501 796"/>
+        <ImageTarget name="tf_4" size="619.88501 796"/>
+        <ImageTarget name="tf_10" size="619.88501 796"/>
+        <ImageTarget name="tf_11" size="619.88501 796"/>
+        <ImageTarget name="xiapex_4" size="800 733"/>
+        <ImageTarget name="tf1_6" size="311 400"/>
+        <ImageTarget name="tf1_7" size="311 400"/>
+        <ImageTarget name="tf1_8" size="311 400"/>
+        <ImageTarget name="tf1_12" size="311 400"/>
+        <ImageTarget name="tf1_13" size="311 400"/>
+        <ImageTarget name="tf1_1" size="310.399994 388"/>
+        <ImageTarget name="tf1_2" size="310.222504 399"/>
+        <ImageTarget name="tf1_5" size="310.222504 399"/>
+        <ImageTarget name="tf1_9" size="310.222504 399"/>
+        <ImageTarget name="clinique_1" size="534 800"/>
+        <ImageTarget name="wanted_page2" size="565 800"/>
+        <ImageTarget name="wanted_page3" size="565 800"/>
+        <ImageTarget name="wanted_page4" size="565 800"/>
+        <ImageTarget name="wanted_page5" size="564.705017 801"/>
+        <ImageTarget name="wanted1_page1" size="282 400"/>
+        <ImageTarget name="wanted1_page6" size="282 400"/>
+        <ImageTarget name="clinique_2" size="800 404"/>
+        <ImageTarget name="mobile_marketing1" size="607 800"/>
+        <ImageTarget name="cad_2" size="800 216"/>
+        <ImageTarget name="oyster" size="800 501.333344"/>
+        <ImageTarget name="heinz_ketchup_1" size="433 600"/>
+        <ImageTarget name="hunter_hayes_front" size="800 800"/>
+        <ImageTarget name="marmite_label" size="800 713"/>
+        <ImageTarget name="mie_jurassic" size="497 800"/>
+        <ImageTarget name="jwt_card2" size="800 517"/>
+        <ImageTarget name="xbox_1" size="800 567"/>
+        <ImageTarget name="metro_herald_guilty4" size="800 99"/>
+        <ImageTarget name="now80_front" size="800 800"/>
+        <ImageTarget name="tescohf_7" size="476 800"/>
+        <ImageTarget name="waitrose_metro3" size="658 800"/>
+        <ImageTarget name="coppafeel_poster1" size="1000 257"/>
+        <ImageTarget name="watch_marker2" size="320 230"/>
+        <ImageTarget name="smart_front1" size="800 406"/>
+    </Tracking>
+</QCARConfig>

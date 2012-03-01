@@ -198,6 +198,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\BookAR.states.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\BookAR.update.cpp"
 				>
 			</File>
@@ -240,6 +244,10 @@
 			Name="UI"
 			>
 			<File
+				RelativePath="..\src\UI\UIDef.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\UI\UIElement.cpp"
 				>
 			</File>
@@ -261,6 +269,10 @@
 			</File>
 			<File
 				RelativePath="..\src\State\StateCreating.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\State\StateGlobal.cpp"
 				>
 			</File>
 			<File
