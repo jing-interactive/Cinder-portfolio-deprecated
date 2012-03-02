@@ -5,11 +5,17 @@
 #include <string>
 #include <cinder/Cinder.h>
 
+namespace cinder{
+	class XmlTree;
+}
+
 namespace ARContent{
 
 class Content
 {
 public:
+	static Content* create(const cinder::XmlTree& xmltree);
+
 	enum Type
 	{
 		T_OVERLAY,
