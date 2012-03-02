@@ -2,12 +2,11 @@
 #define UIELEMENT_MANAGER_H
 
 #include <vector>
-
-class UIElement;
+#include <cinder/Cinder.h>
 
 class UIElementManager
 {
-	std::vector<UIElement> elements;
+	std::vector<std::shared_ptr<class UIElement>> elements;
 };
 
 #endif //UIELEMENT_MANAGER_H

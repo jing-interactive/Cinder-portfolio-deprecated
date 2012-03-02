@@ -9,6 +9,10 @@
 #include "cinder/Text.h"
 #include "ARTracker/ARTracker.h"
 #include "UI/UIElement.h"
+#include "UI/UIDef.h"
+#include "Content/ContentManager.h"
+
+using namespace ARContent;
 
 namespace
 {
@@ -29,6 +33,7 @@ namespace
 		THUMB_H = 50,
 		THUMB_SPAC = 5,
 	};
+
 	char* ui_button_images[] = {
 		"UI/view2.png",
 		"UI/make2.png",
@@ -63,11 +68,14 @@ void BookAR::prepareSettings( Settings *settings )
 }
 
 void BookAR::setup()
-{
+{	
+	_content_mgr = shared_ptr<ContentManager>(new ContentManager);
+	bool result = _content_mgr->load(getAppPath().generic_string()+"config/interactions.plist");
+
 	for (int i=0;i<N_BUTTONS;i++)
 	{
 	//	ImageSourceRef img = loadImage(getAppPath().generic_string()+ui_button_images[i]);
-		_buttons.push_back(shared_ptr<UIElement>(new UIElement(BUTTON_X0+BUTTON_W*i, BUTTON_Y0, BUTTON_W, BUTTON_H/*, img*/)));
+		_buttons.push_back(shared_ptr<UIElement>(new UIElement(BUTTON_BASE + i, BUTTON_X0+BUTTON_W*i, BUTTON_Y0, BUTTON_W, BUTTON_H/*, img*/)));
 	}
 	
 	_tex_iphone4 = loadImage(getAppPath().generic_string()+"UI/iphone4.png");
@@ -136,38 +144,9 @@ void BookAR::setup()
 		Surface thumb_img = loadImage(getAppPath().generic_string()+thumb_files[i]);
 		float ratio = thumb_img.getAspectRatio();
 		int thumb_w = THUMB_H*ratio;
-		_thumbs.push_back(shared_ptr<UIElement>(new UIElement(thumb_x, THUMB_Y0, thumb_w, THUMB_H, thumb_img)));
+		_thumbs.push_back(shared_ptr<UIElement>(new UIElement(THUMB_BASE + i, thumb_x, THUMB_Y0, thumb_w, THUMB_H, thumb_img)));
 		thumb_x += thumb_w+THUMB_SPAC;
 	}
-#ifdef USING_ARTK
-	_artk_tracker = shared_ptr<ARToolKitPlus::TrackerSingleMarker>(new ARToolKitPlus::TrackerSingleMarker(CAM_W, CAM_H, 8, 6, 6, 6, 0));
-	{
-		_artk_tracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_LUM);
-		// load a camera file.
-		std::string path(getAppPath()+"../../resources/no_distortion.cal");
-		if (!_artk_tracker->init(path.c_str(), 1.0f, 1000.0f)) {
-			console() << "ERROR: init() failed\n";
-			return;
-		}
-		_artk_tracker->getCamera()->printSettings();
-		_artk_tracker->setBorderWidth(0.125f);
-		// set a threshold. we could also activate automatic thresholding
-	#if 1
-		_artk_tracker->setThreshold(150);
-	#else
-		_artk_tracker->activateAutoThreshold(true);
-	#endif
-		// let's use lookup-table undistortion for high-speed
-		// note: LUT only works with images up to 1024x1024
-		_artk_tracker->setUndistortionMode(ARToolKitPlus::UNDIST_LUT);
-		// switch to simple ID based markers
-		// use the tool in tools/IdPatGen to generate markers
-		_artk_tracker->setMarkerMode(ARToolKitPlus::MARKER_ID_BCH);
-
-		_artk_tracker->setPoseEstimator(ARToolKitPlus::POSE_ESTIMATOR_RPP);
-	}
-#endif
-
 	//param	
 	mParams = shared_ptr<params::InterfaceGl>(new params::InterfaceGl( "App parameters", Vec2i( 200, 100 ) ));
 	{
@@ -203,6 +182,10 @@ void BookAR::setup()
 	//	_proj_far = 1000;
 	//	mParams->addParam( "_proj_far", &_proj_far, "min=10 max=10000 step=10");
 	}
+
+	setupStates();
+
+	changeToState(_state_tracking); 
 }
 
 

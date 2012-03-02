@@ -2,10 +2,13 @@
 #include "cinder/app/AppBasic.h"
 #include "cinder/Timeline.h"
 
-UIElement::UIElement(int x, int y, int width, int height, gl::Texture tex )
-:_tex(tex),_area(x,y,x+width,y+height),_pos(x,y)
+UIElement::UIElement(int id, int x, int y, int width, int height, gl::Texture tex )
+:_id(id), 
+_tex(tex),
+_area(x,y,x+width,y+height),
+_pos(x,y),
+_state(NORMAL)
 {
-	_state = NORMAL;
 //	App::get()->registerMouseMove(this, &UIElement::mouseMove);
 //	App::get()->registerMouseDown(this, &UIElement::mouseDown);
 }
@@ -50,9 +53,4 @@ void UIElement::draw()
 		gl::color(1,1,1);
 		gl::drawStrokedRoundedRect(_area, 10);
 	}
-}
-
-UIElement::State UIElement::getState()
-{
-	return _state;
 }

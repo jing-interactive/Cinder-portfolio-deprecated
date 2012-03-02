@@ -2,34 +2,9 @@
 #include <ARToolKitPlus/TrackerSingleMarker.h>
 #endif
 #include "BookAR.h"
-#include "cinder/ip/Grayscale.h"
-#include "ARTracker/ARTracker.h"
-
-#if 0
-float BookARApp::cameraXToScreenX(float cx)
-{
-	const int APP_W_2 = APP_W/2;
-	float temp = lmap<float>(cx, 0, CAM_W, -(APP_W_2-SPAC_LEFT)/APP_W_2, (APP_W_2-SPAC_RIGHT)/APP_W_2);
-	return temp;
-}
-
-float BookARApp::cameraYToScreenY(float cy)
-{
-	const int APP_H_2 = APP_H/2;
-	float temp = lmap<float>(cy, 0, CAM_H, (APP_H_2-SPAC_UP)/APP_H_2, -(APP_H_2-SPAC_DOWN)/APP_H_2);
-	return temp;
-}
-#else
-float BookAR::cameraXToScreenX(float cx)
-{
-	return lmap<float>(cx, 0, CAM_W, -1, 1);
-}
-
-float BookAR::cameraYToScreenY(float cy)
-{
-	return lmap<float>(cy, 0, CAM_H, 1, -1);
-}
-#endif
+#include "ui/UIElement.h"
+#include "UI/UIDef.h"
+#include <boost/foreach.hpp>
 
 void BookAR::updateData(const ci::Surface32f& image, gl::VboMesh& mesh, float max_height)
 {
@@ -62,71 +37,56 @@ void BookAR::updateData(const ci::Surface32f& image, gl::VboMesh& mesh, float ma
 	}
 }
 
+namespace
+{
+	enum
+	{//helper
+		OBSERVE = 0,
+		CREATE = 1,
+		CAMERA = 2,
+		SHARE = 3,
+		FRIENDS = 4,
+	};
+}
+
+
 void BookAR::update()
-{	
-	static float sin_counter = 0.0f;
-	if( _capture && _capture.checkNewFrame() ) 
+{
+	StateMachine<BookAR>::update();
+
+	BOOST_FOREACH(shared_ptr<UIElement> e, _buttons)
 	{
-		Surface8u& frame_clr = _capture.getSurface();
-		Channel8u frame_gray = Channel8u( _capture.getWidth(), _capture.getHeight() );
-
-		ip::grayscale( frame_clr, &frame_gray );
-
-		if (_using_sdar)
+		if (e->getState() == UIElement::CLICK)
 		{
-			_ar_tracker->update(frame_clr.getData());
-			int numActiveTrackables = _ar_tracker->getNumTracked();
+			int id = e->getId()-BUTTON_BASE;
+			switch (id)
 			{
-				std::lock_guard<mutex> lock(_mtx_ar);
-				_n_trackables = numActiveTrackables;
-				if (_n_trackables > 0)
-				{
-					sin_counter += 0.5f;
-					_obj_id = _ar_tracker->getID(0);
-
-					updateData(_img_posters[_obj_id], _mesh_book, 200*sinf(sin_counter));
-					console() << _n_trackables << std::endl;
-
-					_ar_tracker->getProjectionMat(_mat_proj);
-
-					_ar_tracker->getModelViewMat(0, _mat_modelview);
-					_ar_tracker->getCorners(0, _pts_corner); 
-				}
+			case OBSERVE:
+				break;
+			case CREATE:
+				changeToState(_state_creating);
+				break;
+			case CAMERA:
+				changeToState(_state_tracking);
+				break;
+			case SHARE:
+				changeToState(_state_sharing);
+				break;
+			case FRIENDS:
+				break;
+			default:
+				break;
 			}
+			break;
 		}
-#ifdef USING_ARTK
-		else
+	}
+	BOOST_FOREACH(shared_ptr<UIElement> e, _thumbs)
+	{
+		if (e->getState() == UIElement::CLICK)
 		{
-			ARToolKitPlus::ARMarkerInfo* m_infos;
-			int numActiveTrackables;
-			std::vector<int> markerId = _artk_tracker->calc(frame_gray.getData(), &m_infos, &numActiveTrackables);
-
-			int best_id = _artk_tracker->selectBestMarkerByCf();
-			{
-				std::lock_guard<mutex> lock(_mtx_ar);
-				_n_trackables = numActiveTrackables;
-
-				for (int j = 0; j < numActiveTrackables; j++) 
-				{
-					if (m_infos[j].id == best_id)
-					{		
-						for(int i=0; i<4; i++) 
-							_pts_corner[i] = ci::Vec2f(m_infos[j].vertex[i][0], m_infos[j].vertex[i][1]);
-						_mat_proj = Matrix44d(_artk_tracker->getProjectionMatrix());
-						_mat_modelview = Matrix44d(_artk_tracker->getModelViewMatrix());
-						break;
-					}
-				}
-			}
+			int id = e->getId()-THUMB_BASE;
+			//TODO: set current model to create
+			break;
 		}
-#else
-		else
-		{
-			_n_trackables = 0;
-		}
-#endif
-		if (_n_trackables == 0)
-			sin_counter = 0;
-		_tex_bg = gl::Texture(frame_clr);
 	}
 }

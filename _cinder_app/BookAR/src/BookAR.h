@@ -16,8 +16,9 @@ using namespace std;
 namespace cinder{namespace params{
 	class InterfaceGl;
 }}
-
-class UserGenContent;
+namespace ARContent{
+	class ContentManager;
+}
 
 class BookAR : public AppBasic, public StateMachine<BookAR>
 {
@@ -36,6 +37,7 @@ public:
 
 	void mouseDown( MouseEvent event );
 	void mouseMove( MouseEvent event );
+//	void buttonDown( ButtonEvent event);
 
 	void update();
 	void draw();
@@ -43,17 +45,17 @@ public:
 
 	void prepareSettings( Settings *settings );
 
-private: //camera device
+public: //camera device
 	Capture _capture;
 	bool _capture_visible;
 	int _device_id;
 	Area _area_capture;
 
-private:
+public:
 	gl::Texture _tex_bg;
 	gl::Texture _tex_default;
 
-private: //AR
+public: //AR
 	shared_ptr<class ARTracker> _ar_tracker;
 	std::mutex _mtx_ar;
 	Matrix44d _mat_modelview;
@@ -62,7 +64,7 @@ private: //AR
 	int	_n_trackables;
 	int _obj_id;
 
-private: //book rendering
+public: //book rendering
 	float _cube_scale;
 	bool _2dbook_visible;
 	bool _3dbook_visible;
@@ -70,23 +72,27 @@ private: //book rendering
 	void updateData(const ci::Surface32f& image, gl::VboMesh& mesh, float max_height);
 	ci::Vec3f _mesh_translate;
 
-private: //InterfaceGl
+public: //InterfaceGl
 	shared_ptr<params::InterfaceGl>	mParams;
 	bool _using_sdar;
 	ci::Vec3f _light_dir;
 	ci::ColorA _cube_clr;
 
-private: //UI
+public: //UI
 	vector<shared_ptr<class UIElement>> _buttons;
 	vector<shared_ptr<class UIElement>> _thumbs;
-private:
+public:
 	ci::Surface32f _img_posters[N_MODELS];
 	gl::Texture _tex_posters[N_MODELS];
+public:	//Content
+	shared_ptr<ARContent::ContentManager> _content_mgr;
 
-private: //GUI
+public: //GUI
 	gl::Texture _tex_iphone4;
 
-private:
-	float cameraXToScreenX(float cx);
-	float cameraYToScreenY(float cy);
+public: //States
+	void setupStates();
+	shared_ptr<State<BookAR>> _state_tracking;
+	shared_ptr<State<BookAR>> _state_creating;
+	shared_ptr<State<BookAR>> _state_sharing;
 };

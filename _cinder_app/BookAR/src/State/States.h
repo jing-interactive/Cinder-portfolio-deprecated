@@ -28,3 +28,12 @@ struct StateSharing: public State<BookAR>
 	void draw();
 	void exit();
 };
+
+struct StateGlobal: public State<BookAR>
+{
+	StateGlobal(BookAR& app):State<BookAR>(app){}
+	void enter();
+	void update();
+	void draw();
+	void exit();
+};

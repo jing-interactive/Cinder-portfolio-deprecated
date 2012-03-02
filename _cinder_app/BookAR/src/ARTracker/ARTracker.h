@@ -8,6 +8,7 @@ class ARTracker
 {
 public:
 	static ARTracker* create(const std::string& type);
+    virtual ~ARTracker(){}
 
     virtual void setup(int width, int height, double dNear, double dFar, void* param = NULL) = 0;
 

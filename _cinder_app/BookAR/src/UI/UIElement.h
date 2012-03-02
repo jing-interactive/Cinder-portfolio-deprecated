@@ -17,18 +17,20 @@ public:
 		OVER,
 		CLICK
 	};
-	UIElement(int x, int y, int width, int height, gl::Texture tex = gl::Texture());
+	UIElement(int id, int x, int y, int width, int height, gl::Texture tex = gl::Texture());
 	bool isPointIn( const Vec2f &pt );
 	bool mouseMove( MouseEvent event );
 	bool mouseDown( MouseEvent event );
 	void draw();
-	State getState();
+	State getState(){return _state;}
+	int getId(){return _id;}
 // 	//! Registers a callback for button events. Returns a unique identifier.
 // 	CallbackId		registerAction( std::function<bool (UIElement)> callback ) { return _mgr.registerCb( callback ); }
 // 	//! Registers a callback for mouseDown events. Returns a unique identifier.
 // 	template<typename T>
 // 	CallbackId		registerAction( T *obj, bool (T::*callback)(UIElement) ) { return _mgr.registerCb( std::bind1st( std::mem_fun( callback ), obj ) ); }
 private:
+	int			_id;
 	State		_state;
 	Vec2f		_pos;
 	gl::Texture _tex;
