@@ -1,71 +1,82 @@
 #include "State.h"
 
-struct StateIdle: public State
+class PuzzleApp;
+
+struct PuzzleState : public State<PuzzleApp>
 {
-	StateIdle(PuzzleApp& app):State(app){}
+	PuzzleState(PuzzleApp& app):State<PuzzleApp>(app){}
+protected:
+	double _time;
+	double getElapsedSeconds();
+	void resetTimer();
+};
+
+struct StateIdle: public PuzzleState
+{
+	StateIdle(PuzzleApp& app):PuzzleState(app){}
 	void enter();
 	void update();
 	void draw();
 	void exit();
 };
 
-struct StateInit: public State
+struct StateInit: public PuzzleState
 {
-	StateInit(PuzzleApp& app):State(app){}
+	StateInit(PuzzleApp& app):PuzzleState(app){}
 	void enter();
 	void update();
 	void draw();
 	void exit();
 };
 
-struct StateCountdown: public State
+struct StateCountdown: public PuzzleState
 {
-	StateCountdown(PuzzleApp& app):State(app){}
+	StateCountdown(PuzzleApp& app):PuzzleState(app){}
 	void enter();
 	void update();
 	void draw();
 	void exit();
 };
 
-struct StateShuffle: public State
+struct StateShuffle: public PuzzleState
 {
-	StateShuffle(PuzzleApp& app):State(app){}
+	StateShuffle(PuzzleApp& app):PuzzleState(app){}
 	void enter();
 	void update();
 	void draw();
 	void exit();
 };
 
-struct StateGame: public State
+struct StateGame: public PuzzleState
 {
-	StateGame(PuzzleApp& app):State(app){}
+	StateGame(PuzzleApp& app):PuzzleState(app){}
 	void enter();
 	void update();
 	void draw();
 	void exit();
 };
 
-struct StateGameover: public State
+struct StateGameover: public PuzzleState
 {
-	StateGameover(PuzzleApp& app):State(app){}
+	StateGameover(PuzzleApp& app):PuzzleState(app){}
 	void enter();
 	void update();
 	void draw();
 	void exit();
 };
 
-struct StateTakephoto: public State
+struct StateTakephoto: public PuzzleState
 {
-	StateTakephoto(PuzzleApp& app):State(app){}
+	StateTakephoto(PuzzleApp& app):PuzzleState(app){}
 	void enter();
 	void update();
 	void draw();
 	void exit();
 };
 
-struct StateSharepic: public State
+struct StateSharepic: public PuzzleState
 {
-	StateSharepic(PuzzleApp& app):State(app){}
+	StateSharepic(PuzzleApp& app):PuzzleState(app){}
 	void enter();
 	void update();
 	void draw();

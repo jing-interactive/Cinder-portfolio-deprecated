@@ -7,7 +7,7 @@ namespace
 	Vec2f pos;
 	Color8u clr(255,255,255);
 	Font font;
-	const int n_countdown = 1;
+	const int n_countdown = 10;
 }
 
 void StateCountdown::enter()

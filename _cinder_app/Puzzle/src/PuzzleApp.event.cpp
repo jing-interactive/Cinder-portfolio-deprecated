@@ -1,37 +1,47 @@
 #include "PuzzleApp.h"
 #include <boost/foreach.hpp>
 #include "Sprite.h"
+#include "Hand.h"
+
+namespace
+{
+	static bool verbose = false;
+}
 
 void PuzzleApp::mouseMove( MouseEvent event )
 {
-	console() << "move" <<endl;
-	_hands[RIGHT].pos.set(event.getPos());
-	_hands[RIGHT].push = false;
+	if (verbose) 
+		console() << "move" <<endl;
+	_hands[RIGHT]->pos.set(event.getPos());
+	_hands[RIGHT]->state = Hand::NORMAL;
 }
 
 void PuzzleApp::mouseDrag( MouseEvent event )
 {
-	_hands[RIGHT].pos.set(event.getPos());
-	console() << "drag" <<endl;
+	if (verbose) 
+		console() << "drag" <<endl;
+	_hands[RIGHT]->state = Hand::DRAG;
+	_hands[RIGHT]->pos.set(event.getPos());
 }
 
 void PuzzleApp::mouseDown( MouseEvent event )
 {
-	console() << "down" <<endl;
-	_hands[RIGHT].pos = event.getPos();
-	_hands[RIGHT].push = true;
+	if (verbose) 
+		console() << "down" <<endl;
+	_hands[RIGHT]->pos = event.getPos();
+	_hands[RIGHT]->state = Hand::CLICK;
 }
 
 void PuzzleApp::mouseUp( MouseEvent event )
 {
-	_hands[RIGHT].push = false;
-	if (_sprite_selected)
-		_sprite_selected.reset();
+	if (verbose)
+		_hands[RIGHT]->state = Hand::NORMAL;
 }
 
 void PuzzleApp::mouseWheel( MouseEvent event )
 {
-	console() << event.getWheelIncrement() <<endl;
+	if (verbose) 
+		console() << event.getWheelIncrement() <<endl;
 	_rotate = event.getWheelIncrement();
 }
 
@@ -43,4 +53,8 @@ void PuzzleApp::keyDown( KeyEvent event )
 		changeToState(_current_state);
 	if (event.getChar() == KeyEvent::KEY_f)
 		setFullScreen(!isFullScreen());
+	if (event.getChar() == KeyEvent::KEY_1)
+		_hands[LEFT]->state = Hand::CLICK;
+	if (event.getChar() == KeyEvent::KEY_2)
+		_hands[LEFT]->state = Hand::NORMAL;
 }

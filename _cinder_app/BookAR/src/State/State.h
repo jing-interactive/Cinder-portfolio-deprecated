@@ -20,19 +20,23 @@ struct StateMachine
 	boost::shared_ptr<State<AppType>> _current_state;
 	boost::shared_ptr<State<AppType>> _prev_state;
 	boost::shared_ptr<State<AppType>> _global_state;//which never changes
-	
+
 	virtual void setupStates() = 0;
 
 	virtual void update()
 	{
-		_global_state->update();
-		_current_state->update();
+		if (_global_state)
+			_global_state->update();
+		if (_current_state)
+			_current_state->update();
 	}
 
 	virtual void draw()	
 	{
-		_global_state->draw();
-		_current_state->draw();
+		if (_global_state)
+			_global_state->draw();
+		if (_current_state)
+			_current_state->draw();
 	}
 
 	void changeToState(const boost::shared_ptr<State<AppType>>& new_state)

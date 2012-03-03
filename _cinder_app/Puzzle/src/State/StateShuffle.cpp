@@ -21,10 +21,10 @@ void StateShuffle::enter()
 	timeline().clear();
 	BOOST_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
 	{
-		timeline().appendTo( &spr->_pos, 
+		timeline().apply( &spr->_center, 
 			Vec2f(randFloat(_app.getWindowWidth()), randFloat(_app.getWindowHeight()))
 			, timeAnim, easeAnim);
-		timeline().appendTo( &spr->_degree, randFloat(90), timeAnim*0.7f, easeAnim);
+		timeline().apply( &spr->_degree, randFloat(90), timeAnim*0.7f, easeAnim);
 	}
 }
 
@@ -36,11 +36,13 @@ void StateShuffle::update()
 
 void StateShuffle::draw()
 {
-	gl::color(Color8u::white());
+	gl::enableAlphaBlending();
+	gl::color(1,1,1,0.8f);
 	BOOST_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
 	{
 		spr->draw();
 	}
+	gl::disableAlphaBlending();
 }
 
 void StateShuffle::exit()

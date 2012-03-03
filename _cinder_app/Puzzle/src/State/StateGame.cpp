@@ -4,6 +4,7 @@
 #include <boost/foreach.hpp>
 #include "Sprite.h"
 #include "cinder/Timeline.h"
+#include "Hand.h"
 
 namespace
 {
@@ -11,61 +12,99 @@ namespace
 	{
 		return lhs->_z < rhs->_z;
 	}
-	const float k_Rotate = 5.0f;
-	const float ABOUT_ZERO = 10;
+	shared_ptr<Sprite> the_spr;
 }
 
 void StateGame::enter()
 {
 	_app._sprite_selected.reset();
+	the_spr.reset();
 }
 
 void StateGame::update()
 {
-	if (_app._sprite_selected)
+	bool gameover = true;
+	BOOST_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
 	{
-		if (_app._hands[RIGHT].push)//update selected sprite's pos && rotation
-		{
-			_app._sprite_selected->_pos = _app._hands[RIGHT].pos;
-			_app._sprite_selected->_degree = _app._sprite_selected->_degree + _app._rotate * k_Rotate;
+		if (!spr->isOK())
+			gameover = false;
+	}
 
-			//TODO: make more degrees
-			int int_degree = _app._sprite_selected->_degree;
-// 			if (abs(_app._sprite_selected->_degree - 180) < ABOUT_ZERO)
-// 				_app._sprite_selected->_degree = 180;
+	if (gameover)
+	{
+		_app.changeToState(_app._state_gameover);
+		return;
+	}
+
+	shared_ptr<Sprite>& sprite_selected = _app._sprite_selected;
+	if (sprite_selected)
+	{
+		if (abs(_app._rotate) > FLT_EPSILON)//update rotation
+		{//ignore move action
+			sprite_selected->addDegree(_app._rotate);
 			_app._rotate = 0;//reset
 		}
 		else
-			_app._sprite_selected.reset();			
+		if (_app._hands[RIGHT]->state == Hand::DRAG)//update position
+		{
+			sprite_selected->setPosFromCursor(_app._hands[RIGHT]->pos);
+		}
+		else
+		{
+			sprite_selected->_state = Sprite::NORMAL;
+			sprite_selected.reset();	
+		}
 	}
-	else if (_app._hands[RIGHT].push)//if non selected and push action fires
+	else 
 	{
+		if (the_spr)
+		{//clear previous sprite status
+			the_spr->_state = Sprite::NORMAL;
+			the_spr.reset();
+		}
 		BOOST_REVERSE_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
 		{//find the hit one
-			if (spr->isPointInside(_app._hands[RIGHT].pos))
-			{
-				_app._sprite_selected = spr;
+			if (spr->isPointInside(_app._hands[RIGHT]->pos))
+			{				
+				the_spr = spr;
 				break;
 			}
 		}
-		if (_app._sprite_selected)
+		if (the_spr)
 		{
-			_app._sprite_selected->_z = _app._next_z++;
-			std::sort(_app._sprites.begin(), _app._sprites.end(), cmpSpriteByZ);
+			if (_app._hands[RIGHT]->state != Hand::NORMAL)
+			{//if non selected and push action fires
+				console() << "ok" <<endl;
+				sprite_selected = the_spr;
+				sprite_selected->setPivotFromCursor(_app._hands[RIGHT]->pos);
+				sprite_selected->_state = Sprite::CLICK; 
+				sprite_selected->_z = _app._next_z++;
+				std::sort(_app._sprites.begin(), _app._sprites.end(), cmpSpriteByZ); 
+			}
+			else
+			{//hover on 
+				the_spr->_state = Sprite::CLICK;
+			}
 		}
 	}
 }
 
 void StateGame::draw()
 {
-	gl::color(Color8u::white());
+	shared_ptr<Sprite>& sprite_selected = _app._sprite_selected;
+
+	gl::enableAlphaBlending();
+	gl::color(1,1,1,0.8f);
 	BOOST_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
 	{
 		spr->draw();
 	}
+	gl::disableAlphaBlending();
+	if (the_spr)
+		the_spr->drawBox();
 }
 
 void StateGame::exit()
 {
-
+	
 }

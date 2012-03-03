@@ -182,6 +182,14 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath="..\src\Hand.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\Hand.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\PuzzleApp.cpp"
 				>
 			</File>
@@ -256,10 +264,6 @@
 			Name="State"
 			>
 			<File
-				RelativePath="..\src\State\State.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\include\State.h"
 				>
 			</File>
@@ -281,6 +285,10 @@
 			</File>
 			<File
 				RelativePath="..\src\State\StateInit.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\State\States.cpp"
 				>
 			</File>
 			<File
