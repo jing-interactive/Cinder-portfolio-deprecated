@@ -70,5 +70,8 @@ public://state machine
  
 	shared_ptr<Sprite> _sprite_selected;
 
+	Font fnt_big;
+	Font fnt_small;
+
 	void setupStates(); 
 }; 

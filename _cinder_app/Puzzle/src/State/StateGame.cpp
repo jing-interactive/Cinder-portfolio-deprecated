@@ -27,7 +27,10 @@ void StateGame::update()
 	BOOST_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
 	{
 		if (!spr->isOK())
+		{
 			gameover = false;
+			break;
+		}
 	}
 
 	if (gameover)
@@ -45,7 +48,7 @@ void StateGame::update()
 			_app._rotate = 0;//reset
 		}
 		else
-		if (_app._hands[RIGHT]->state == Hand::DRAG)//update position
+		if (_app._hands[RIGHT]->state != Hand::NORMAL)//update position
 		{
 			sprite_selected->setPosFromCursor(_app._hands[RIGHT]->pos);
 		}
@@ -93,15 +96,36 @@ void StateGame::draw()
 {
 	shared_ptr<Sprite>& sprite_selected = _app._sprite_selected;
 
-	gl::enableAlphaBlending();
-	gl::color(1,1,1,0.8f);
-	BOOST_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
+	if (sprite_selected)
 	{
-		spr->draw();
+		gl::enableAlphaBlending();
+		gl::color(1,1,1,0.3f);
+		BOOST_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
+		{
+			if (sprite_selected != spr)
+				spr->draw();
+		}
+		gl::color(1,1,1,1);
+		sprite_selected->draw();
 	}
-	gl::disableAlphaBlending();
+	else
+	{
+		gl::disableAlphaBlending();
+		gl::color(1,1,1);
+		BOOST_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
+		{
+			spr->draw();
+		}
+	}
 	if (the_spr)
-		the_spr->drawBox();
+	{
+		glLineWidth(6);
+		the_spr->drawBox(Color8u(255,255,255));
+	}
+	BOOST_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
+	{		
+		spr->drawBox();
+	}
 }
 
 void StateGame::exit()

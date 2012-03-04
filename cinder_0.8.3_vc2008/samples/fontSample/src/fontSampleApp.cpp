@@ -36,7 +36,7 @@ void fontSampleApp::setup()
 		// display some font properties
 		std::stringstream ss;
 		ss << font.getName() << " leading: " << font.getLeading() << " ascent: " << font.getAscent() << " descent: " << font.getDescent() << " glyphs: " << font.getNumGlyphs();
-		ss << "Glyph 'a' maps to " << font.getGlyphChar( 'a' );
+		ss << "Glyph 'a' maps to " << font.getGlyphChar( 'a' )<<std::endl;
 		vector<Font::Glyph> g = font.getGlyphs( "abc123" );
 		ss << g.size();
 		console() << ss.str();

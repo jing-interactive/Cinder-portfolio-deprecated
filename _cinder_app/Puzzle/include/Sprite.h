@@ -13,10 +13,17 @@ struct Sprite
 		CLICK,
 	};
 
+	enum PosState
+	{
+		CORRECT,
+		HALF,
+		WRONG
+	};
 	void addDegree(float deg);
 	void setPosFromCursor(const Vec2f& pos);
 	void setPivotFromCursor(const Vec2f& pos);
 	void drawBox();
+	void drawBox(const Color8u& clr);
 	bool isOK();
 
 	State _state;
@@ -34,7 +41,7 @@ struct Sprite
 	static Sprite* createTile( const Surface8u& img, int x, int y, int tile_w, int tile_h );
 
 private:
-	bool _pos_ok;
+	PosState _pos_state;
 	bool _deg_ok;
 };
 

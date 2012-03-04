@@ -8,7 +8,7 @@ namespace
 	Color8u clr(255,255,255);
 	Font font;
 	const int n_countdown = 2;
-	string welcome("ShareTime!");
+	string welcome = toUtf8(L"’’∆¨∑÷œÌ");
 }
 
 void StateSharepic::enter()

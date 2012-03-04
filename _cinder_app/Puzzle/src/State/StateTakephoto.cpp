@@ -8,7 +8,7 @@ namespace
 	Color8u clr(255,255,255);
 	Font font;
 	const int n_countdown = 2;
-	string welcome("You win the game!");
+	string welcome = toUtf8(L"∫œ”∞¡ÙƒÓ");
 }
 
 void StateTakephoto::enter()
@@ -16,7 +16,7 @@ void StateTakephoto::enter()
 	resetTimer();
 	pos.set(_app.getWindowSize()/2);
 	if (!font)
-		font = Font("Times New Roman", 64);
+		font = Font("STHupo", 64);
 }
 
 void StateTakephoto::update()

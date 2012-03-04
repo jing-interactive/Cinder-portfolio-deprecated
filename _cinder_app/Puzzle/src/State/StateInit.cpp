@@ -8,7 +8,7 @@ namespace
 	Color8u clr(255,255,255);
 	Font font;
 	const int n_countdown = 2;
-	string welcome("welcome to Kinect show! Give introductions.");
+	string welcome = toUtf8(L"欢迎参加体感拼图");
 }
 
 void StateInit::enter()
@@ -16,7 +16,7 @@ void StateInit::enter()
 	resetTimer();
 	pos.set(_app.getWindowSize()/2);
 	if (!font)
-		font = Font("Times New Roman", 64);
+		font = Font("STHupo", 64);
 	_app.selectRandomImage();
 }
 

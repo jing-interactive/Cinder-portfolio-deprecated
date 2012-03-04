@@ -10,21 +10,32 @@ namespace
 {
 	const int N_TILES = 3;
 	const float timeAnim = 3.0f;
+	const float randomRadius = 50.0f;
 	EaseFn easeAnim = EaseInOutQuad();
 }
 
 void StateShuffle::enter()
 {
 	resetTimer();
+	timeline().clear();
 
 	_app.shuffleSelectedImage(N_TILES);
-	timeline().clear();
+
+	vector<Vec2f> centers;
+	BOOST_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
+	{
+		centers.push_back(spr->_center.value() + randVec2f()*randomRadius);
+	}
+
+	std::random_shuffle(centers.begin(), centers.end());
+	std::random_shuffle(centers.begin(), centers.end());
+	int i = 0;
 	BOOST_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
 	{
 		timeline().apply( &spr->_center, 
-			Vec2f(randFloat(_app.getWindowWidth()), randFloat(_app.getWindowHeight()))
-			, timeAnim, easeAnim);
-		timeline().apply( &spr->_degree, randFloat(90), timeAnim*0.7f, easeAnim);
+			centers[i++], timeAnim, easeAnim);
+		if (randInt(10) > 4)
+			timeline().apply( &spr->_degree, randFloat(90), timeAnim*0.7f, easeAnim);
 	}
 }
 
@@ -36,13 +47,12 @@ void StateShuffle::update()
 
 void StateShuffle::draw()
 {
-	gl::enableAlphaBlending();
-	gl::color(1,1,1,0.8f);
+	gl::disableAlphaBlending();
+	gl::color(1,1,1);
 	BOOST_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
 	{
 		spr->draw();
 	}
-	gl::disableAlphaBlending();
 }
 
 void StateShuffle::exit()

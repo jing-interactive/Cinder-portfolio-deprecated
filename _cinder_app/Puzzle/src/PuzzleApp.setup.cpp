@@ -3,6 +3,7 @@
 #include "cinder/ImageIo.h"
 #include "cinder/Rand.h"
 #include "Hand.h"
+#include "cinder/Rand.h"
 
 void PuzzleApp::prepareSettings(Settings *settings){
 	settings->setFrameRate(60.0f);
@@ -14,6 +15,11 @@ void PuzzleApp::setup()
 {
 	_next_z = 0;
 	_rotate = 0;
+
+	Rand::randomize();
+
+	fnt_big = Font("STHupo", 64);
+	fnt_small = Font("YouYuan", 32);
 
 	Color8u hand_clrs[N_HANDS]={Color8u(255,122,122),Color8u(100,0,255)};
 	for (int i=0;i<N_HANDS;i++)

@@ -6,17 +6,14 @@ namespace
 {
 	Vec2f pos;
 	Color8u clr(255,255,255);
-	Font font;
-	const int n_countdown = 2;
-	string welcome("You win the game!");
+	const int n_countdown = 4;
+	string welcome = toUtf8(L"”Œœ∑Ω· ¯");
 }
 
 void StateGameover::enter()
 {
 	resetTimer();
 	pos.set(_app.getWindowSize()/2);
-	if (!font)
-		font = Font("Times New Roman", 64);
 }
 
 void StateGameover::update()
@@ -29,7 +26,7 @@ void StateGameover::draw()
 {
 	gl::color(1,1,1);
 	gl::draw(_app._tex_selected);
-	gl::drawStringCentered(welcome, pos, clr, font);
+	gl::drawStringCentered(welcome, pos, clr, _app.fnt_big);
 }
 
 void StateGameover::exit()
