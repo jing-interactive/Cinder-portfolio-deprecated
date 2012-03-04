@@ -21,7 +21,7 @@ void PuzzleApp::setup()
 	fnt_big = Font("STHupo", 64);
 	fnt_small = Font("YouYuan", 32);
 
-	Color8u hand_clrs[N_HANDS]={Color8u(255,122,122),Color8u(100,0,255)};
+	ColorA hand_clrs[N_HANDS]={ColorA(1,0.5f,0.5f, 0.7f),ColorA(0.5f,0,1.0f,0.7f)};
 	for (int i=0;i<N_HANDS;i++)
 	{
 		_hands[i] = shared_ptr<Hand>(new Hand(hand_clrs[i]));

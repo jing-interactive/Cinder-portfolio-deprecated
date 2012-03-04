@@ -10,6 +10,7 @@ void PuzzleApp::draw()
 
 	StateMachine::draw();
 
+	gl::enableAlphaBlending();
 	for (int i=0;i<N_HANDS;i++)
 	{
 		_hands[i]->draw();

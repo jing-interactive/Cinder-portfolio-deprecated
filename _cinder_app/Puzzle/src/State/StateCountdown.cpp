@@ -6,7 +6,7 @@ namespace
 {
 	Vec2f pos;
 	Color8u clr(255,255,255);
-	const int n_countdown = 1;
+	const int n_countdown = 20;
 }
 
 void StateCountdown::enter()

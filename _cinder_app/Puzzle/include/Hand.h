@@ -8,9 +8,9 @@ struct Hand
 		CLICK,
 		DRAG,
 	};
-	Hand(const ci::Color8u&);
+	Hand(const ci::ColorA&);
 	void draw();
 	ci::Vec2i pos;
-	ci::Color8u clr;
+	ci::ColorA clr;
 	State state;
 };

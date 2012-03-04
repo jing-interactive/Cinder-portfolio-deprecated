@@ -3,7 +3,7 @@
 
 using namespace ci;
 
-Hand::Hand(const ci::Color8u& color):clr(color)
+Hand::Hand(const ci::ColorA& color):clr(color)
 {
 	state = NORMAL;
 }

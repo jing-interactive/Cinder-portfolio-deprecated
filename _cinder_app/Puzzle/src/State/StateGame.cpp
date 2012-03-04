@@ -8,17 +8,22 @@
 
 namespace
 {
+	Vec2f pos;
+	ColorA timer_clr(1,1,1,0.8f);
+	char timer_str[30];
+	shared_ptr<Sprite> the_spr;
 	bool cmpSpriteByZ(const shared_ptr<Sprite>& lhs, const shared_ptr<Sprite>& rhs)
 	{
 		return lhs->_z < rhs->_z;
 	}
-	shared_ptr<Sprite> the_spr;
 }
 
 void StateGame::enter()
 {
+	resetTimer();
 	_app._sprite_selected.reset();
 	the_spr.reset();
+	pos.set(80,40);
 }
 
 void StateGame::update()
@@ -38,6 +43,11 @@ void StateGame::update()
 		_app.changeToState(_app._state_gameover);
 		return;
 	}
+
+	int sec = getElapsedSeconds();
+	int min = sec/60;
+	sec = sec%60;
+	sprintf(timer_str, "%2d:%2d", min, sec);
 
 	shared_ptr<Sprite>& sprite_selected = _app._sprite_selected;
 	if (sprite_selected)
@@ -126,6 +136,9 @@ void StateGame::draw()
 	{		
 		spr->drawBox();
 	}
+	
+	gl::enableAlphaBlending();
+	gl::drawStringCentered(timer_str, pos, timer_clr, _app.fnt_big);
 }
 
 void StateGame::exit()
