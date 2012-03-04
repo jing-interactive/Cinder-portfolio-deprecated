@@ -14,10 +14,10 @@ TODO: change code to use new C++ syntax
 #include <opencv2/core/core.hpp>
 #include <opencv2/core/core_c.h>
 
-#include <xmmintrin.h>
-
 #include "NAR_Sig.h"
 #include "NAR_Config.h"
+
+#include <xmmintrin.h>
 
 // Node in K-Tree
 class KNode

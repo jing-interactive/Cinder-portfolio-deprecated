@@ -1,3 +1,4 @@
+#include <iostream>
 #include <opencv2/imgproc/imgproc.hpp>
 #include "NAR_Config.h"
 #include "DoG.h"
@@ -95,6 +96,11 @@ void DoGKeyPointExtraction(const cv::Mat &grey, bool sub_pixel, std::vector <cv:
 
                 float tr = Dxx + Dyy;
                 float det = Dxx*Dyy - Dxy*Dxy;
+
+                if(det < 0) {
+                    continue;
+                }
+
                 float ratio = tr*tr / det;
 
                 if(ratio > edge_threshold) {

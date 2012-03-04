@@ -8,7 +8,7 @@ up to learn about it. The first attempt used CUDA, which limited it to users wit
 NVIDIA graphics card. Since then I've removed all GPU code and did a major overhaul
 of the code. The new code is called NAR, short for Nghia's Augmented Reality :)
 
-This newer code is intended for educational purposes, targeted at beginners working 
+This code is intended for educational purposes, targeted at beginners working 
 on AR who need some basic code to get them started.
 
 

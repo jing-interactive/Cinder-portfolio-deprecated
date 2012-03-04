@@ -21,21 +21,21 @@
 
 #ifdef _WIN32
 	#ifdef _DEBUG
-	#pragma comment(lib, "opencv_calib3d232d.lib")
-	#pragma comment(lib, "opencv_core232d.lib")
-	#pragma comment(lib, "opencv_features2d232d.lib")
-	#pragma comment(lib, "opencv_highgui232d.lib")
-	#pragma comment(lib, "opencv_imgproc232d.lib")
-	#pragma comment(lib, "opencv_ml232d.lib")
-	#pragma comment(lib, "opencv_video232d.lib")
+	#pragma comment(lib, "opencv_calib3d233d.lib")
+	#pragma comment(lib, "opencv_core233d.lib")
+	#pragma comment(lib, "opencv_features2d233d.lib")
+	#pragma comment(lib, "opencv_highgui233d.lib")
+	#pragma comment(lib, "opencv_imgproc233d.lib")
+	#pragma comment(lib, "opencv_ml233d.lib")
+	#pragma comment(lib, "opencv_video233d.lib")
 #else
-	#pragma comment(lib, "opencv_calib3d232.lib")
-	#pragma comment(lib, "opencv_core232.lib")
-	#pragma comment(lib, "opencv_features2d232.lib")
-	#pragma comment(lib, "opencv_highgui232.lib")
-	#pragma comment(lib, "opencv_imgproc232.lib")
-	#pragma comment(lib, "opencv_ml232.lib")
-	#pragma comment(lib, "opencv_video232.lib")
+	#pragma comment(lib, "opencv_calib3d233.lib")
+	#pragma comment(lib, "opencv_core233.lib")
+	#pragma comment(lib, "opencv_features2d233.lib")
+	#pragma comment(lib, "opencv_highgui233.lib")
+	#pragma comment(lib, "opencv_imgproc233.lib")
+	#pragma comment(lib, "opencv_ml233.lib")
+	#pragma comment(lib, "opencv_video233.lib")
 	#endif
 #endif
 
@@ -119,8 +119,8 @@ int main()
     }
 
     // Font for drawing text
-    gui::IGUIFont* font = device->getGUIEnvironment()->getFont("../media/bitstream_font.xml");
-    assert(font);
+    gui::IGUIFont* font = 0;//device->getGUIEnvironment()->getFont("../media/bitstream_font.xml");
+   // assert(font);
 
     // Lighting
     ILightSceneNode* light1 = smgr->addLightSceneNode(0, core::vector3df(-10, 10, -10), video::SColorf(1.0f,1.0f,1.0f));
@@ -128,7 +128,7 @@ int main()
 
     // Setup camera - remains static at the origin, +z is pointing into the screen! differnt to OpenGL
     ICameraSceneNode *camera = smgr->addCameraSceneNode(0, vector3df(0,0,0), vector3df(0,0,1));
-	camera->setFOV((float)(60.0 * core::PI/180.0));
+    camera->setFOV((float)(60.0 * M_PI/180.0));
 
     // Add 3-axis
     scene::ISceneNode *y_axis = smgr->addMeshSceneNode(
@@ -283,17 +283,17 @@ int main()
             else if(last_job.status == NAR::BAD) {
                 person->setVisible(false);
                 y_axis->setVisible(false);
-            } 
+            }
 
             if(last_job.status != NAR::BAD) {
                 // Draw the features matched
                 for(size_t i=0; i < last_job.matches.size(); i++) {
                     int x = (int)(last_job.matches[i].x + 0.5f);
                     int y = (int)(last_job.matches[i].y + 0.5f);
-                    float scale = last_job.matches[i].scale;
-                    float radius = (NAR_PATCH_SIZE/2) / scale;
+                    //float scale = last_job.matches[i].scale;
+                   // float radius = (NAR_PATCH_SIZE/2) / scale;
 
-                    driver->draw2DPolygon(core::position2d<s32>(x,y), radius, SColor(100, 255, 0, 0), 32);
+                    driver->draw2DPolygon(core::position2d<s32>(x,y), 8, SColor(100, 255, 0, 0), 32);
                 }
 
                 // Draw the countour
@@ -311,6 +311,13 @@ int main()
                     driver->draw2DRectangleOutline(core::recti(pt1.x, pt1.y, pt2.x, pt2.y), SColor(255,0,255,0));
                 }
                 */
+
+                for(size_t i=0; i < last_job.optical_flow_tracks.size(); i++) {
+                    cv::Point2f &pt = last_job.optical_flow_tracks[i];
+					int x = (int)(pt.x + 0.5f);
+					int y = (int)(pt.y + 0.5f);
+                    driver->draw2DPolygon(core::position2d<s32>(x,y), 3, SColor(100, 0, 255, 0), 32);
+                }
             }
         }
 

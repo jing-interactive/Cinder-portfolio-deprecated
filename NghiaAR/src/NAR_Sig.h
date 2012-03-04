@@ -2,8 +2,11 @@
 #define __NAR_SIG_H__
 
 #include "NAR_Config.h"
+
 #include <iostream>
 #include <cstdlib>
+#include <vector>
+#include <opencv2/core/core.hpp>
 
 // NOTE: x,y needs to be float for optical flow to work (assumes floats), else you get drifts
 class NAR_Sig

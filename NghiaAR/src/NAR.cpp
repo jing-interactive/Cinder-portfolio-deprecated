@@ -48,6 +48,7 @@ NAR::NAR()
 		m_search_region_padding = 0;
 		m_failed_frames = 0;
 		m_max_consecutive_fails = 3;
+        m_max_optical_flow_tracks = 100;
 
 		SetAlphaBeta(0.25, 0.25);
 	}
@@ -80,6 +81,8 @@ NAR::NAR()
         m_keypoint_thread[i].Run();
         m_extract_feature_thread[i].Run();
     }
+
+    m_optical_flow_frame_count = 0;
 }
 
 NAR::~NAR()
@@ -167,6 +170,325 @@ void NAR::DumpMatches()
 
 }
 
+bool NAR::FeatureMatching(ThreadJob &job, vector <NAR_Sig> &matches)
+{
+    boost::posix_time::ptime t1, t2;
+
+    // first process called by FindARObject
+    t1 = boost::posix_time::microsec_clock::local_time();
+
+    vector <int> indexes; // index points to m_marker_sig
+    vector <float> dists;
+
+    // Using K-Tree
+    indexes.resize(job.sigs.size());
+    dists.resize(job.sigs.size());
+
+    for(size_t i=0; i < job.sigs.size(); i++) {
+        vector <int> ret_indexes;
+        m_ktree.Search(job.sigs[i], ret_indexes);
+
+        int best_dist = FEATURE_LENGTH;
+        int best_idx = 0;
+
+        for(size_t j=0; j < ret_indexes.size(); j++) {
+            int idx = ret_indexes[j];
+
+            int d = HammingDistance(job.sigs[i].feature, m_AR_object_sigs[idx].feature);
+
+            if(d < best_dist) {
+                best_dist = d;
+                best_idx = ret_indexes[j];
+            }
+        }
+
+        indexes[i] = best_idx;
+        dists[i] = (float)best_dist;
+    }
+
+    // We'll get sigs with duplicate (x,y) (but diff pose)
+    // Keep the best matching one only
+    vector <float> score_map(m_AR_object_width*m_AR_object_height/4, FLT_MAX);
+    vector <int> query_index_map(m_AR_object_width*m_AR_object_height/4, -1);
+    vector <int> model_sig_index_map(m_AR_object_width*m_AR_object_height/4, -1); // using down size map
+
+    int half_width = m_AR_object_width/2;
+    int half_height = m_AR_object_height/2;
+
+    for(size_t i=0; i < job.sigs.size(); i++) {
+        int idx = indexes[i];
+
+        int x = (int)(m_AR_object_sigs[idx].x/2 + 0.5f);
+        int y = (int)(m_AR_object_sigs[idx].y/2 + 0.5f);
+
+        x = min(x, half_width-1);
+        y = min(y, half_height-1);
+
+        x = max(x, 0);
+        y = max(y, 0);
+
+        if(dists[i] < score_map[y*half_width + x]) {
+            score_map[y*half_width + x] = dists[i];
+            query_index_map[y*half_width+ x] = (int)i;
+            model_sig_index_map[y*half_width + x] = idx;
+        }
+    }
+
+    for(size_t i=0; i < query_index_map.size(); i++) {
+        int query_idx = query_index_map[i];
+
+        if(query_idx != -1 && score_map[i] < m_max_sig_dist) {
+            int model_sig_idx = model_sig_index_map[i];
+
+            float a = job.sigs[query_idx].orientation;
+            float b = m_AR_object_sigs[model_sig_idx].orientation;
+
+            job.sigs[query_idx].orientation_diff = ShortestAngle(a,b);
+            job.sigs[query_idx].match_x = m_AR_object_sigs[model_sig_idx].x;
+            job.sigs[query_idx].match_y = m_AR_object_sigs[model_sig_idx].y;
+            //job.sigs[query_idx].match_idx = model_sig_idx;
+            //job.sigs[query_idx].score = score_map[i];
+
+            matches.push_back(job.sigs[query_idx]);
+        }
+    }
+
+    t2 = boost::posix_time::microsec_clock::local_time();
+
+    cout << "Feature matching: " << ((t2-t1).total_milliseconds()) << " ms, total: " << job.sigs.size() << endl;
+
+    if((int)matches.size() < m_min_inliers) {
+        return false;
+    }
+
+    return true;
+}
+
+bool NAR::Homography(ThreadJob &job, const std::vector <NAR_Sig> &matches, cv::Mat &H)
+{
+    boost::posix_time::ptime t1, t2;
+    vector <cv::Point2f> src2, dst2;
+    const cv::Mat &cur_grey = job.blurred;
+
+    t1 = boost::posix_time::microsec_clock::local_time();
+
+    for(size_t i=0; i < matches.size(); i++) {
+        src2.push_back(cv::Point2f(matches[i].match_x, matches[i].match_y));
+        dst2.push_back(cv::Point2f(matches[i].x, matches[i].y));
+    }
+
+    // If we have optical flow vectors, attempt to track them and add them to the list of points for homography
+    // The more points the better the homography!
+    int OF_index_offset = (int)src2.size();
+
+    if(!m_prev_optical_flow_pts.empty()) {
+        vector <cv::Point2f> cur_pts, cur_pts2;
+        vector <uchar> of_status;
+        vector <float> of_err;
+
+        cv::calcOpticalFlowPyrLK(m_prev_grey, cur_grey, m_prev_optical_flow_pts, cur_pts, of_status, of_err, cv::Size(21,21), 3);
+
+        m_avg_optical_flow.x = 0;
+        m_avg_optical_flow.y = 0;
+
+        for(size_t i=0; i < cur_pts.size(); i++) {
+            if(of_status[i]) {
+                src2.push_back(m_prev_AR_object_pts[i]);
+                dst2.push_back(cur_pts[i]);
+
+                cur_pts2.push_back(cur_pts[i]);
+
+                m_avg_optical_flow.x += (cur_pts[i].x - m_prev_optical_flow_pts[i].x);
+                m_avg_optical_flow.y += (cur_pts[i].y - m_prev_optical_flow_pts[i].y);
+            }
+        }
+
+        m_avg_optical_flow.x /= cur_pts2.size();
+        m_avg_optical_flow.y /= cur_pts2.size();
+
+        m_prev_optical_flow_pts = cur_pts2;
+    }
+
+    int best_inliers;
+    vector <char> inlier_mask;
+    vector <uchar> mask2;
+
+    H = cv::findHomography(src2, dst2, CV_RANSAC, m_RANSAC_threshold, mask2);
+
+    best_inliers = accumulate(mask2.begin(), mask2.end(), 0);
+    t2 = boost::posix_time::microsec_clock::local_time();
+
+    // Move back up later
+    if(best_inliers < m_min_inliers) {
+        cout << "Not enough inliers: " << best_inliers << endl;
+        cout << "Homography: " << job.matches.size() << " - " <<  (t2-t1).total_milliseconds() << " ms" << endl;
+        return false;
+    }
+
+    // Do least-square fit
+    vector <cv::Point2f> src3, dst3;;
+    vector <cv::Point2f> optical_flow_pts, AR_object_pts;
+
+    vector <NAR_Sig> filtered;
+    for(size_t i=0; i < mask2.size(); i++) {
+        if(mask2[i] == 0) {
+            continue;
+        }
+
+        src3.push_back(src2[i]);
+        dst3.push_back(dst2[i]);
+
+        if((int)i >= OF_index_offset) {
+            optical_flow_pts.push_back(src2[i]);
+            AR_object_pts.push_back(dst2[i]);
+        }
+    }
+
+    H = cv::findHomography(src3, dst3, 0);
+
+    job.matches = dst3;
+
+    t2 = boost::posix_time::microsec_clock::local_time();
+
+    cout << "Homography: " << job.matches.size() << " - " <<  (t2-t1).total_milliseconds() << " ms" << endl;
+
+    return true;
+}
+
+bool NAR::PoseEstimation(const cv::Mat &H)
+{
+    boost::posix_time::ptime t1, t2;
+
+    t1 = boost::posix_time::microsec_clock::local_time();
+
+    cv::Mat image_pts = m_inv_camera_intrinsics * H * m_AR_object_image_pts;
+
+    double obj_err, img_err;
+    int it;
+
+    bool status = RPP::Rpp(m_AR_oject_worlds_pts, image_pts, m_AR_object_rotation, m_AR_object_translation, it, obj_err, img_err);
+
+    if(!status) {
+        return false;
+    }
+
+    t2 = boost::posix_time::microsec_clock::local_time();
+
+    cout << "RPP: " << (t2-t1).total_milliseconds() << " ms" << endl;
+
+    return true;
+}
+
+void NAR::UpdateAlphaBetaTracker(ThreadJob &job)
+{
+    double yaw = 0, pitch = 0, roll = 0;
+    double x, y, z;
+
+    x = m_AR_object_translation.at<double>(0,0);
+    y = m_AR_object_translation.at<double>(1,0);
+    z = m_AR_object_translation.at<double>(2,0);
+
+    GetYPR(m_AR_object_rotation, yaw, pitch, roll);
+
+    m_tracker.SetState(x, y, z, yaw, pitch, roll);
+
+    if(m_tracker.Ready()) {
+        m_tracker.GetCorrectedState(&x, &y, &z, &yaw, &pitch, &roll);
+
+        m_AR_object_rotation = MakeRotation3x3(yaw, pitch, roll);
+        m_AR_object_translation.at<double>(0,0) = x;
+        m_AR_object_translation.at<double>(1,0) = y;
+        m_AR_object_translation.at<double>(2,0) = z;
+
+        ProjectModel(x, y, z, yaw, pitch, roll, job.corners);
+    }
+
+    job.rotation = m_AR_object_rotation;
+    job.translation = m_AR_object_translation;
+}
+
+void NAR::UpdateSearchRegion(ThreadJob &job)
+{
+    cv::Point region_start;
+    cv::Point region_end;
+
+    if(m_tracker.Ready() && m_failed_frames < m_max_consecutive_fails) {
+        job.use_search_region = true;
+
+        PredictSearchRegion(region_start, region_end);
+
+        job.search_region_start = region_start;
+        job.search_region_end = region_end;
+
+        for(int i=0; i < KEYPOINT_LEVELS; i++) {
+            float scale = pow(KEYPOINT_SCALE_FACTOR, (float)i);
+
+            m_keypoint_thread[i].SetSearchRegion(region_start*scale, region_end*scale);
+        }
+    }
+    else {
+        job.use_search_region = false;
+
+        for(int i=0; i < KEYPOINT_LEVELS; i++) {
+            m_keypoint_thread[i].TurnOffSearchRegion();
+        }
+    }
+}
+
+void NAR::UpdateOpticalFlowTracks(ThreadJob &job, const cv::Mat &H, const cv::Mat &cur_grey)
+{
+    if(m_optical_flow_frame_count >= 16) {
+        m_prev_optical_flow_pts.clear();
+
+        m_optical_flow_frame_count = 0;
+        m_avg_optical_flow.x = 0;
+        m_avg_optical_flow.y = 0;
+        m_last_optical_flow_size = 0;
+    }
+    else if(m_prev_optical_flow_pts.empty()) {
+        cv::Mat mask2 = cv::Mat::zeros(job.img.size(), CV_8U);
+        cv::rectangle(mask2, job.search_region_start, job.search_region_end, cv::Scalar(255), CV_FILLED);
+        cv::goodFeaturesToTrack(cur_grey, m_prev_optical_flow_pts, m_max_optical_flow_tracks, 0.04, 8.0, mask2);
+
+        cout << "OF tracks " << m_prev_optical_flow_pts.size() << endl;
+
+        // Reverse transform
+        cv::Mat inv = H.inv();
+        cv::Mat X(3,1,CV_64F);
+        cv::Mat X2(3,1,CV_64F);
+        X.at<double>(2,0) = 1.0;
+
+        m_prev_AR_object_pts.resize(m_prev_optical_flow_pts.size());
+
+        for(size_t i=0; i < m_prev_optical_flow_pts.size(); i++) {
+            X.at<double>(0,0) = m_prev_optical_flow_pts[i].x;
+            X.at<double>(1,0) = m_prev_optical_flow_pts[i].y;
+            X.at<double>(2,0) = 1.0;
+
+            X2 = inv*X;
+
+            m_prev_AR_object_pts[i].x = (float)(X2.at<double>(0,0) / X2.at<double>(2,0));
+            m_prev_AR_object_pts[i].y = (float)(X2.at<double>(1,0) / X2.at<double>(2,0));
+        }
+
+        m_optical_flow_frame_count = 0;
+        m_avg_optical_flow.x = 0;
+        m_avg_optical_flow.y = 0;
+        m_last_optical_flow_size = (int)m_prev_optical_flow_pts.size();
+    }
+
+    if(fabs(m_avg_optical_flow.x) + fabs(m_avg_optical_flow.y) > 20) { // significant movement
+        cout << "     Significant movement" << endl;
+        m_optical_flow_frame_count++;
+    }
+    else if(m_prev_optical_flow_pts.size() < m_last_optical_flow_size*7/10) { // we've lost too many optical flow tracks
+        cout << "     Lost too many optical flow tracks" << endl;
+        m_optical_flow_frame_count++;
+    }
+
+    job.optical_flow_tracks = m_prev_optical_flow_pts;
+}
+
 int NAR::FindARObject(ThreadJob &job)
 {
     if(m_AR_object_sigs.empty()) {
@@ -183,251 +505,38 @@ int NAR::FindARObject(ThreadJob &job)
         assert(0);
     }
 
-    vector <char> mask;
-    cv::Mat H(3,3,CV_64F);
     boost::posix_time::ptime t1, t2;
+    cv::Mat H(3,3,CV_64F);
+    vector <NAR_Sig> matches;
+    cv::Mat &cur_grey = job.blurred;
 
     cout << endl;
 
-    // Feature matching
-    {
-        t1 = boost::posix_time::microsec_clock::local_time();
-
-        vector <int> indexes; // index points to m_marker_sig
-        vector <float> dists;
-
-        // Using K-Tree
-        indexes.resize(job.sigs.size());
-        dists.resize(job.sigs.size());
-
-        for(size_t i=0; i < job.sigs.size(); i++) {
-            vector <int> ret_indexes;
-            m_ktree.Search(job.sigs[i], ret_indexes);
-
-            int best_dist = FEATURE_LENGTH;
-            int best_idx = 0;
-
-            for(size_t j=0; j < ret_indexes.size(); j++) {
-                int idx = ret_indexes[j];
-
-                int d = HammingDistance(job.sigs[i].feature, m_AR_object_sigs[idx].feature);
-
-                if(d < best_dist) {
-                    best_dist = d;
-                    best_idx = ret_indexes[j];
-                }
-            }
-
-            indexes[i] = best_idx;
-            dists[i] = (float)best_dist;
-        }
-
-        // We'll get sigs with duplicate (x,y) (but diff pose)
-        // Keep the best matching one only
-        vector <float> score_map(m_AR_object_width*m_AR_object_height/4, FLT_MAX);
-        vector <int> query_index_map(m_AR_object_width*m_AR_object_height/4, -1);
-        vector <int> model_sig_index_map(m_AR_object_width*m_AR_object_height/4, -1); // using down size map
-
-        int half_width = m_AR_object_width/2;
-        int half_height = m_AR_object_height/2;
-
-        for(size_t i=0; i < job.sigs.size(); i++) {
-            int idx = indexes[i];
-
-            int x = (int)(m_AR_object_sigs[idx].x/2 + 0.5f);
-            int y = (int)(m_AR_object_sigs[idx].y/2 + 0.5f);
-
-            x = min(x, half_width-1);
-            y = min(y, half_height-1);
-
-            x = max(x, 0);
-            y = max(y, 0);
-
-            if(dists[i] < score_map[y*half_width + x]) {
-                score_map[y*half_width + x] = dists[i];
-                query_index_map[y*half_width+ x] = (int)i;
-                model_sig_index_map[y*half_width + x] = idx;
-            }
-        }
-
-        for(size_t i=0; i < query_index_map.size(); i++) {
-            int query_idx = query_index_map[i];
-
-            if(query_idx != -1 && score_map[i] < m_max_sig_dist) {
-                int model_sig_idx = model_sig_index_map[i];
-
-                float a = job.sigs[query_idx].orientation;
-                float b = m_AR_object_sigs[model_sig_idx].orientation;
-
-                job.sigs[query_idx].orientation_diff = ShortestAngle(a,b);
-                job.sigs[query_idx].match_x = m_AR_object_sigs[model_sig_idx].x;
-                job.sigs[query_idx].match_y = m_AR_object_sigs[model_sig_idx].y;
-                //job.sigs[query_idx].match_idx = model_sig_idx;
-                //job.sigs[query_idx].score = score_map[i];
-
-                job.matches.push_back(job.sigs[query_idx]);
-            }
-        }
-
-        t2 = boost::posix_time::microsec_clock::local_time();
-
-        cout << "Feature matching: " << ((t2-t1).total_milliseconds()) << " ms, total: " << job.sigs.size() << endl;
-    }
-
-    FilterOrientation(job.matches, job.matches, 1);
-
-    cout << "FilterOrientation " <<  job.matches.size() << endl;
-
-  // DumpMatches();
-
-    if((int)job.matches.size() < m_min_inliers) {
-        int status = DetectionFailed();
-        return status;
-    }
-
-    // Homography
-    {
-        t1 = boost::posix_time::microsec_clock::local_time();
-
-        vector <cv::Point2f> src2, dst2;
-
-        for(size_t i=0; i < job.matches.size(); i++) {
-            src2.push_back(cv::Point2f(job.matches[i].match_x, job.matches[i].match_y));
-            dst2.push_back(cv::Point2f(job.matches[i].x, job.matches[i].y));
-        }
-
-        int best_inliers;
-        vector <char> inlier_mask;
-        vector <uchar> mask2;
-
-        H = cv::findHomography(src2, dst2, CV_RANSAC, m_RANSAC_threshold, mask2);
-
-        best_inliers = accumulate(mask2.begin(), mask2.end(), 0);
-        t2 = boost::posix_time::microsec_clock::local_time();
-
-        // Move back up later
-        if(best_inliers < m_min_inliers) {
-            cout << "Not enough inliers: " << best_inliers << endl;
-            cout << "Homography: " << job.matches.size() << " - " <<  (t2-t1).total_milliseconds() << " ms" << endl;
-
-            int status = DetectionFailed();
-            return status;
-        }
-
-		// Do least-square fit
-        src2.clear();
-        dst2.clear();
-
-        vector <NAR_Sig> filtered;
-        for(size_t i=0; i < mask2.size(); i++) {
-            if(mask2[i] == 0) {
-                continue;
-            }
-
-            src2.push_back(cv::Point2f(job.matches[i].match_x, job.matches[i].match_y));
-            dst2.push_back(cv::Point2f(job.matches[i].x, job.matches[i].y));
-            filtered.push_back(job.matches[i]);
-
-            //cout << "Orientation " << TO_DEG(query_sigs_filtered[i].orientation_diff) << " " << query_sigs_filtered[i].score << endl;
-        }
-
-        H = cv::findHomography(src2, dst2, 0);
-
-        job.matches = filtered;
-
-        t2 = boost::posix_time::microsec_clock::local_time();
-
-        cout << "Homography: " << job.matches.size() << " - " <<  (t2-t1).total_milliseconds() << " ms" << endl;
-    }
-
-    // Find pose
-    {
-        t1 = boost::posix_time::microsec_clock::local_time();
-
-        cv::Mat image_pts = m_inv_camera_intrinsics * H * m_AR_object_image_pts;
-
-        double obj_err, img_err;
-        int it;
-
-        bool status = RPP::Rpp(m_AR_oject_worlds_pts, image_pts, m_AR_object_rotation, m_AR_object_translation, it, obj_err, img_err);
-
-        if(!status) {
-            int ret_status = DetectionFailed();
-            return ret_status;
-        }
-
-        t2 = boost::posix_time::microsec_clock::local_time();
-
-        cout << "RPP: " << (t2-t1).total_milliseconds() << " ms" << endl;
-    }
-
-    // Update tracker - smoother pose
-    {
-        double yaw = 0, pitch = 0, roll = 0;
-        double x, y, z;
-
-        x = m_AR_object_translation.at<double>(0,0);
-        y = m_AR_object_translation.at<double>(1,0);
-        z = m_AR_object_translation.at<double>(2,0);
-
-        GetYPR(m_AR_object_rotation, yaw, pitch, roll);
-
-        m_tracker.SetState(x, y, z, yaw, pitch, roll);
-
-        if(m_tracker.Ready()) {
-            m_tracker.GetCorrectedState(&x, &y, &z, &yaw, &pitch, &roll);
-
-            m_AR_object_rotation = MakeRotation3x3(yaw, pitch, roll);
-            m_AR_object_translation.at<double>(0,0) = x;
-            m_AR_object_translation.at<double>(1,0) = y;
-            m_AR_object_translation.at<double>(2,0) = z;
-
-            ProjectModel(x, y, z, yaw, pitch, roll, job.corners);
-        }
-
-        job.rotation = m_AR_object_rotation;
-        job.translation = m_AR_object_translation;
-    }
-
-    // See if we can use prediction for the next frames
-    if(m_tracker.Ready() && m_failed_frames < m_max_consecutive_fails) {
-        cv::Point region_start;
-        cv::Point region_end;
-
-        job.use_search_region = true;
-
-        PredictSearchRegion(region_start, region_end);
-
-        job.search_region_start = region_start;
-        job.search_region_end = region_end;
-
-        for(int i=0; i < KEYPOINT_LEVELS; i++) {
-            float scale = pow(KEYPOINT_SCALE_FACTOR, (float)i);
-
-            region_start *= scale;
-            region_end *= scale;
-
-            m_keypoint_thread[i].SetSearchRegion(region_start, region_end);
-        }
-    }
-    else {
-        job.use_search_region = false;
-
-        for(int i=0; i < KEYPOINT_LEVELS; i++) {
-            m_keypoint_thread[i].TurnOffSearchRegion();
-        }
-    }
-
+    // goto for the win! :)
+    if(!FeatureMatching(job, matches)) goto fail;
+    if(!FilterOrientation(matches, matches, 1)) goto fail;
+    if(!Homography(job, matches, H)) goto fail;
+    if(!PoseEstimation(H)) goto fail;
+    UpdateAlphaBetaTracker(job);
+    UpdateSearchRegion(job);
+    UpdateOpticalFlowTracks(job, H, cur_grey);
+
+    m_prev_grey = cur_grey;
     m_failed_frames = 0;
-
     cout << "Found match!" << endl;
 
     return NAR::GOOD;
+
+fail:
+    int status = DetectionFailed();
+    return status;
 }
 
 NAR::StatusCode NAR::DetectionFailed()
 {
     m_failed_frames++;
+    m_prev_optical_flow_pts.clear();
+    m_prev_AR_object_pts.clear();
 
     // For now we'll just return the same pose when the frame has failed to detect the model
     // Prediction doesn't work very well in the presence of motion blur
@@ -443,7 +552,13 @@ NAR::StatusCode NAR::DetectionFailed()
         m_AR_object_translation.at<double>(1,0) = y;
         m_AR_object_translation.at<double>(2,0) = z;
         */
+
         return PREDICTION;
+    }
+
+    // reset search regions
+    for(int i=0; i < KEYPOINT_LEVELS; i++) {
+        m_keypoint_thread[i].TurnOffSearchRegion();
     }
 
     m_tracker.Reset();
@@ -492,12 +607,12 @@ void NAR::PredictSearchRegion(cv::Point &ret_start, cv::Point &ret_end)
     m_region_end = ret_end;
 }
 
-void NAR::FilterOrientation(vector <NAR_Sig> &input, vector <NAR_Sig> &output, int top)
+bool NAR::FilterOrientation(vector <NAR_Sig> &input, vector <NAR_Sig> &output, int top)
 {
     assert(top > 0);
 
 	if(input.size() == 0) {
-		return;
+		return false;
 	}
 
     // Modifies the orientation_bin in input
@@ -541,6 +656,14 @@ void NAR::FilterOrientation(vector <NAR_Sig> &input, vector <NAR_Sig> &output, i
     }
 
     filtered.swap(output);
+
+    cout << "FilterOrientation: " <<  output.size() << " matches" << endl;
+
+    if((int)output.size() < m_min_inliers) {
+        return false;
+    }
+
+    return true;
 }
 
 float NAR::ShortestAngle(float a, float b)
@@ -689,6 +812,11 @@ void NAR::SetAlphaBeta(double alpha, double beta)
 void NAR::SetMaxFailedFrames(int n)
 {
     m_failed_frames = n;
+}
+
+void NAR::SetMaxOpticalFlowTracks(int n)
+{
+    m_max_optical_flow_tracks = n;
 }
 
 void NAR::SetAngleStep(int angle_step)
@@ -840,7 +968,7 @@ void NAR::LearnARObject(const cv::Mat &AR_object)
         for(int yaw=0; yaw <= m_yaw_end; yaw += m_angle_step) {
             for(int pitch=0; pitch <= m_pitch_end; pitch += m_angle_step) {
                 pose_count++;
-                cout << "learning pose " << pose_count << "/" << total_poses << endl;
+                cout << "Learning pose " << pose_count << "/" << total_poses << endl;
 
                 WarpImage(resized, warped, (float)yaw, (float)pitch, 0.0f, inv_affine);
 
@@ -1051,11 +1179,17 @@ void NAR::DoWork()
                     ThreadJob job_done;
 
                     job_done.img = jobs[0].img;
+
                     current_group_id = jobs[0].group_id;
                     group_id_processed = true;
 
                     for(size_t i=0; i < jobs.size(); i++) {
                         job_done.sigs.insert(job_done.sigs.end(), jobs[i].sigs.begin(), jobs[i].sigs.end());
+
+                        // Pass the full size blurred grey image
+                        if(jobs[i].blurred.size() == jobs[i].img.size()) {
+                            job_done.blurred = jobs[i].blurred;
+                        }
                     }
 
                     // Find the object
@@ -1067,7 +1201,7 @@ void NAR::DoWork()
 
                         end = boost::posix_time::microsec_clock::local_time();
 
-                        cout << "FindARObject " << (end-start).total_milliseconds() << " ms" << endl;
+                        cout << "FindARObject: " << (end-start).total_milliseconds() << " ms" << endl;
                     }
 
                     boost::mutex::scoped_lock lock2(m_job_mutex);

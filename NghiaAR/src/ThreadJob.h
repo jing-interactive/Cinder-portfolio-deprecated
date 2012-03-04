@@ -20,10 +20,11 @@ struct ThreadJob
     // Everything below here is final result of the AR process, used for display
     int status; // return status of the AR process
     cv::Mat rotation, translation;
-    std::vector <NAR_Sig> matches;
+    std::vector <cv::Point2f> matches;
     bool use_search_region;
     cv::Point2i search_region_start, search_region_end;
     cv::Point2i corners[4]; // 4 corners of the AR object
+    std::vector <cv::Point2f> optical_flow_tracks;
 };
 
 #endif

@@ -41,6 +41,7 @@ public:
     void SetMaxSigDist(int max_sig_dist);
     void SetAlphaBeta(double alpha, double beta);
     void SetMaxFailedFrames(int n);
+    void SetMaxOpticalFlowTracks(int n);
 
     // Parameters used to learn the AR object
     void SetAngleStep(int angle_step);
@@ -58,17 +59,26 @@ public:
     // Debug/visual feedback functions
     size_t GetARObjectSigSizeBytes(); // returns the size of AR object signature in bytes
     void DumpMatches(); // for debugging individual matches
+    std::vector <cv::Point2f>& GetOFTracks() { return m_prev_optical_flow_pts; }
 
     boost::mutex m_job_mutex;
 
 private:
     virtual void DoWork();
 
+    // FindARObject processing pipeline
     int FindARObject(const cv::Mat &grey);
+    bool FeatureMatching(ThreadJob &job, std::vector <NAR_Sig> &matches);
+    bool FilterOrientation(std::vector <NAR_Sig> &input, std::vector <NAR_Sig> &output, int top = 0); // filter inconsistent oriented sigs
+    bool Homography(ThreadJob &job, const std::vector <NAR_Sig> &matches, cv::Mat &H);
+    bool PoseEstimation(const cv::Mat &H);
+    void UpdateAlphaBetaTracker(ThreadJob &job);
+    void UpdateSearchRegion(ThreadJob &job);
+    void UpdateOpticalFlowTracks(ThreadJob &job, const cv::Mat &H, const cv::Mat &cur_grey);
+
     void LearnARObject(const cv::Mat &AR_object);
     void UpdateParameters(); // sets the 3x3 camera matrix
     int FindARObject(ThreadJob &job);
-    void FilterOrientation(std::vector <NAR_Sig> &input, std::vector <NAR_Sig> &output, int top = 0); // filter inconsistent oriented sigs
 
     float ShortestAngle(float a, float b); // shortest angle from a to be
     void ProjectModel(double x, double y, double z, double yaw, double pitch, double roll, cv::Point2i ret_corners[4]);
@@ -100,6 +110,7 @@ private:
     float m_scale_factor;
     int m_nscales;
     int m_max_feature_labels;
+    int m_max_optical_flow_tracks;
     // End parameters
 
     // Opengl specific
@@ -131,6 +142,14 @@ private:
     std::deque <ThreadJob> m_jobs_done;
     KeyPointThread m_keypoint_thread[KEYPOINT_LEVELS];
     ExtractFeatureThread m_extract_feature_thread[KEYPOINT_LEVELS];
+
+    // Optical flow assist
+    std::vector <cv::Point2f> m_prev_optical_flow_pts;
+    std::vector <cv::Point2f> m_prev_AR_object_pts;
+    int m_optical_flow_frame_count; // increments where this significant movement
+    cv::Point2f m_avg_optical_flow;
+    int m_last_optical_flow_size;
+    cv::Mat m_prev_grey;
 };
 
 #endif

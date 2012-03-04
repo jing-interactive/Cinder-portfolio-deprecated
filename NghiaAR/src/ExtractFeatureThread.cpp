@@ -227,7 +227,7 @@ void ExtractFeatureThread::GetPatchFeatureDescriptor(const unsigned char patch[N
     }
 }
 
-
+#ifdef USE_SSE4
 float ExtractFeatureThread::Bilinear(const cv::Mat &grey, float x, float y)
 {
     // Faster to do integer additions than float
@@ -262,7 +262,9 @@ float ExtractFeatureThread::Bilinear(const cv::Mat &grey, float x, float y)
 
     return result;
 }
-/*
+
+#else
+
 float ExtractFeatureThread::Bilinear(const cv::Mat &grey, float x, float y)
 {
     int x1 = (int)x;
@@ -288,4 +290,4 @@ float ExtractFeatureThread::Bilinear(const cv::Mat &grey, float x, float y)
 
     return _w1*grey1 + _w2*grey2 + _w3*grey3 + _w4*grey4;
 }
-*/
+#endif

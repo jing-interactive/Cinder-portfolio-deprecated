@@ -109,6 +109,7 @@ void AlphaBetaTracker::GetCorrectedState(double *x, double *y, double *z, double
 
 void AlphaBetaTracker::GetPredictedState(double *x, double *y, double *z, double *yaw, double *pitch, double *roll)
 {
+/*
     // Disable prediction for now
 
     *x = est_x;
@@ -117,15 +118,14 @@ void AlphaBetaTracker::GetPredictedState(double *x, double *y, double *z, double
     *yaw = est_yaw;
     *pitch = est_pitch;
     *roll = est_roll;
+*/
 
-/*
     *x = est_x + est_dx;
     *y = est_y + est_dy;
     *z = est_z + est_dz;
     *yaw = est_yaw;// + est_dyaw;
     *pitch = est_pitch;// + est_dpitch;
     *roll = est_roll;// + est_droll;
-*/
 }
 
 void AlphaBetaTracker::GetVelocity(double *dx, double *dy, double *dz, double *dyaw, double *dpitch, double *droll)
