@@ -3,16 +3,16 @@
 namespace ARContent{
 
 
-Function* Function::createFunction( const std::string& on_click )
+Function* Function::create( const std::string& on_click )
 {
 	//////////////////////////////////////////////////////////////////////////
 	//TODO: lots of things to do
+	return NULL;
 }
 
-Function* Function::createFunction( const std::string& function, const std::string& arg1, const std::string& arg2/*=""*/, const std::string& arg3/*=""*/ )
+Function* Function::create( const std::string& function, const std::string& arg1, const std::string& arg2/*=""*/, const std::string& arg3/*=""*/ )
 {
-	
+	return NULL;
 }
-
 
 }

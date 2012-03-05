@@ -14,6 +14,7 @@ namespace ARContent{
 class Model
 {
 public:
+	static Model* create(const cinder::XmlTree& xmltree);
 	//OPTIONAL
 	std::vector<std::shared_ptr<class Animation>> animations;
 

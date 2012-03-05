@@ -13,6 +13,7 @@ namespace ARContent{
 class Scene
 {
 public:
+	static Scene* create(const cinder::XmlTree& xmltree);
 	std::string name;
 	
 	//TODO: 

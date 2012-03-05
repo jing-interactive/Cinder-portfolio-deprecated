@@ -19,12 +19,12 @@ bool ContentManager::load( const std::string& plist )
 		for( XmlTree::Iter item = firstContent.begin(); item != firstContent.end(); ++item )
 		{
 			//key
-			string mdl_key = item->getValue<string>();
+			string key = item->getValue<string>();
 			item++;
 			Content* ctt = Content::create(*item);
 			if (ctt)
 			{
-				_contents.insert(Pair(mdl_key, shared_ptr<Content>(ctt)));
+				_contents.insert(Pair(key, shared_ptr<Content>(ctt)));
 			}
 		}
 

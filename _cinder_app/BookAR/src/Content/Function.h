@@ -11,8 +11,8 @@ public:
 	enum{
 		N_ARGS = 3,
 	};
-	static Function* createFunction(const std::string& on_click);
-	static Function* createFunction(const std::string& function, const std::string& arg1, const std::string& arg2="", const std::string& arg3="");
+	static Function* create(const std::string& on_click);
+	static Function* create(const std::string& function, const std::string& arg1, const std::string& arg2="", const std::string& arg3="");
 
 	virtual void execute() = 0;
 

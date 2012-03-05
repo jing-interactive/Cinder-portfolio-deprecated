@@ -29,11 +29,11 @@ public:
 	//<string>Jurassic Park</string>
 	std::string name;
 
-	bool sync;//yes/no
+	std::string sync;//yes/no
 
-	Type type;
+	std::string type;
 
-	std::vector<std::shared_ptr<class Scene>> _scenes;
+	std::vector<std::shared_ptr<class Scene>> scenes;
 };
 }
 #endif //CONTENT_H
