@@ -14,7 +14,7 @@
 
 namespace
 {
-	const float THRESH_DIST = 30.0f;
+	const float THRESH_DIST = 70.0f;
 	const float k_Rotate = 5.0f;
 	const float ABOUT_ZERO = 10;
 }

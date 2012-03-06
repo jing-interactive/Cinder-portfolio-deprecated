@@ -56,9 +56,18 @@ struct StateGame: public PuzzleState
 	void exit();
 };
 
-struct StateGameover: public PuzzleState
+struct StateWin: public PuzzleState
 {
-	StateGameover(PuzzleApp& app):PuzzleState(app){}
+	StateWin(PuzzleApp& app):PuzzleState(app){}
+	void enter();
+	void update();
+	void draw();
+	void exit();
+};
+
+struct StateLose: public PuzzleState
+{
+	StateLose(PuzzleApp& app):PuzzleState(app){}
 	void enter();
 	void update();
 	void draw();

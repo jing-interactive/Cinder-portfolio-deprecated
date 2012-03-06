@@ -276,15 +276,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\State\StateGameover.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\src\State\StateIdle.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\src\State\StateInit.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\State\StateLose.cpp"
 				>
 			</File>
 			<File
@@ -305,6 +305,10 @@
 			</File>
 			<File
 				RelativePath="..\src\State\StateTakephoto.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\State\StateWin.cpp"
 				>
 			</File>
 		</Filter>

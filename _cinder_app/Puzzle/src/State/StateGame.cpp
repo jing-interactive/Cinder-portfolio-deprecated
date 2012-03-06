@@ -6,9 +6,12 @@
 #include "cinder/Timeline.h"
 #include "Hand.h"
 
+extern void setTimeString(const string& str);
+
 namespace
 {
 	Vec2f pos;
+	float totalGameTime = 5*60;//5 seconds
 	ColorA timer_clr(1,1,1,0.8f);
 	char timer_str[30];
 	shared_ptr<Sprite> the_spr;
@@ -28,26 +31,35 @@ void StateGame::enter()
 
 void StateGame::update()
 {
-	bool gameover = true;
+	bool winning = true;
 	BOOST_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
 	{
 		if (!spr->isOK())
 		{
-			gameover = false;
+			winning = false;
 			break;
 		}
 	}
 
-	if (gameover)
+	if (winning)
 	{
-		_app.changeToState(_app._state_gameover);
+		setTimeString(timer_str);
+		_app.changeToState(_app._state_win);
 		return;
 	}
 
 	int sec = getElapsedSeconds();
-	int min = sec/60;
-	sec = sec%60;
-	sprintf(timer_str, "%2d:%2d", min, sec);
+	if (sec > totalGameTime)//exceed the gaming time
+	{
+		_app.changeToState(_app._state_lose);
+		return;
+	}
+	else
+	{
+		int min = sec/60;
+		sec = sec%60;
+		sprintf(timer_str, "%2d:%2d", min, sec);
+	}
 
 	shared_ptr<Sprite>& sprite_selected = _app._sprite_selected;
 	if (sprite_selected)

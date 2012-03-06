@@ -64,7 +64,8 @@ public://state machine
 	shared_ptr<State<PuzzleApp>> _state_countdown;
 	shared_ptr<State<PuzzleApp>> _state_shuffle;
 	shared_ptr<State<PuzzleApp>> _state_game;
-	shared_ptr<State<PuzzleApp>> _state_gameover;
+	shared_ptr<State<PuzzleApp>> _state_win;
+	shared_ptr<State<PuzzleApp>> _state_lose;
 	shared_ptr<State<PuzzleApp>> _state_takephoto;
 	shared_ptr<State<PuzzleApp>> _state_sharepic;
  
