@@ -17,11 +17,12 @@ namespace ARContent{
 		{
 			string key = it->getValue<string>();
 			it++;
+			string value = it->getValue<string>();
 			if (key == "name")
-				scn->name = key;//TODO:////fdffff
+				scn->name = value;
 
 			else if (key == "initialCommands")
-				scn->initialCommands = key;
+				scn->initialCommands = value;
 			else if (key == "models")
 			{
 				BOOST_FOREACH(XmlTree item, it->getChildren())

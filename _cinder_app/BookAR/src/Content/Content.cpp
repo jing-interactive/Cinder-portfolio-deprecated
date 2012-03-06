@@ -19,9 +19,10 @@ namespace ARContent{
 		{
 			string key = it->getValue<string>();
 			it++;
-			if (key == "name")	ctt->name = it->getValue<string>();
-			else if (key == "type")	ctt->type = it->getValue<string>();
-			else if (key == "sync")	ctt->sync = it->getValue<string>();	
+			string value = it->getValue<string>();
+			if (key == "name")	ctt->name = value;
+			else if (key == "type")	ctt->type = value;
+			else if (key == "sync")	ctt->sync = value;	
 			else if (key == "scenes")
 			{
 				BOOST_FOREACH(XmlTree item, it->getChildren())

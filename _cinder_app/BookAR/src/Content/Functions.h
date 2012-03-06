@@ -21,7 +21,7 @@ public:
 	void execute();
 };
 
-class FunctioGotoScene : public Function
+class FunctionGotoScene : public Function
 {
 public:
 	void execute();

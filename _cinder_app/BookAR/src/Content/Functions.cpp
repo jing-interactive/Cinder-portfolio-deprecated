@@ -3,8 +3,6 @@
 namespace ARContent{
 
  
-
-
 	void FunctionShow::execute()
 	{
 
@@ -17,7 +15,7 @@ namespace ARContent{
 	}
 
 
-	void FunctioGotoScene::execute()
+	void FunctionGotoScene::execute()
 	{
 
 	}
