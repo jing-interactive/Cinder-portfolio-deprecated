@@ -1,4 +1,8 @@
 #include "Functions.h"
+#include <cinder/Utilities.h>
+
+
+using namespace ci;
 
 namespace ARContent{
 
@@ -8,36 +12,30 @@ namespace ARContent{
 
 	}
 
-
 	void FunctionHide::execute()
 	{
 
 	}
-
 
 	void FunctionGotoScene::execute()
 	{
 
 	}
 
-
 	void FunctionGotoLink::execute()
 	{
-
+		launchWebBrowser(Url(args[0]));
 	}
-
 
 	void FunctionPlayInAppVideo::execute()
 	{
 
 	}
 
-
 	void FunctionBindAnimation::execute()
 	{
 
 	}
-
 
 	void FunctionPlaySound::execute()
 	{
@@ -50,18 +48,15 @@ namespace ARContent{
 
 	}
 
-
 	void FunctionShowOverlay::execute()
 	{
 
 	}
 
-
 	void FunctionLoadCommands::execute()
 	{
 
 	}
-
 
 	void FunctionLockLandscape::execute()
 	{

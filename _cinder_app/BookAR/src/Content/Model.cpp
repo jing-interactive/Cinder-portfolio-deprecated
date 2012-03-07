@@ -3,9 +3,12 @@
 #include <list>
 #include "Model.h"
 #include "Function.h"
+#include "Animation.h"
 #include <boost/foreach.hpp>
+#include <cinder/app/AppBasic.h>
 
 using namespace ci;
+using namespace ci::app;
 using namespace std;
 
 namespace ARContent{
@@ -54,6 +57,27 @@ namespace ARContent{
 				mdl->hidden = (value == "yes");
 		}
 
+//		App::get()->registerMouseUp(mdl, &(Model::mouseUp));
+
 		return mdl;
 	}
+
+	void Model::draw()
+	{
+// 		BOOST_FOREACH(shared_ptr<Animation> item, animations)
+// 		{
+// 			item->draw();
+// 		}
+	}
+
+	bool Model::mouseUp( ci::app::MouseEvent event )
+	{
+		if (on_click)
+			on_click->execute();
+		BOOST_FOREACH(std::shared_ptr<class Function> fun, click_actions)
+			fun->execute();
+
+		return false;
+	}
+
 }

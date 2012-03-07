@@ -3,10 +3,11 @@
 #endif
 
 #include "BookAR.h"
-#include "cinder/ImageIo.h"
-#include "cinder/params/Params.h"
-#include "cinder/Utilities.h"
-#include "cinder/Text.h"
+#include <cinder/ImageIo.h>
+#include <cinder/params/Params.h>
+#include <cinder/Utilities.h>
+#include <cinder/Text.h>
+#include <cinder/Xml.h>
 #include "ARTracker/ARTracker.h"
 #include "UI/UIElement.h"
 #include "UI/UIDef.h"
@@ -41,20 +42,7 @@ namespace
 		"UI/share2.png",
 		"UI/friend2.png"
 	};
-	char* thumb_files[BookAR::N_MODELS]=
-	{
-		"/poster/thumb_transformer.jpg",
-		"/poster/thumb_tintin.jpg",
-		"/poster/thumb_MooseJaw.jpg",
-	};
 	const int N_BUTTONS = _countof(ui_button_images);
-	std::vector<std::string> mdl_files;
-	char* post_files[BookAR::N_MODELS]=
-	{
-		"/poster/transformer.jpg",
-		"/poster/tintin.jpg",
-		"/resources/MooseJawMask.jpg",
-	};
 }
 
 void BookAR::prepareSettings( Settings *settings )
@@ -66,6 +54,45 @@ void BookAR::prepareSettings( Settings *settings )
 	settings->setBorderless(false);
 	settings->setTitle("SDAR App");
 }
+
+bool BookAR::readAppConfig( const string& appXml )
+{	
+	vector<string> mdl_files;
+	vector<string> thumb_files;
+	try
+	{
+		XmlTree doc(loadFile(appXml));
+		XmlTree firstConfig = doc.getChild("SDARConfig");
+
+		for( XmlTree::Iter item = firstConfig.begin(); item != firstConfig.end(); ++item )
+		{
+			//key
+			string name = item->getAttribute("name");
+			string thumb = item->getAttribute("thumb");
+			mdl_files.push_back(name);
+			thumb_files.push_back(thumb);
+		}
+	}
+	catch( ... ) {
+		console() << "[ERROR] Failed to readAppConfig from " << appXml<<std::endl;
+		return false;
+	}
+	_ar_tracker->setup(CAM_W, CAM_H, 10, 1000, static_cast<void*>(&mdl_files));
+
+	//thumbs
+	int thumb_x = THUMB_X0;
+	for (int i=0;i<thumb_files.size();i++)
+	{
+		Surface thumb_img = loadImage(getAppPath().generic_string()+thumb_files[i]);
+		float ratio = thumb_img.getAspectRatio();
+		int thumb_w = static_cast<int>(THUMB_H*ratio);
+		_thumbs.push_back(shared_ptr<UIElement>(new UIElement(THUMB_BASE + i, thumb_x, THUMB_Y0, thumb_w, THUMB_H, thumb_img)));
+		thumb_x += thumb_w+THUMB_SPAC;
+	}
+
+	return true;
+}
+
 
 void BookAR::setup()
 {	
@@ -81,14 +108,7 @@ void BookAR::setup()
 	_tex_iphone4 = loadImage(getAppPath().generic_string()+"UI/iphone4.png");
 	_area_capture.set(SPAC_LEFT,SPAC_UP,APP_W-SPAC_RIGHT,APP_H-SPAC_DOWN);
 
-	mdl_files.resize(N_MODELS);
-	mdl_files[0] = "/resources/transformer.mdl";
-	mdl_files[1] = "/resources/tintin.mdl";
-	mdl_files[2] = "/resources/MooseJaw.mdl";
-
 	_ar_tracker = shared_ptr<ARTracker>(ARTracker::create("SDAR"));
-
-	_obj_id = -1;
 
 	_device_id = 0;
 
@@ -100,7 +120,7 @@ void BookAR::setup()
 		ci::constrain<int>(_device_id, 0, devices.size()-1);
 	}
 
-	if (_device_id < devices.size())
+	if (_device_id < (int)devices.size())
 	{
 		try {
 			_capture = Capture( CAM_W, CAM_H, devices[_device_id] );
@@ -123,30 +143,9 @@ void BookAR::setup()
 		_tex_bg = layout.render(true);
 	}
 
-	_ar_tracker->setup(CAM_W, CAM_H, 10, 1000, static_cast<void*>(&mdl_files));
+	if (!readAppConfig(getAppPath().generic_string()+"config/sdar.xml"))
+		quit();
 
-	_tex_default = loadImage(getAppPath().generic_string()+"resources/android.png");
-
-	
-	for (int i=0;i<N_MODELS;i++)
-	{
-		_img_posters[i] = loadImage(getAppPath().generic_string()+post_files[i]);
-		if (i==N_MODELS-1)
-			_tex_posters[i] = _img_posters[i];
-		else
-			_tex_posters[i] = _tex_default;
-	}
-
-	//thumbs
-	int thumb_x = THUMB_X0;
-	for (int i=0;i<N_MODELS;i++)
-	{
-		Surface thumb_img = loadImage(getAppPath().generic_string()+thumb_files[i]);
-		float ratio = thumb_img.getAspectRatio();
-		int thumb_w = THUMB_H*ratio;
-		_thumbs.push_back(shared_ptr<UIElement>(new UIElement(THUMB_BASE + i, thumb_x, THUMB_Y0, thumb_w, THUMB_H, thumb_img)));
-		thumb_x += thumb_w+THUMB_SPAC;
-	}
 	//param	
 	mParams = shared_ptr<params::InterfaceGl>(new params::InterfaceGl( "App parameters", Vec2i( 200, 100 ) ));
 	{

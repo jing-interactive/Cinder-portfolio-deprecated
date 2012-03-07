@@ -1,8 +1,10 @@
 #include "States.h"
 #include "../BookAR.h"
 #include "../ARTracker/ARTracker.h"
-#include "cinder/Utilities.h"
-#include "cinder/ip/Grayscale.h"
+#include <cinder/Utilities.h>
+#include <cinder/ip/Grayscale.h>
+#include "../Content/ContentManager.h"
+#include "../Content/Content.h"
 
 namespace
 {
@@ -15,11 +17,13 @@ namespace
 	{
 		return lmap<float>(cy, 0, BookAR::CAM_H, 1, -1);
 	}
+
+	int tid = -1;
 }
 
 void StateTracking::enter()
 {
-
+	_app._current_content.reset();
 }
 
 void StateTracking::update()
@@ -35,18 +39,18 @@ void StateTracking::update()
 
 		ip::grayscale( frame_clr, &frame_gray );
 
-		tracker->update(frame_clr.getData());
-		int numActiveTrackables = _app._ar_tracker->getNumTracked();
+		int numActiveTrackables = tracker->update(frame_clr.getData());
 		{
 			std::lock_guard<mutex> lock(_app._mtx_ar);
 			_app._n_trackables = numActiveTrackables;
 			if (_app._n_trackables > 0)
 			{
 				sin_counter += 0.5f;
-				_app._obj_id = tracker->getID(0);
-
-				_app.updateData(_app._img_posters[_app._obj_id], _app._mesh_book, 200*sinf(sin_counter));
-				console() << _app._n_trackables << std::endl;
+				tid = tracker->getID(0);
+				string name = tracker->getName(0);
+				_app._current_content = _app._content_mgr->getContentByName(name);
+				//_app.updateData(_app._img_posters[tid], _app._mesh_book, 200*sinf(sin_counter));
+				console() << name << std::endl;
 
 				tracker->getProjectionMat(_app._mat_proj);
 
@@ -83,7 +87,7 @@ void StateTracking::draw()
 			gl::disableDepthWrite();
 			//	gl::setMatricesWindow(Vec2i(CAM_W,CAM_H));
 
-			_app._tex_posters[_app._obj_id].enableAndBind();			
+			_app._current_content->getTexture().enableAndBind();			
 			//			gl::pushMatrices();			
 			{
 				glMatrixMode(GL_PROJECTION);
@@ -93,20 +97,7 @@ void StateTracking::draw()
 				gl::setViewport(_app._area_capture + Vec2i(0,93));
 
 				glBegin(GL_QUADS);
-				if (_app._obj_id == BookAR::N_MODELS-1)
-					gl::color(Color8u(255,255,255));
-				else
-					gl::color(Color8u(0,0,0));
-#if 0
-				glTexCoord2f(0.0f, 0.0f);
-				glVertex3f(-1,-1,0.5);
-				glTexCoord2f(1.0f, 0.0f);
-				glVertex3f(1,-1,0.5);
-				glTexCoord2f(1.0f, 1.0f);
-				glVertex3f(1,1,0.5);
-				glTexCoord2f(0.0f, 1.0f);
-				glVertex3f(-1,1,0.5);
-#else
+				gl::color(1,1,1);
 				glTexCoord2f(0.0f, 0.0f);
 				glVertex3f(cameraXToScreenX(_app._pts_corner[0].x),cameraYToScreenY(_app._pts_corner[0].y),0.5);
 				glTexCoord2f(1.0f, 0.0f);
@@ -115,16 +106,14 @@ void StateTracking::draw()
 				glVertex3f(cameraXToScreenX(_app._pts_corner[2].x),cameraYToScreenY(_app._pts_corner[2].y),0.5);
 				glTexCoord2f(0.0f, 1.0f);
 				glVertex3f(cameraXToScreenX(_app._pts_corner[3].x),cameraYToScreenY(_app._pts_corner[3].y),0.5);
-#endif
 				glEnd();
 			}
 			//			gl::popMatrices();
-			_app._tex_posters[_app._obj_id].disable();
+			_app._current_content->getTexture().disable();
 		}
-
-		if (_app._3dbook_visible && _app._obj_id != BookAR::N_MODELS-1)
-		{//rendering.3d			
-#if 1
+#ifndef NEW_CONTENT_SYSTEM
+		if (_app._3dbook_visible && tid != BookAR::N_MODELS-1)
+		{//rendering.3d	
 			glMatrixMode( GL_PROJECTION );
 			glLoadMatrixd(_app._mat_proj);
 			glMatrixMode( GL_MODELVIEW );
@@ -144,36 +133,17 @@ void StateTracking::draw()
 				gl::draw( _app._mesh_book );
 			}
 			gl::popModelView();
-
-#else
-			// now draw 3D cube at marker location with proper scale
-			gl::enableDepthWrite();
-			gl::enableDepthRead();
-			gl::pushMatrices();				
-			glMatrixMode( GL_PROJECTION );
-			glLoadMatrixd(_mat_proj);
-			glMatrixMode( GL_MODELVIEW );
-			glLoadMatrixd( _mat_modelview );
-			gl::BoolState b1(GL_LIGHTING);
-
-			glEnable(GL_LIGHTING);
-			glEnable(GL_LIGHT0);
-
-			GLfloat lightPosition[] = { -_light_dir.x, -_light_dir.y, -_light_dir.z, 0.0f };
-			glLightfv( GL_LIGHT0, GL_POSITION, lightPosition );
-			glMaterialfv( GL_FRONT, GL_DIFFUSE,	_cube_clr );
-			gl::color( _cube_clr );
-			// scale is 80mm
-			// make cube resting on top of marker instead of inside
-			//glDisable(GL_TEXTURE_2D);
-			gl::drawCube(Vec3f(0.0f,0.0f,0.0f), Vec3f(_cube_scale,_cube_scale,_cube_scale));
-			gl::popMatrices();
-#endif
 		}
+#endif
 	}
 }
 
 void StateTracking::exit()
+{
+
+}
+
+void StateTracking::mouseUp( cinder::app::MouseEvent event )
 {
 
 }

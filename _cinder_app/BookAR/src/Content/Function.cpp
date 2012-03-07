@@ -1,7 +1,7 @@
 #include "Function.h"
-#include <boost/algorithm/string.hpp>
 #include <vector>
 #include "Functions.h"
+#include <cinder/Utilities.h>
 
 using namespace std;
 
@@ -12,19 +12,22 @@ namespace ARContent{
 Function* Function::create( const std::string& on_click )
 {
 	Function* fun = NULL;
-	vector<string> words;
-	boost::algorithm::split(words, on_click, boost::is_any_of("#"),	boost::algorithm::token_compress_on );
-	//create different Function according to words
-	if (words[0] == "gotolink")
+	vector<string> words = ci::split(on_click, ':');
+	if (words.size() > 2)
 	{
-		fun = new FunctionGotoLink();
-		fun->args[0] = words[2];
+		//create different Function according to words
+		if (words[0] == "gotolink")
+		{
+			fun = new FunctionGotoLink();
+			fun->args[0] = words[1]+":"+words[2];
+		}
+		else if (words[1] == "gotoscene")
+		{
+			fun = new FunctionGotoScene();
+			fun->args[0] = words[1];
+		}
 	}
-	else if (words[1] == "gotoscene")
-	{
-		fun = new FunctionGotoScene();
-		fun->args[0] = words[1];
-	}
+
 	return fun;
 }
 

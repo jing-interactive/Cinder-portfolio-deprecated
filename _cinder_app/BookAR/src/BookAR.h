@@ -1,13 +1,15 @@
-#include "cinder/app/AppBasic.h"
-#include "cinder/Capture.h"
-#include "cinder/Surface.h"
-#include "cinder/Matrix44.h"
-#include "cinder/Thread.h"
+#include <cinder/app/AppBasic.h>
+#include <cinder/Capture.h>
+#include <cinder/Surface.h>
+#include <cinder/Matrix44.h>
+#include <cinder/Thread.h>
 
-#include "cinder/gl/gl.h"
-#include "cinder/gl/Texture.h"
-#include "cinder/gl/Vbo.h"
+#include <cinder/gl/gl.h>
+#include <cinder/gl/Texture.h>
+#include <cinder/gl/Vbo.h>
 #include "State/State.h"
+
+#define NEW_CONTENT_SYSTEM
 
 using namespace ci;
 using namespace ci::app;
@@ -18,6 +20,7 @@ namespace cinder{namespace params{
 }}
 namespace ARContent{
 	class ContentManager;
+	class Content;
 }
 
 class BookAR : public AppBasic, public StateMachine<BookAR>
@@ -29,7 +32,6 @@ public:
 		APP_H = 750,
 		CAM_W = 320,
 		CAM_H = 240,
-		N_MODELS = 3,
 	};
   public:
 	void setup();
@@ -37,6 +39,7 @@ public:
 
 	void mouseDown( MouseEvent event );
 	void mouseMove( MouseEvent event );
+	void mouseUp( MouseEvent event );
 //	void buttonDown( ButtonEvent event);
 
 	void update();
@@ -53,7 +56,6 @@ public: //camera device
 
 public:
 	gl::Texture _tex_bg;
-	gl::Texture _tex_default;
 
 public: //AR
 	shared_ptr<class ARTracker> _ar_tracker;
@@ -62,7 +64,6 @@ public: //AR
 	Matrix44d _mat_proj;
 	ci::Vec2f  _pts_corner[4];
 	int	_n_trackables;
-	int _obj_id;
 
 public: //book rendering
 	float _cube_scale;
@@ -81,11 +82,10 @@ public: //InterfaceGl
 public: //UI
 	vector<shared_ptr<class UIElement>> _buttons;
 	vector<shared_ptr<class UIElement>> _thumbs;
-public:
-	ci::Surface32f _img_posters[N_MODELS];
-	gl::Texture _tex_posters[N_MODELS];
+
 public:	//Content
 	shared_ptr<ARContent::ContentManager> _content_mgr;
+	shared_ptr<ARContent::Content> _current_content;
 
 public: //GUI
 	gl::Texture _tex_iphone4;
@@ -95,4 +95,7 @@ public: //States
 	shared_ptr<State<BookAR>> _state_tracking;
 	shared_ptr<State<BookAR>> _state_creating;
 	shared_ptr<State<BookAR>> _state_sharing;
+
+private:
+	bool readAppConfig(const string& appXml);
 };

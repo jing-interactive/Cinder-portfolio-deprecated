@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <cinder/Cinder.h>
+#include <cinder/gl/Texture.h>
 
 namespace cinder{
 	class XmlTree;
@@ -15,6 +16,8 @@ class Content
 {
 public:
 	static Content* create(const cinder::XmlTree& xmltree);
+
+	void draw();
 
 	enum Type
 	{
@@ -34,6 +37,13 @@ public:
 	std::string type;
 
 	std::vector<std::shared_ptr<class Scene>> scenes;
+	std::string texture;
+
+	cinder::gl::Texture getTexture();
+private:
+	Content();
+	//rendering stuff
+	cinder::gl::Texture gl_texture;
 };
 }
 #endif //CONTENT_H

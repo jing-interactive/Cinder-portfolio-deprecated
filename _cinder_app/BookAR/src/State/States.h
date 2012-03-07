@@ -1,37 +1,49 @@
 #include "State.h"
+#include <cinder/app/MouseEvent.h>
 
 class BookAR;
 
-struct StateTracking: public State<BookAR>
+struct BookARState: public State<BookAR>
 {
-	StateTracking(BookAR& app):State<BookAR>(app){}
+	BookARState(BookAR& app):State<BookAR>(app){}
+	virtual void mouseDown(cinder::app::MouseEvent event){}
+	virtual void mouseMove(cinder::app::MouseEvent event){}
+	virtual void mouseUp(cinder::app::MouseEvent event){}
+};
+
+struct StateTracking: public BookARState
+{
+	StateTracking(BookAR& app):BookARState(app){}
 	void enter();
 	void update();
 	void draw();
 	void exit();
+	void mouseUp(cinder::app::MouseEvent event);
 };
 
-struct StateCreating: public State<BookAR>
+struct StateCreating: public BookARState
 {
-	StateCreating(BookAR& app):State<BookAR>(app){}
+	StateCreating(BookAR& app):BookARState(app){}
 	void enter();
 	void update();
 	void draw();
 	void exit();
+	void mouseDown(cinder::app::MouseEvent event);
 };
 
-struct StateSharing: public State<BookAR>
+struct StateSharing: public BookARState
 {
-	StateSharing(BookAR& app):State<BookAR>(app){}
+	StateSharing(BookAR& app):BookARState(app){}
 	void enter();
 	void update();
 	void draw();
 	void exit();
+	void mouseDown(cinder::app::MouseEvent event);
 };
 
-struct StateGlobal: public State<BookAR>
+struct StateGlobal: public BookARState
 {
-	StateGlobal(BookAR& app):State<BookAR>(app){}
+	StateGlobal(BookAR& app):BookARState(app){}
 	void enter();
 	void update();
 	void draw();

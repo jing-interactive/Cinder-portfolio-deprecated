@@ -232,6 +232,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\SDAR.lib"
+				>
+			</File>
+			<File
 				RelativePath="..\src\ARTracker\SDARTracker.cpp"
 				>
 			</File>
@@ -360,10 +364,6 @@
 				</File>
 			</Filter>
 		</Filter>
-		<File
-			RelativePath="..\..\..\_common\SDAR\SDAR.lib"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

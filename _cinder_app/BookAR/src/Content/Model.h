@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 #include <cinder/Cinder.h>
+#include <cinder/app/MouseEvent.h>
+//#include <cinder/Timeline.h>
 
 namespace cinder{
 	class XmlTree;
@@ -17,6 +19,9 @@ public:
 	static Model* create(const cinder::XmlTree& xmltree);
 	//OPTIONAL
 	std::vector<std::shared_ptr<class Animation>> animations;
+
+	void draw();
+	bool mouseUp(ci::app::MouseEvent event);
 
 	std::string name;
 	std::string name_type;//always "MD2"

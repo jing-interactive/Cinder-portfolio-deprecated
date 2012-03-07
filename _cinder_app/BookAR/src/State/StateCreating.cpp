@@ -1,6 +1,6 @@
 #include "States.h"
 #include "../BookAR.h"
-#include "cinder/Utilities.h"
+#include <cinder/Utilities.h>
 
 namespace
 {
@@ -22,6 +22,11 @@ void StateCreating::draw()
 }
 
 void StateCreating::exit()
+{
+
+}
+
+void StateCreating::mouseDown( cinder::app::MouseEvent event )
 {
 
 }

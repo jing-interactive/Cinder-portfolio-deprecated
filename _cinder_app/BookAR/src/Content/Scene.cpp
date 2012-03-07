@@ -37,4 +37,11 @@ namespace ARContent{
 		return scn;
 	}
 
+	void Scene::draw()
+	{
+		BOOST_FOREACH(shared_ptr<Model> item, models)
+		{
+			item->draw();
+		}
+	}
 }

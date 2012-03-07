@@ -15,6 +15,8 @@ class Scene
 public:
 	static Scene* create(const cinder::XmlTree& xmltree);
 	std::string name;
+
+	void draw();
 	
 	//TODO: 
 	//http://blippar.com/service/ar/tas/metroie/video/playSound2.php?sound=trex.wav::::Loading...
@@ -22,5 +24,6 @@ public:
 
 	std::vector<std::shared_ptr<class Model>> models;
 };
+
 }
 #endif //SCENE_H

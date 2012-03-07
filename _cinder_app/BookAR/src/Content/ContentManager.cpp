@@ -1,6 +1,6 @@
 #include "ContentManager.h"
-#include "cinder/Xml.h"
-#include "cinder/app/App.h"
+#include <cinder/Xml.h>
+#include <cinder/app/App.h>
 #include "Content.h"
 
 using namespace ci;
@@ -35,6 +35,17 @@ bool ContentManager::load( const std::string& plist )
 	}
 
 	return true;
+}
+
+std::shared_ptr<Content> ContentManager::getContentByName( const std::string& name ) const
+{
+	std::shared_ptr<Content> ctt;
+	ConstIter it = _contents.find(name);
+	if (it != _contents.end())
+	{
+		ctt = it->second;
+	}
+	return ctt;
 }
 
 }

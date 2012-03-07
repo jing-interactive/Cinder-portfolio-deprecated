@@ -1,6 +1,7 @@
 #include "BookAR.h"
 #include "UI/UIElement.h"
 #include <boost/foreach.hpp>
+#include "State/States.h"
 
 void BookAR::mouseDown( MouseEvent event )
 {
@@ -13,6 +14,13 @@ void BookAR::mouseDown( MouseEvent event )
 	{
 		e->mouseDown(event);
 	}
+}
+
+void BookAR::mouseUp( MouseEvent event )
+{
+	State<BookAR>* state = _current_state.get();
+	BookARState* aState = static_cast<BookARState*>(state);
+	aState->mouseUp(event);
 }
 
 void BookAR::mouseMove( MouseEvent event )

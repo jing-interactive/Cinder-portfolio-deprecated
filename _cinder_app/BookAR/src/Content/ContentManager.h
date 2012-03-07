@@ -11,11 +11,13 @@ class ContentManager
 {
 public:
 	typedef std::map<std::string, std::shared_ptr<class Content>> Map;
-	typedef std::pair<std::string, std::shared_ptr<class Content>> Pair;
+	typedef Map::value_type  Pair;
 	typedef Map::iterator Iter;
+	typedef Map::const_iterator ConstIter;
 
 	Map _contents;
 public:
+	std::shared_ptr<class Content> getContentByName(const std::string& name) const;
 	bool load(const std::string& plist);
 };
 }

@@ -1,11 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>      
-    <key>mie_jurassic</key>
+<dict>
+<!-- using standard format
+  	<key>MooseJaw</key>
+	<dict>
+        <key>name</key>
+        <string>MooseJaw Glass</string>
+        <key>texture</key>
+        <string>resources/MooseJawMask.jpg</string>
+		<key>type</key>
+		<string>overlay</string>
+	</dict>
+  	<key>Tintin</key>
+	<dict>
+        <key>name</key>
+        <string>The Adventures of Tintin in 3D</string>  
+        <key>texture</key>
+        <string>resources/tintin.jpg</string>
+		<key>type</key>
+		<string>overlay</string>
+	</dict>
+  	<key>Transformer</key>
+	<dict>
+        <key>name</key>
+        <string>Transformer III</string>  
+        <key>texture</key>
+        <string>resources/transformer.jpg</string>
+		<key>type</key>
+		<string>overlay</string>
+	</dict>
+-->
+    <key>Clothing</key>
 	<dict>
 		<key>name</key>
-		<string>Jurassic Park</string>
+		<string>Clothing Taobao</string>
         <key>scenes</key>
         <array>
             <dict>
@@ -20,11 +49,11 @@
                         <array>
 						</array>
                         <key>name</key>
-                        <string>jp_head</string>
+                        <string>overlay</string>
                         <key>name_type</key>
-                        <string>md2</string>
+                        <string>obj</string>
                         <key>on_click</key>
-                        <string>gotolink::::http://www.youtube.com/watch?v=TWSDaF73sOc</string>
+                        <string>gotolink::::http://detail.tmall.com/item.htm?id=14600763972&is_b=1&cat_id=50025263&spm=1008.1000032.1000012.4&prt=1331085367754&prc=1</string>
                         <key>rotation_x</key>
                         <string>0</string>
                         <key>rotation_y</key>
@@ -34,9 +63,9 @@
                         <key>scale</key>
                         <string>100</string>
                         <key>texture</key>
-                        <string>jp_head1.png</string>
+                        <string>clothing_gray_front.jpg</string>
                         <key>texture_type</key>
-                        <string>png</string>
+                        <string>jpg</string>
                         <key>hidden</key>
                         <string>no</string>
                     </dict>
@@ -45,11 +74,11 @@
                         <array>
 						</array>
                         <key>name</key>
-                        <string>jp_button_play2</string>
+                        <string>overlay</string>
                         <key>name_type</key>
-                        <string>md2</string>
+                        <string>obj</string>
                         <key>on_click</key>
-                        <string>gotolink::::http://www.youtube.com/watch?v=TWSDaF73sOc</string>
+                        <string>gotolink::::http://detail.tmall.com/item.htm?id=14600763972&is_b=1&cat_id=50025263&spm=1008.1000032.1000012.4&prt=1331085367754&prc=1</string>
                         <key>rotation_x</key>
                         <string>0</string>
                         <key>rotation_y</key>
@@ -59,7 +88,7 @@
                         <key>scale</key>
                         <string>100</string>
                         <key>texture</key>
-                        <string>jp_button_play2.png</string>
+                        <string>price tag.png</string>
                         <key>texture_type</key>
                         <string>png</string>
                         <key>hidden</key>
@@ -74,10 +103,10 @@
 		<string>no</string>
     </dict>
    
-	<key>walkers_phantom</key>
+	<key>Tintin</key>
 	<dict>
 		<key>name</key>
-		<string>Walkers Phantom</string>
+		<string>Tintin XX</string>
         <key>scenes</key>
         <array>
             <dict>
@@ -89,9 +118,9 @@
                         <key>animations</key>
                         <array></array>
                         <key>name</key>
-                        <string>p</string>
+                        <string>mesh/duck.obj</string>
                         <key>name_type</key>
-                        <string>md2</string>
+                        <string>obj</string>
                         <key>on_click</key>
                         <string></string>
                         <key>rotation_x</key>
@@ -103,31 +132,9 @@
                         <key>scale</key>
                         <string>50</string>
                         <key>texture</key>
-                        <string>bando1_middle_colour2_new1.png</string>
+                        <string>duckCM.tga</string>
                         <key>texture_type</key>
-                        <string>png</string>
-                    </dict>
-                    <dict>
-                        <key>animations</key>
-                        <array></array>
-                        <key>name</key>
-                        <string>p</string>
-                        <key>name_type</key>
-                        <string>md2</string>
-                        <key>on_click</key>
-                        <string></string>
-                        <key>rotation_x</key>
-                        <string>0</string>
-                        <key>rotation_y</key>
-                        <string>90</string>
-                        <key>rotation_z</key>
-                        <string>0</string>
-                        <key>scale</key>
-                        <string>50</string>
-                        <key>texture</key>
-                        <string>bando1_middle_colour3_new1.png</string>
-                        <key>texture_type</key>
-                        <string>png</string>
+                        <string>tga</string>
                     </dict>
                 </array>
             </dict>
