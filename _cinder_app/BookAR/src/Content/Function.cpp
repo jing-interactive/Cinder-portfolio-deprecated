@@ -36,4 +36,9 @@ Function* Function::create( const std::string& function, const std::string& arg1
 	return NULL;
 }
 
+Function::Function()
+{
+	parent = NULL;
+}
+
 }

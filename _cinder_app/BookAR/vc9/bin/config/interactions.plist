@@ -31,6 +31,52 @@
 		<string>overlay</string>
 	</dict>
 -->
+    <key>MooseJaw</key>
+	<dict>
+		<key>name</key>
+		<string>MooseJaw Glass</string>
+        <key>scenes</key>
+        <array>
+            <dict>
+                <key>name</key>
+                <string>default</string>
+                <key>initialCommands</key>
+                <string>http://blippar.com/service/ar/tas/metroie/video/playSound2.php?sound=trex.wav::::Loading...</string>
+                <key>models</key>
+                <array>
+                	<dict>
+                        <key>animations</key>
+                        <array>
+						</array>
+                        <key>name</key>
+                        <string>plane</string>
+                        <key>name_type</key>
+                        <string>obj</string>
+                        <key>on_click</key>
+                        <string>gotolink::::http://detail.tmall.com/item.htm?id=14600763972&is_b=1&cat_id=50025263&spm=1008.1000032.1000012.4&prt=1331085367754&prc=1</string>
+                        <key>rotation_x</key>
+                        <string>0</string>
+                        <key>rotation_y</key>
+                        <string>90</string>
+                        <key>rotation_z</key>
+                        <string>0</string>
+                        <key>scale</key>
+                        <string>1</string>
+                        <key>texture</key>
+                        <string>resources/MooseJawMask.jpg</string>
+                        <key>texture_type</key>
+                        <string>jpg</string>
+                        <key>hidden</key>
+                        <string>no</string>
+                    </dict>
+                </array>
+            </dict>
+        </array>
+        <key>type</key>
+		<string>3d</string>
+		<key>sync</key>
+		<string>no</string>
+    </dict>
     <key>Clothing</key>
 	<dict>
 		<key>name</key>
@@ -49,11 +95,17 @@
                         <array>
 						</array>
                         <key>name</key>
-                        <string>overlay</string>
+                        <string>plane</string>
                         <key>name_type</key>
                         <string>obj</string>
                         <key>on_click</key>
                         <string>gotolink::::http://detail.tmall.com/item.htm?id=14600763972&is_b=1&cat_id=50025263&spm=1008.1000032.1000012.4&prt=1331085367754&prc=1</string>
+                        <key>translation_x</key>
+                        <string>0</string>
+                        <key>translation_y</key>
+                        <string>0</string>
+                        <key>translation_z</key>
+                        <string>0</string>
                         <key>rotation_x</key>
                         <string>0</string>
                         <key>rotation_y</key>
@@ -61,9 +113,9 @@
                         <key>rotation_z</key>
                         <string>0</string>
                         <key>scale</key>
-                        <string>100</string>
+                        <string>1</string>
                         <key>texture</key>
-                        <string>clothing_gray_front.jpg</string>
+                        <string>resources/clothing_gray_front.jpg</string>
                         <key>texture_type</key>
                         <string>jpg</string>
                         <key>hidden</key>
@@ -74,11 +126,17 @@
                         <array>
 						</array>
                         <key>name</key>
-                        <string>overlay</string>
+                        <string>plane</string>
                         <key>name_type</key>
                         <string>obj</string>
                         <key>on_click</key>
                         <string>gotolink::::http://detail.tmall.com/item.htm?id=14600763972&is_b=1&cat_id=50025263&spm=1008.1000032.1000012.4&prt=1331085367754&prc=1</string>
+                        <key>translation_x</key>
+                        <string>0.2</string>
+                        <key>translation_y</key>
+                        <string>0</string>
+                        <key>translation_z</key>
+                        <string>0</string>
                         <key>rotation_x</key>
                         <string>0</string>
                         <key>rotation_y</key>
@@ -86,9 +144,9 @@
                         <key>rotation_z</key>
                         <string>0</string>
                         <key>scale</key>
-                        <string>100</string>
+                        <string>0.3</string>
                         <key>texture</key>
-                        <string>price tag.png</string>
+                        <string>resources/price tag.png</string>
                         <key>texture_type</key>
                         <string>png</string>
                         <key>hidden</key>
@@ -132,9 +190,9 @@
                         <key>scale</key>
                         <string>50</string>
                         <key>texture</key>
-                        <string>duckCM.tga</string>
+                        <string>mesh/duckCM.png</string>
                         <key>texture_type</key>
-                        <string>tga</string>
+                        <string>png</string>
                     </dict>
                 </array>
             </dict>

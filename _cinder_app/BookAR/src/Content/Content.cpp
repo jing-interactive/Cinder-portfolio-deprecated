@@ -1,7 +1,6 @@
 #include "Content.h"
 #include <cinder/Xml.h>
 #include <cinder/app/App.h>
-#include <cinder/ImageIo.h>
 #include <boost/foreach.hpp>
 #include "Scene.h"
 
@@ -22,7 +21,6 @@ namespace ARContent{
 			it++;
 			string value = it->getValue<string>();
 			if (key == "name")	ctt->name = value;
-			else if (key == "texture")	ctt->texture = value;
 			else if (key == "type")	ctt->type = value;
 			else if (key == "sync")	ctt->sync = value;	
 			else if (key == "scenes")
@@ -31,35 +29,42 @@ namespace ARContent{
 				{
 					Scene* scene = Scene::create(item);
 					if (scene)
+					{
+						scene->parent = ctt;
 						ctt->scenes.push_back(shared_ptr<Scene>(scene));
+					}
 				}
 			}
 		}
+		if (!ctt->scenes.empty())
+			ctt->_current_scene = ctt->scenes.front();
 
 		return ctt;
 	}
 
-	cinder::gl::Texture Content::getTexture()
-	{
-		if (!gl_texture)
-		{
-			assert(texture != "invalid");
-			gl_texture = loadImage(getAppPath().generic_string()+texture);
-		}
-		return gl_texture;
-	}
-
-	Content::Content():texture("invalid")
-	{
-
-	}
-
 	void Content::draw()
 	{
-		BOOST_FOREACH(shared_ptr<Scene> item, scenes)
-		{
-			item->draw();
-		}
+		if (_current_scene)
+			_current_scene->draw();
 	}
 
+	std::shared_ptr<class Scene> Content::getCurrentScene()
+	{
+		return _current_scene;
+	}
+
+	void Content::setCurrentSceneByName( const std::string& name )
+	{
+		shared_ptr<Scene> scn;
+		BOOST_FOREACH(shared_ptr<Scene> item, scenes)
+		{
+			if (item->name == name)
+			{
+				scn = item;
+				break;
+			}
+		}
+		if (scn)
+			_current_scene = scn;
+	}
 }

@@ -43,17 +43,17 @@ unsigned int SDARTracker::update( unsigned char* data )
 	return getNumOfActiveTrackables();
 }
 
-void SDARTracker::getProjectionMat(ci::Matrix44d& mat)
+ci::Matrix44d SDARTracker::getProjectionMat()
 {
 	double* m = getProjectionMatrix(_near, _far);
-	mat = ci::Matrix44d(m);
+	return ci::Matrix44d(m);
 }
 
-void SDARTracker::getModelViewMat(unsigned int tIdx, ci::Matrix44d& mat)
+ci::Matrix44d SDARTracker::getModelViewMat(unsigned int tIdx)
 {
 	assert(tIdx >=0 && tIdx < _n_trackables);
 	double* m = getModelViewMatrix(tIdx);
-	mat = ci::Matrix44d(m);
+	return ci::Matrix44d(m);
 }
 
 void SDARTracker::getCorners(unsigned int tIdx, ci::Vec2f points[4])

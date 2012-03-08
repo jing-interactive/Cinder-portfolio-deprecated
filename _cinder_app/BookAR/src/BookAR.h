@@ -60,10 +60,6 @@ public:
 public: //AR
 	shared_ptr<class ARTracker> _ar_tracker;
 	std::mutex _mtx_ar;
-	Matrix44d _mat_modelview;
-	Matrix44d _mat_proj;
-	ci::Vec2f  _pts_corner[4];
-	int	_n_trackables;
 
 public: //book rendering
 	float _cube_scale;
@@ -85,7 +81,6 @@ public: //UI
 
 public:	//Content
 	shared_ptr<ARContent::ContentManager> _content_mgr;
-	shared_ptr<ARContent::Content> _current_content;
 
 public: //GUI
 	gl::Texture _tex_iphone4;

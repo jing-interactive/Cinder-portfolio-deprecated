@@ -13,11 +13,11 @@ public:
 	//return num tracked
     unsigned int update(unsigned char* data);
 
-	void getProjectionMat(ci::Matrix44d& mat);
+	ci::Matrix44d getProjectionMat();
 
 	unsigned int getID(unsigned int tIdx);
 	const char* getName(unsigned int tIdx);	
-    void getModelViewMat(unsigned int tIdx, ci::Matrix44d& mat);
+    ci::Matrix44d getModelViewMat(unsigned int tIdx);
     void getCorners(unsigned int tIdx, ci::Vec2f points[4]);
 private:
 	int _width,_height;

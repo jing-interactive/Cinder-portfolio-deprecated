@@ -29,7 +29,10 @@ namespace ARContent{
 				{
 					Model* model = Model::create(item);
 					if (model)
+					{
+						model->parent = scn;
 						scn->models.push_back(shared_ptr<Model>(model));
+					}
 				}
 			}
 		}
@@ -42,6 +45,21 @@ namespace ARContent{
 		BOOST_FOREACH(shared_ptr<Model> item, models)
 		{
 			item->draw();
+		}
+	}
+
+	Scene::Scene()
+	{
+		parent = NULL;
+	}
+
+	void Scene::setMatrix( const ci::Matrix44d& modelview, const ci::Matrix44d& proj, const ci::Vec2f corners[4] )
+	{
+		this->modelview = modelview;
+		this->proj = proj;
+		for (int i=0;i<4;i++)
+		{
+			this->corners[i] = corners[i];
 		}
 	}
 }

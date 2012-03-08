@@ -36,14 +36,12 @@ public:
 
 	std::string type;
 
-	std::vector<std::shared_ptr<class Scene>> scenes;
-	std::string texture;
+	std::shared_ptr<class Scene> getCurrentScene();
+	void setCurrentSceneByName(const std::string& name);
 
-	cinder::gl::Texture getTexture();
 private:
-	Content();
-	//rendering stuff
-	cinder::gl::Texture gl_texture;
+	std::vector<std::shared_ptr<class Scene>> scenes;
+	std::shared_ptr<class Scene> _current_scene;
 };
 }
 #endif //CONTENT_H
