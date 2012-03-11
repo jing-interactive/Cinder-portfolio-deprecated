@@ -10,6 +10,7 @@ struct StateBreathe: public LedState
 	void update();
 	void draw();
 	void exit();
+	struct BreatheLine* lines; 
 };
 
 struct StateLotsOfLines: public LedState

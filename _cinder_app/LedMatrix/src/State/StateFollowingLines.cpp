@@ -7,7 +7,7 @@
 
 namespace
 {
-	const int n_countdown = INT_MAX;
+	const int n_countdown = 60;
 	const int n_lines = 40;//duplicates might exist
 }
 
