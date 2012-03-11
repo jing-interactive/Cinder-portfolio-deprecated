@@ -3,32 +3,32 @@
 #include "LedMatrixApp.h"
 #include <cinder/Utilities.h>
 #include "LedManager.h"
+#include "LedLine.h"
 
 namespace
 {
 	const int n_countdown = 2;
 }
 
-void StateAnimal::enter()
+void StateLotsOfLines::enter()
 {	
-	printf("%d %s\n", _dev_id, "Animal");
+	printf("%d %s\n", _dev_id, "[idle]LotsOfStars");
 	resetTimer();
-	_app.changeToState(LedState::create(_app, _dev_id, T_SPARK_INT));
+	_app.changeToState(LedState::create(_app, _dev_id, T_SPARK));
 }
 
-void StateAnimal::update()
+void StateLotsOfLines::update()
 {
 	if (getElapsedSeconds() > n_countdown)
 		_app.changeToRandomInteractiveState(_dev_id);
 }
 
-void StateAnimal::draw()
+void StateLotsOfLines::draw()
 {
-
 
 }
 
-void StateAnimal::exit()
+void StateLotsOfLines::exit()
 {
 
 }

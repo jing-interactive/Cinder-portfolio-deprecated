@@ -24,13 +24,13 @@ LedState* LedState::create(LedMatrixApp& app, int dev_id, StateType typ)
 		st = new StateBreathe(app, dev_id);
 		break;
 	case T_LOTS:
-		st = new StateLotsOfStars(app, dev_id);
+		st = new StateLotsOfLines(app, dev_id);
 		break;
 	case T_FOLLOWING:
-		st = new StateFollowingStars(app, dev_id);
+		st = new StateFollowingLines(app, dev_id);
 		break;
 	case T_SPARK_INT:
-		st = new StateSpark(app, dev_id);
+		st = new StateSparkInteractive(app, dev_id);
 		break;
 	case T_SPARK:
 		st = new StateSpark(app, dev_id);
@@ -43,5 +43,5 @@ LedState* LedState::create(LedMatrixApp& app, int dev_id, StateType typ)
 
 bool LedState::isIdleState( StateType typ )
 {
-	return typ == T_ANIMAL || typ == T_LOTS || typ == T_SPARK;
+	return typ == T_BREATHE || typ == T_LOTS || typ == T_SPARK;
 }

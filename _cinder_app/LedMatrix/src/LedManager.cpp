@@ -44,7 +44,7 @@ void LedManager::_setup()
 void LedManager::reset()
 {
 	for (int i=0;i<TOTAL;i++)
-		leds[i].clr =  DarkColor;
+		leds[i].clr = getDarkColor();
 }
 
 void LedManager::draw3d()
@@ -95,4 +95,14 @@ LedManager& LedManager::get( int device_id )
 {
 	assert(device_id >= 0 && device_id<2);
 	return mgr[device_id];
+}
+
+ci::ColorA8u LedManager::getDarkColor(uint8_t alpha)
+{
+	return ci::ColorA8u(229,229,229,alpha);
+}
+
+ci::ColorA8u LedManager::getLightColor(uint8_t alpha)
+{
+	return ci::ColorA8u(50, 179, 225,alpha);
 }

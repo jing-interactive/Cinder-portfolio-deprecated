@@ -10,9 +10,9 @@ namespace
 }
 
 void StateBreathe::enter()
-{
+{	
+	printf("%d %s\n", _dev_id, "[idle]Breathe");
 	resetTimer();
-	_app.changeToState(LedState::create(_app, _dev_id, T_SPARK));
 }
 
 void StateBreathe::update()
@@ -23,9 +23,7 @@ void StateBreathe::update()
 
 void StateBreathe::draw()
 {
-	gl::color(1,1,1);
-	// gl::draw(_app._tex_selected);
-	// gl::drawStringCentered(welcome, pos, clr, font);
+
 }
 
 void StateBreathe::exit()

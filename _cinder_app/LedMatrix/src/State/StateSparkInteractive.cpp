@@ -13,29 +13,26 @@ namespace
 
 void StateSparkInteractive::enter()
 {
+	printf("%d %s\n", _dev_id, "SparkInteractive");
 	resetTimer();
 	sparks = new Spark[n_sparks];
 }
 
 void StateSparkInteractive::update()
 {
-	Vec3i center;//be integer
-	bool centers_updated = !_app.centers[_dev_id].empty();
-	if (centers_updated)
-		center = _app.centers[_dev_id].front();
+	Vec3i center;
+	bool updated = _app.getNewCenter(center, _dev_id);
 	for (int i=0;i<n_sparks;i++)
 	{
-		sparks[i].update(_dev_id);
-		if (centers_updated)
+		if (updated)
 			sparks[i].setCenter(center);
+		sparks[i].update(_dev_id);
 	}
 }
 
 void StateSparkInteractive::draw()
 {
-//	gl::color(1,1,1);
-	// gl::draw(_app._tex_selected);
-	// gl::drawStringCentered(welcome, pos, clr, font);
+
 }
 
 void StateSparkInteractive::exit()

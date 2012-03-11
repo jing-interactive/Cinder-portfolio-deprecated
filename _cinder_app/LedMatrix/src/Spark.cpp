@@ -7,8 +7,8 @@ using namespace ci;
 
 namespace
 {
-	const int MIN_LIFE = 3;
-	const int MAX_LIFE = 6;
+	const int MIN_LIFE = 2;
+	const int MAX_LIFE = 4;
 	const float MIN_SPEED = 0.01f;
 	const float MAX_SPEED = 0.04f;
 	const int radius_x = 2;
@@ -19,7 +19,7 @@ namespace
 Spark::Spark()
 {
 	min.set(0,0,0);
-	max.set(W,H,Z);
+	max.set(LedManager::W,LedManager::H,LedManager::Z);
 	reset();
 }
 
@@ -44,7 +44,7 @@ void Spark::update(int dev_id)
 	{
 		if (--life <= 0)
 		{
-			LedManager::get(dev_id).setLedColor(idx, DarkColor);
+			LedManager::get(dev_id).setLedColor(idx, LedManager::getDarkColor());
 			reset();
 			return;
 		}
@@ -52,16 +52,15 @@ void Spark::update(int dev_id)
 	}
 	
 	k = lmap<float>(k*k, 0, 1, 0, 250);
-	LedManager::get(dev_id).setLedColor(idx,ColorA8u(50, 179, 225, 
-		static_cast<int>(k)));
+	LedManager::get(dev_id).setLedColor(idx,LedManager::getDarkColor((int)k));
 }
 
 void Spark::setCenter( const Vec3i& pos )
 {
-	min.x = constrain(pos.x-radius_x,0,W-1);
-	max.x = constrain(pos.x+radius_x,0,W-1);
-	min.y = constrain(pos.y-radius_y,0,H-1);
-	max.y = constrain(pos.y+radius_y,0,H-1);
-	min.z = constrain(pos.z-radius_z,0,Z-1);
-	max.z = constrain(pos.z+radius_z,0,Z-1);
+	min.x = constrain(pos.x-radius_x,0,LedManager::W-1);
+	max.x = constrain(pos.x+radius_x,0,LedManager::W-1);
+	min.y = constrain(pos.y-radius_y,0,LedManager::H-1);
+	max.y = constrain(pos.y+radius_y,0,LedManager::H-1);
+	min.z = constrain(pos.z-radius_z,0,LedManager::Z-1);
+	max.z = constrain(pos.z+radius_z,0,LedManager::Z-1);
 }

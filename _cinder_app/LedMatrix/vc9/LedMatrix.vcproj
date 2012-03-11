@@ -180,6 +180,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath="..\src\LedLine.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\LedManager.cpp"
 				>
 			</File>
@@ -209,6 +213,10 @@
 			</File>
 			<File
 				RelativePath="..\src\LedMatrixApp.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Spark.cpp"
 				>
 			</File>
 		</Filter>
@@ -284,10 +292,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\Spark.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\src\State\StateAnimal.cpp"
 				>
 			</File>
@@ -296,11 +300,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\State\StateFollowingStars.cpp"
+				RelativePath="..\src\State\StateFollowingLines.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\State\StateLotsOfStars.cpp"
+				RelativePath="..\src\State\StateLotsOfLines.cpp"
 				>
 			</File>
 			<File

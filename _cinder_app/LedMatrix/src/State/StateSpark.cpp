@@ -15,7 +15,8 @@ namespace
 }
 
 void StateSpark::enter()
-{
+{	
+	printf("%d %s\n", _dev_id, "[idle]Spark");
 	resetTimer();
 	sparks = new Spark[n_sparks];
 }

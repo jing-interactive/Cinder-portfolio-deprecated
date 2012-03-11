@@ -23,3 +23,14 @@ void LedMatrixApp::onKinect( const osc::Message* msg )
 		one_msg[dev_id].push_back(pos);
 	}
 }
+
+
+bool LedMatrixApp::getNewCenter( Vec3i& center, int dev )
+{
+	bool updated = !centers[dev].empty();
+	if (updated)
+	{//TODO: add support to more centers
+		center = centers[dev].front();
+	}
+	return updated;
+}

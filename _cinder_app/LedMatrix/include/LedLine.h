@@ -1,39 +1,26 @@
 #pragma once
+//used at StateFollowingState and StateBreathe.cpp
+#include <vector>
 
-class Line
+struct Line
 {
-	float z=0;//[0, Z)
-	float speed = 0.7;
-	float decay = 0.8;
-	boolean visible = true;
-	boolean come = true;//come and back
-	void setup()
+	enum LineState
 	{
-		z = 0;
-		come = true;
-		speed = random(0.7, 1);
-		decay = random(0.65, 0.8);
-		visible = random(10) > 0 ? true : false;
-	}
-	void update()
-	{
-		if (come)
-		{
-			z += speed/2;
-			if (z > target_z)//TODO:
-				come = false;
-		}
-		else
-		{
-			z -= speed;
-			if (z <= 0)//TODO:
-			{
-				setup();
-			}
-		}
-	}
-	void draw()
-	{
+		T_COME,
+		T_GO,
+	};
+	std::vector<float> snake_z;//vector of z, just like 1-D snake eater
+	float speed;
+	float decay;
+	bool visible;
+	LineState state;
 
-	}
-}
+	Line();
+	void reset();
+	void update(int dev);
+	void setTarget(const ci::Vec3i& pos);
+private: 
+	ci::Vec3i target;
+	int x,y;
+	int life;
+};

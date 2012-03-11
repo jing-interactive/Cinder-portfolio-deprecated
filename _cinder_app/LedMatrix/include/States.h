@@ -12,14 +12,15 @@ struct StateBreathe: public LedState
 	void exit();
 };
 
-struct StateLotsOfStars: public LedState
+struct StateLotsOfLines: public LedState
 {
-	StateLotsOfStars(LedMatrixApp& app, int dev_id)
+	StateLotsOfLines(LedMatrixApp& app, int dev_id)
 		:LedState(app, dev_id, T_LOTS){}
 	void enter();
 	void update();
 	void draw();
 	void exit();
+	struct Line* lines;
 };
 
 struct StateSpark: public LedState
@@ -33,14 +34,15 @@ struct StateSpark: public LedState
 	struct Spark* sparks;
 };
 
-struct StateFollowingStars: public LedState
+struct StateFollowingLines: public LedState
 {
-	StateFollowingStars(LedMatrixApp& app, int dev_id)
+	StateFollowingLines(LedMatrixApp& app, int dev_id)
 		:LedState(app, dev_id, T_FOLLOWING){}
 	void enter();
 	void update();
 	void draw();
 	void exit();
+	struct Line* lines;
 };
 
 struct StateAnimal: public LedState
