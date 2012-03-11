@@ -7,6 +7,8 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
+const int device_id = 1;
+
 struct Blob
 {
 	Blob():visible(false),radius(10){}
@@ -32,12 +34,12 @@ struct Blob
 		m.setAddress("/contour");
 		m.addIntArg(id);                        //0
 		m.addStringArg("/move");				//1
-		m.addFloatArg(pos.x/getWindowWidth());					//2
-		m.addFloatArg(pos.y/getWindowHeight());					//3
-		m.addFloatArg(radius/getWindowWidth());					//4
-		m.addFloatArg(radius/getWindowHeight());					//5
-		m.addFloatArg(z);						//6 rotation
-		m.addIntArg(0);			                 //7
+		m.addFloatArg(pos.x/getWindowWidth());					//2 -> cx
+		m.addFloatArg(pos.y/getWindowHeight());					//3 -> cy
+		m.addFloatArg(0);					//4
+		m.addFloatArg(z);					//5	-> cz
+		m.addFloatArg(0);					//6 rotation
+		m.addIntArg(device_id);				//7 -> device id
 
 		bundle.addMessage(m);
 	}
@@ -108,6 +110,7 @@ void KinServerSimApp::update()
 	{
 		osc::Message m;
 		m.setAddress("/start"); 
+		m.addIntArg(device_id);
 		bundle.addMessage(m);
 	}
 	for (int i=0;i<2;i++)
