@@ -16,7 +16,11 @@ public:
 
 	virtual void execute() = 0;
 
+	class Model* parent;
+
 	std::string args[N_ARGS];
+
+	Function();
 };
 }
 #endif //FUNCTION_H

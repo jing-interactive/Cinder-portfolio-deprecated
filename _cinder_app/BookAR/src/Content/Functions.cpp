@@ -1,6 +1,8 @@
 #include "Functions.h"
 #include <cinder/Utilities.h>
-
+#include "Model.h"
+#include "Scene.h"
+#include "Content.h"
 
 using namespace ci;
 
@@ -19,7 +21,14 @@ namespace ARContent{
 
 	void FunctionGotoScene::execute()
 	{
-
+		if (parent != NULL)
+		{
+			Scene* scn = parent->parent;
+			assert(scn != NULL);
+			Content* ctt = scn->parent;
+			assert(scn != NULL);
+			ctt->setCurrentSceneByName(args[0]);
+		}
 	}
 
 	void FunctionGotoLink::execute()
@@ -42,7 +51,6 @@ namespace ARContent{
 
 	}
 
-
 	void FunctionSetVar::execute()
 	{
 
@@ -62,5 +70,4 @@ namespace ARContent{
 	{
 
 	}
-
 }

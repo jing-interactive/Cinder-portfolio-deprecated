@@ -5,6 +5,7 @@
 #include <string>
 #include <cinder/Cinder.h>
 #include <cinder/app/MouseEvent.h>
+#include <cinder/gl/Texture.h>
 //#include <cinder/Timeline.h>
 
 namespace cinder{
@@ -31,7 +32,8 @@ public:
 	std::shared_ptr<class Function> on_click;
 	std::vector<std::shared_ptr<class Function>> click_actions;
 
-	float rotation_x,rotation_y,rotation_z;
+	ci::Vec3f translation;
+	ci::Vec3f rotation;
 	float scale;
 
 	std::string texture;
@@ -39,7 +41,12 @@ public:
 
 	std::shared_ptr<class VideoTexture> videoTexture;
 
+	class Scene* parent;
+
 	bool hidden;//default visibility
+private:
+	Model();//private ctr
+	ci::gl::Texture gl_texture;
 };
 }
 #endif //MODEL_H

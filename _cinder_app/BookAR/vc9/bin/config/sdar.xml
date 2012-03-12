@@ -2,6 +2,8 @@
 <SDARConfig>
     <ImageTarget name="assets/MooseJaw.mdl" thumb="thumb/MooseJaw.jpg" size="526 800"/>
     <ImageTarget name="assets/tintin.mdl" thumb="thumb/tintin.jpg" size="531 800"/>
+    <!-- 
     <ImageTarget name="assets/transformer.mdl" thumb="thumb/transformer.jpg" size="600 800"/> 
+    -->
     <ImageTarget name="assets/clothing.mdl" thumb="thumb/clothing.jpg" size="600 800"/>
 </SDARConfig>

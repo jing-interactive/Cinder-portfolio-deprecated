@@ -5,6 +5,7 @@
 #include <cinder/ip/Grayscale.h>
 #include "../Content/ContentManager.h"
 #include "../Content/Content.h"
+#include "../Content/Scene.h"
 
 namespace
 {
@@ -18,12 +19,19 @@ namespace
 		return lmap<float>(cy, 0, BookAR::CAM_H, 1, -1);
 	}
 
+	Matrix44d modelview;
+	Matrix44d proj;
+	Vec2f corners[4];
+	int n_trackables = 0;
+
+	shared_ptr<ARContent::Content> the_content;
+
 	int tid = -1;
 }
 
 void StateTracking::enter()
 {
-	_app._current_content.reset();
+	the_content.reset();
 }
 
 void StateTracking::update()
@@ -42,23 +50,32 @@ void StateTracking::update()
 		int numActiveTrackables = tracker->update(frame_clr.getData());
 		{
 			std::lock_guard<mutex> lock(_app._mtx_ar);
-			_app._n_trackables = numActiveTrackables;
-			if (_app._n_trackables > 0)
+			n_trackables = numActiveTrackables;
+			if (n_trackables > 0)
 			{
 				sin_counter += 0.5f;
+
+				proj = tracker->getProjectionMat();
+				modelview = tracker->getModelViewMat(0);
+				tracker->getCorners(0, corners);
+
+				for (int i=0;i<4;i++)
+				{
+					corners[i].x = cameraXToScreenX(corners[i].x);
+					corners[i].y = cameraYToScreenY(corners[i].y);
+				}				
+
 				tid = tracker->getID(0);
 				string name = tracker->getName(0);
-				_app._current_content = _app._content_mgr->getContentByName(name);
+				the_content = _app._content_mgr->getContentByName(name);
+				assert(the_content);
+				the_content->getCurrentScene()->setMatrix(proj, modelview, corners);
+
 				//_app.updateData(_app._img_posters[tid], _app._mesh_book, 200*sinf(sin_counter));
 				console() << name << std::endl;
-
-				tracker->getProjectionMat(_app._mat_proj);
-
-				tracker->getModelViewMat(0, _app._mat_modelview);
-				tracker->getCorners(0, _app._pts_corner);
 			}
 		}
-		if (_app._n_trackables == 0)
+		if (n_trackables == 0)
 			sin_counter = 0;
 		_app._tex_bg = gl::Texture(frame_clr);
 	}
@@ -78,10 +95,14 @@ void StateTracking::draw()
 
 	gl::color(1,1,1);
 
-	if (_app._n_trackables > 0)
+	if (n_trackables > 0)
 	{
-		std::lock_guard<mutex> lock(_app._mtx_ar);
+		gl::setViewport(_app._area_capture + Vec2i(0,93));
 
+		std::lock_guard<mutex> lock(_app._mtx_ar);
+		the_content->draw();
+
+#if 0
 		if (_app._2dbook_visible)
 		{//rendering.2d
 			gl::disableDepthWrite();
@@ -111,6 +132,7 @@ void StateTracking::draw()
 			//			gl::popMatrices();
 			_app._current_content->getTexture().disable();
 		}
+#endif
 #ifndef NEW_CONTENT_SYSTEM
 		if (_app._3dbook_visible && tid != BookAR::N_MODELS-1)
 		{//rendering.3d	

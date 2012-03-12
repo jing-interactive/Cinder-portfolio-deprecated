@@ -27,7 +27,6 @@ bool ContentManager::load( const std::string& plist )
 				_contents.insert(Pair(key, shared_ptr<Content>(ctt)));
 			}
 		}
-
 	}
 	catch( ... ) {
 		console() << "[ERROR] Failed to load ContentManager from " << plist<<std::endl;
