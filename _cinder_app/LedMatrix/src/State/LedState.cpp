@@ -49,18 +49,21 @@ bool LedState::isIdleState( StateType typ )
 
 void LedState::update()
 {
-	if (getElapsedSeconds() > n_countdown-2 && inner_state == T_RUNNING)
+	if (getElapsedSeconds() > n_countdown && inner_state == T_RUNNING)
 	{
-		LedManager::get(_dev_id).fadeOut(2);
+		ci::Tween<float>::Options option = LedManager::get(_dev_id).fadeOut(2);
 		inner_state = T_DYING;
-	}
 
-	if (getElapsedSeconds() > n_countdown)
-	{
 		if (LedState::isIdleState(_type))
-			_app.changeToRandomIdleState(_dev_id);
+		{
+			option = option.finishFn(std::bind(&LedMatrixApp::changeToRandomIdleState, &_app, _dev_id));
+			//	_app.changeToRandomIdleState(_dev_id);
+		}
 		else
-			_app.changeToRandomInteractiveState(_dev_id);
+		{
+			option = option.finishFn(std::bind(&LedMatrixApp::changeToRandomInteractiveState, &_app, _dev_id));
+//			_app.changeToRandomInteractiveState(_dev_id);
+		}
 	}
 }
 

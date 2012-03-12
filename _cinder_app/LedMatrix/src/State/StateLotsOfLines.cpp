@@ -6,8 +6,7 @@
 #include "LedLine.h"
 
 namespace
-{ 
-	const int n_come_countdown = 5;
+{  
 	const float transition_time = 2;
 	const int n_items = int(LedManager::W*LedManager::H*0.75f);
 	enum{
@@ -39,6 +38,7 @@ void StateLotsOfLines::enter()
 
 void StateLotsOfLines::update()
 {
+	//TODO bug
 	double elapsed = getElapsedSeconds();
 	for (int i=0;i<n_items;i++)
 	{
@@ -48,7 +48,7 @@ void StateLotsOfLines::update()
 	{
 	case T_COME:
 		{
-			if (elapsed > n_come_countdown)
+			if (elapsed > n_countdown - transition_time)
 				inner_state = T_FADE;
 		}break;	
 	case T_FADE:
@@ -58,7 +58,7 @@ void StateLotsOfLines::update()
 		}break;	
 	case T_CHANGE:
 		{
-			if (elapsed > n_come_countdown+transition_time)
+		//	if (elapsed > n_come_countdown+transition_time)
 			{
 				for (int i=0;i<n_items;i++)
 				{
@@ -83,6 +83,5 @@ void StateLotsOfLines::draw()
 
 void StateLotsOfLines::exit()
 {
-	LedManager::get(_dev_id).fadeOut(2);
 	delete[] items;
 }

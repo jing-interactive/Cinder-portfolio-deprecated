@@ -7,11 +7,20 @@ using namespace ci::app;
 
 namespace 
 {
-	const float CUBE_SIZE = 2.0f;//喜渡
-	const float KX = 10;//潔路X
-	const float KY = 10;//潔路Y
+	const float CUBE_SIZE = 1.0f;//喜渡
+	const float KX = 5;//潔路X
+	const float KY = 5;//潔路Y
 	const float KZ = 5;//潔路Z
-};
+
+	static struct LedMgrHelper
+	{
+		LedMgrHelper()
+		{
+			LedManager::get(0).device_id = 0;
+			LedManager::get(1).device_id = 1;
+		}
+	}helper;
+}
 
 LedManager LedManager::mgr[2];
 
@@ -52,6 +61,7 @@ void LedManager::reset()
 
 void LedManager::draw3d()
 {
+	gl::translate(Vec3f(0, device_id*(KY+2)*LedManager::H, 0));
 	for (int z=0;z<Z;z++)
 	{
 		for (int x=0;x<W;x++)
@@ -61,12 +71,9 @@ void LedManager::draw3d()
 				int idx = index(x, y, z);
 				if (leds[idx].visible)
 				{
-					//	gl::pushModelView();
-					//	gl::translate(x*KX, y*KY, z*KZ);
 					gl::color(leds[idx].clr);
 					gl::drawCube(Vec3f(x*KX, y*KY, z*KZ),
 						Vec3f(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
-					//	gl::popModelView();
 				}
 			}
 		}
@@ -80,7 +87,7 @@ void LedManager::draw2d()
 
 Vec3f LedManager::getWatchPoint()
 {
-	return Vec3f(W*1.5f*KX,H*1.3f*KY, Z*0.3f*KZ);
+	return Vec3f(W*1.5f*KX,H*1.3f*KY, Z*0.5f*KZ);
 }
 
 void LedManager::setLedColor( int idx, const ColorA& clr )
@@ -110,18 +117,18 @@ void LedManager::setLedLight( int idx, ci::uint8_t alpha/*=200*/ )
 	setLedColor(idx, ColorA8u(50, 179, 225,k_alpha*alpha));
 }
 
-void LedManager::fadeOutIn( float fadeOutSec, float fadeInSec )
+Tween<float>::Options LedManager::fadeOutIn( float fadeOutSec, float fadeInSec )
 {
 	timeline().apply(&k_alpha, 1.0f, 0.0f, fadeOutSec, EaseInQuad());
-	timeline().appendTo(&k_alpha, 0.0f, 1.0f, fadeInSec, EaseOutQuad());
+	return timeline().appendTo(&k_alpha, 0.0f, 1.0f, fadeInSec, EaseOutQuad());
 }
 
-void LedManager::fadeIn( float sec )
+Tween<float>::Options LedManager::fadeIn( float sec )
 {
-	timeline().apply(&k_alpha, 0.0f, 1.0f, sec, EaseInQuad());
+	return timeline().apply(&k_alpha, 0.0f, 1.0f, sec, EaseInQuad());
 }
 
-void LedManager::fadeOut( float sec )
+Tween<float>::Options LedManager::fadeOut( float sec )
 {
-	timeline().apply(&k_alpha, 1.0f, 0.0f, sec, EaseInQuad());
+	return timeline().apply(&k_alpha, 1.0f, 0.0f, sec, EaseInQuad());
 }

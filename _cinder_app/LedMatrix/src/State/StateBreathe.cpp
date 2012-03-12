@@ -13,7 +13,7 @@ namespace
 	const float MIN_ALPHA_SPEED = 0.003f;
 	const float MAX_ALPHA_SPEED = 0.008f;
 	const float MIN_BREATH_DECAY = 5.4f;
-	const float MAX_BREATH_DECAY = 8.4f;
+	const float MAX_BREATH_DECAY = 7.4f;
 }
 
 struct BreatheLine
@@ -49,7 +49,7 @@ struct BreatheLine
 
 void StateBreathe::enter()
 {
-	n_countdown = 60;
+	n_countdown = 5;
 	printf("%d %s\n", _dev_id, "[idle]Breathe");
 	resetTimer();
 	items = new BreatheLine[n_items];
@@ -86,6 +86,5 @@ void StateBreathe::draw()
 
 void StateBreathe::exit()
 {
-	LedManager::get(_dev_id).fadeOut(2);
 	delete[] items;
 }

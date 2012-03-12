@@ -11,8 +11,12 @@ void LedMatrixApp::draw()
 	gl::clear();
 	gl::setMatrices( maya_cam->getCamera() );
 
-	//TODO: support two device
-	for (int i=0;i<1;i++)
+	gl::pushModelView();
+	gl::scale(Vec3f(20,20,20));
+	gl::drawCoordinateFrame();
+	gl::popModelView();
+
+	for (int i=0;i<2;i++)
 	{
 		current_states[i]->draw();
 

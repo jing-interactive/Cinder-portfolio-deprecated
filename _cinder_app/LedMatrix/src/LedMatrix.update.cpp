@@ -16,12 +16,13 @@ void LedMatrixApp::update()
 	int win_h = getWindowHeight();
 	double elapsed = getElapsedSeconds();
 
-	//TODO: support two device
-	for (int dev_id=0;dev_id<1;dev_id++)
+	for (int dev_id=0;dev_id<2;dev_id++)
 	{
 		bool isIdle = LedState::isIdleState(current_states[dev_id]->_type);
 		if (!isIdle && elapsed - time_last_signal_came[dev_id] > sec_turn_to_idle)
-		{
+		{ 
+//			LedManager::get(dev_id).fadeIn(2);
+//				.finishFn(std::bind(&LedMatrixApp::changeToRandomIdleState, this, dev_id));
 			changeToRandomIdleState(dev_id);
 			isIdle = false;
 		}
@@ -35,6 +36,8 @@ void LedMatrixApp::update()
 		{//some one is moving before Kinect
 			if (isIdle)
 			{
+//				LedManager::get(dev_id).fadeIn(2);
+//					.finishFn(std::bind(&LedMatrixApp::changeToRandomInteractiveState, this, dev_id));
 				changeToRandomInteractiveState(dev_id);
 			}
 

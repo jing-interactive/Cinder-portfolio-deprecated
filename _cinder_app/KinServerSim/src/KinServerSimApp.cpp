@@ -7,7 +7,7 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-const int device_id = 1;
+const int device_id = 0;
 
 struct Blob
 {

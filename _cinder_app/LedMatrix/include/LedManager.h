@@ -21,14 +21,16 @@ struct LedManager
 
 	ci::Anim<float> k_alpha;//[0,1)
 
-	static LedManager& get(int device_id);
+	static LedManager& get(int dev);
+
+	int device_id;
 
 	Led leds[TOTAL];
 
-	void fadeIn(float sec);
-	void fadeOut(float sec);
+	ci::Tween<float>::Options fadeIn(float sec);
+	ci::Tween<float>::Options fadeOut(float sec);
 	//make a global alpha fade out and then fade in 
-	void fadeOutIn(float fadeOutSec, float fadeInSec);
+	ci::Tween<float>::Options fadeOutIn(float fadeOutSec, float fadeInSec);
 
 	static int index(int x, int y, int z)
 	{

@@ -36,6 +36,5 @@ void StateSpark::draw()
 
 void StateSpark::exit()
 {
-	LedManager::get(_dev_id).fadeOut(2);
 	delete[] items;
 }
