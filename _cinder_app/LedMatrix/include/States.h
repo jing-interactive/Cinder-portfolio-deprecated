@@ -10,7 +10,13 @@ struct StateBreathe: public LedState
 	void update();
 	void draw();
 	void exit();
-	struct BreatheLine* lines; 
+private:
+	struct BreatheLine* items;
+	float breathe_decay;
+	float sin_counter;//
+	float sin_value;//
+	float speed;// 
+	float min_br;
 };
 
 struct StateLotsOfLines: public LedState
@@ -21,7 +27,8 @@ struct StateLotsOfLines: public LedState
 	void update();
 	void draw();
 	void exit();
-	struct Line* lines;
+private:
+	struct Line* items;
 };
 
 struct StateSpark: public LedState
@@ -32,7 +39,8 @@ struct StateSpark: public LedState
 	void update();
 	void draw();
 	void exit();
-	struct Spark* sparks;
+private:
+	struct Spark* items;
 };
 
 struct StateFollowingLines: public LedState
@@ -43,7 +51,8 @@ struct StateFollowingLines: public LedState
 	void update();
 	void draw();
 	void exit();
-	struct Line* lines;
+private:
+	struct Line* items;
 };
 
 struct StateAnimal: public LedState
@@ -54,6 +63,8 @@ struct StateAnimal: public LedState
 	void update();
 	void draw();
 	void exit();
+private:
+	struct Animal* item;
 };
 
 struct StateSparkInteractive: public LedState
@@ -64,5 +75,6 @@ struct StateSparkInteractive: public LedState
 	void update();
 	void draw();
 	void exit();
-	struct Spark* sparks;
+private:
+	struct Spark* items;
 };

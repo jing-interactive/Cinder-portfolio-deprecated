@@ -36,19 +36,21 @@ public://camera
 public://osc
 	void onKinect(const osc::Message* msg);
 	bool getNewCenter(Vec3i& center, int dev);//try get
-	shared_ptr<osc::Listener> listener;
-	deque<vector<Vec3f>> kinect_queues[N_DEVICES];
-	vector<Vec3f> one_msg[N_DEVICES];
-	mutex mtx_kinect_queues[N_DEVICES];
 	vector<Vec3i> centers[N_DEVICES];
+private://osc
+	shared_ptr<osc::Listener> listener;
 
+	deque<vector<Vec3f>> kinect_queues[N_DEVICES];
+	mutex mtx_kinect_queues[N_DEVICES];
+
+	vector<Vec3f> single_session[N_DEVICES];
 public://state
-	void changeToState(struct LedState* new_state);
 	void changeToRandomIdleState(int dev_id);
 	void changeToRandomInteractiveState(int dev_id);
 	shared_ptr<struct LedState> current_states[N_DEVICES];
 
-private:
+private://state
+	void changeToState(struct LedState* new_state);
 	void changeToStateAmong( int dev_id, enum StateType idle_states[3]);
 	void setupStates();
 };

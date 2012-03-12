@@ -1,6 +1,7 @@
 #include "LedState.h"
 #include "States.h"
 #include "LedMatrixApp.h"
+#include "LedManager.h"
 
 double LedState::getElapsedSeconds()
 {
@@ -44,4 +45,31 @@ LedState* LedState::create(LedMatrixApp& app, int dev_id, StateType typ)
 bool LedState::isIdleState( StateType typ )
 {
 	return typ == T_BREATHE || typ == T_LOTS || typ == T_SPARK;
+}
+
+void LedState::update()
+{
+	if (getElapsedSeconds() > n_countdown-2 && inner_state == T_RUNNING)
+	{
+		LedManager::get(_dev_id).fadeOut(2);
+		inner_state = T_DYING;
+	}
+
+	if (getElapsedSeconds() > n_countdown)
+	{
+		if (LedState::isIdleState(_type))
+			_app.changeToRandomIdleState(_dev_id);
+		else
+			_app.changeToRandomInteractiveState(_dev_id);
+	}
+}
+
+LedState::LedState( LedMatrixApp& app, int dev_id, StateType type ) 
+:State<LedMatrixApp>(app),
+_dev_id(dev_id), 
+_type(type), 
+inner_state(T_RUNNING),
+n_countdown(60)
+{
+
 }

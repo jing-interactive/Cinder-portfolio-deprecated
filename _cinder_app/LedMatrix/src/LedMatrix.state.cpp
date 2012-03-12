@@ -1,17 +1,19 @@
+#include <cinder/Rand.h>
 #include "LedMatrixApp.h"
 #include "LedState.h"
-#include <cinder/Rand.h>
+#include "LedManager.h"
 
 void LedMatrixApp::changeToState(LedState* new_state)
 {
 	assert(new_state != NULL);
-	int id = new_state->_dev_id;
-	if (current_states[id])
+	int dev = new_state->_dev_id;
+	if (current_states[dev])
 	{
-		current_states[id]->exit();
+		current_states[dev]->exit();
 	}
-	current_states[id] = shared_ptr<LedState>(new_state);
-	current_states[id]->enter();
+	current_states[dev] = shared_ptr<LedState>(new_state);
+	current_states[dev]->enter();
+	LedManager::get(dev).fadeIn(2);
 }
 
 void LedMatrixApp::setupStates()
@@ -39,7 +41,7 @@ void LedMatrixApp::changeToRandomInteractiveState( int dev )
 	static StateType interative_states[3] = {T_FOLLOWING,T_SPARK_INT,T_ANIMAL};
 	changeToStateAmong(dev, interative_states);
 #else	
-	changeToState(LedState::create(*this, dev, T_FOLLOWING));
+	changeToState(LedState::create(*this, dev, T_ANIMAL));
 #endif
 	assert(!LedState::isIdleState(current_states[dev]->_type));
 }

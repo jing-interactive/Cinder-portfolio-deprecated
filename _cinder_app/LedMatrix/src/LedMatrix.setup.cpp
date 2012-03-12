@@ -3,6 +3,7 @@
 #include "LedManager.h"
 #include <cinder/Arcball.h>
 #include <cinder/MayaCamUI.h>
+#include <cinder/Rand.h>
 
 namespace
 {
@@ -11,6 +12,7 @@ namespace
 
 void LedMatrixApp::setup()
 {
+	Rand::randomize();
 	//kinect/osc
 	listener = shared_ptr<osc::Listener>(new osc::Listener());
 	listener->setup(port);

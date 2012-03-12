@@ -1,21 +1,20 @@
-#include "LedState.h"
+#include <cinder/Utilities.h>
 #include "States.h"
 #include "LedMatrixApp.h"
-#include <cinder/Utilities.h>
 #include "LedManager.h"
 #include "Spark.h"
 
 namespace
 {
-	const int n_countdown = 2;
 	const int n_sparks = 20;
 }
 
 void StateSparkInteractive::enter()
 {
+	n_countdown = 2;
 	printf("%d %s\n", _dev_id, "SparkInteractive");
 	resetTimer();
-	sparks = new Spark[n_sparks];
+	items = new Spark[n_sparks];
 }
 
 void StateSparkInteractive::update()
@@ -25,9 +24,11 @@ void StateSparkInteractive::update()
 	for (int i=0;i<n_sparks;i++)
 	{
 		if (updated)
-			sparks[i].setCenter(center);
-		sparks[i].update(_dev_id);
+			items[i].setCenter(center);
+		items[i].update(_dev_id);
 	}
+
+	LedState::update();
 }
 
 void StateSparkInteractive::draw()
@@ -37,5 +38,5 @@ void StateSparkInteractive::draw()
 
 void StateSparkInteractive::exit()
 {
-	delete[] sparks;
+	delete[] items;
 }

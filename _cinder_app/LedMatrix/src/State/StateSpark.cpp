@@ -1,34 +1,32 @@
-#include "LedState.h"
+#include <cinder/Utilities.h>
+#include <vector>
 #include "States.h"
 #include "LedMatrixApp.h"
-#include <cinder/Utilities.h>
 #include "LedManager.h"
 #include "Spark.h"
-#include <vector>
 
 using namespace std;
 
 namespace
 {
-	const int n_countdown = 60;
-	const int n_sparks = 100;//duplicates might exist
+	const int n_items = 100;//duplicates might exist
 }
 
 void StateSpark::enter()
 {	
+	n_countdown = 60;
 	printf("%d %s\n", _dev_id, "[idle]Spark");
 	resetTimer();
-	sparks = new Spark[n_sparks];
+	items = new Spark[n_items];
 }
 
 void StateSpark::update()
 {
-	for (int i=0;i<n_sparks;i++)
+	for (int i=0;i<n_items;i++)
 	{
-		sparks[i].update(_dev_id);
+		items[i].update(_dev_id);
 	}
-	if (getElapsedSeconds() > n_countdown)
-		_app.changeToRandomIdleState(_dev_id);
+	LedState::update();
 }
 
 void StateSpark::draw()
@@ -38,5 +36,6 @@ void StateSpark::draw()
 
 void StateSpark::exit()
 {
-	delete[] sparks;
+	LedManager::get(_dev_id).fadeOut(2);
+	delete[] items;
 }

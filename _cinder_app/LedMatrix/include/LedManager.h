@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cinder/Color.h>
+#include <cinder/Timeline.h>
 
 struct Led
 {
@@ -18,12 +19,16 @@ struct LedManager
 		TOTAL = W*H*Z,
 	};
 
-	static ci::ColorA8u getDarkColor(ci::uint8_t alpha = 5);
-	static ci::ColorA8u getLightColor(ci::uint8_t alpha);
+	ci::Anim<float> k_alpha;//[0,1)
 
 	static LedManager& get(int device_id);
 
 	Led leds[TOTAL];
+
+	void fadeIn(float sec);
+	void fadeOut(float sec);
+	//make a global alpha fade out and then fade in 
+	void fadeOutIn(float fadeOutSec, float fadeInSec);
 
 	static int index(int x, int y, int z)
 	{
@@ -35,6 +40,8 @@ struct LedManager
 		return y*W+x;
 	}
 
+	void setLedDark(int idx, ci::uint8_t alpha=5);
+	void setLedLight(int idx, ci::uint8_t alpha=200);
 	void setLedColor(int idx, const ci::ColorA& clr);
 
 	//clear the led colors

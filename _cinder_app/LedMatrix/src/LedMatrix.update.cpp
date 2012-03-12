@@ -7,7 +7,7 @@ namespace
 	const float Z_NEAR = 800;//kinect sensor value
 	const float Z_FAR = 4000;
 	double time_last_signal_came[N_DEVICES]={0};
-	const double sec_turn_to_idle = 10;//change to idle states if no one moving
+	const double sec_turn_to_idle = 5;//change to idle states if no one moving
 }
 
 void LedMatrixApp::update()

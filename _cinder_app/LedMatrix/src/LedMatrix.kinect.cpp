@@ -8,11 +8,11 @@ void LedMatrixApp::onKinect( const osc::Message* msg )
 	if (msg->getAddress() == "/start")
 	{
 		int dev_id = msg->getArgAsInt32(0);
-		if (one_msg[dev_id].empty())
+		if (single_session[dev_id].empty())
 			return;
 		lock_guard<mutex> lock(mtx_kinect_queues[dev_id]);
-		kinect_queues[dev_id].push_back(one_msg[dev_id]);
-		one_msg[dev_id].clear();
+		kinect_queues[dev_id].push_back(single_session[dev_id]);
+		single_session[dev_id].clear();
 	}
 	else
 	if (msg->getAddress() == "/contour")
@@ -20,7 +20,7 @@ void LedMatrixApp::onKinect( const osc::Message* msg )
 		Vec3f pos(msg->getArgAsFloat(2), msg->getArgAsFloat(3),
 			msg->getArgAsFloat(5));
  		int dev_id = msg->getArgAsInt32(7); 
-		one_msg[dev_id].push_back(pos);
+		single_session[dev_id].push_back(pos);
 	}
 }
 

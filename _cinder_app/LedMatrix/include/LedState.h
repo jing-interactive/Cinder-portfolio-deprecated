@@ -17,16 +17,23 @@ enum StateType
 	T_SPARK_INT,
 };
 
+enum{
+	T_RUNNING,
+	T_DYING,
+};
+
 struct LedState : public State<LedMatrixApp>
 {
 	static LedState* create(LedMatrixApp& app, int dev_id, StateType typ);
 	static bool isIdleState(StateType typ);
-	LedState(LedMatrixApp& app, int dev_id, StateType type)
-		:State<LedMatrixApp>(app),_dev_id(dev_id), _type(type){}
 	int _dev_id;
 	StateType _type;
+	virtual void update();
 protected:
+	LedState(LedMatrixApp& app, int dev_id, StateType type);
+	int n_countdown;
 	double _time;
 	double getElapsedSeconds();
 	void resetTimer();
+	int inner_state;
 };

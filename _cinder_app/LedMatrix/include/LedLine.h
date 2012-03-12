@@ -4,23 +4,33 @@
 
 struct Line
 {
-	enum LineState
+	enum Mode
 	{
-		T_COME,
-		T_GO,
+		T_BULLETS,//always the same direction
+		T_BOUNCING,//will change direction
 	};
-	std::vector<float> snake_z;//vector of z, just like 1-D snake eater
-	float speed;
-	float decay;
-	bool visible;
-	LineState state;
 
+	enum{
+		T_COME,
+		T_STAY,
+		T_GO
+	};
+	int direction;
 	Line();
+	void setMaxSpeed(float speed);
+	void setMode(Mode mode);
 	void reset();
 	void update(int dev);
 	void setTarget(const ci::Vec3i& pos);
-private: 
+	std::vector<float> snake_z;//vector of z, just like 1-D snake eater
+
+	int bouncing_times;
+private:
+	float decay;
+	bool visible;
+	Mode mode;
+	float max_speed;
+	float speed;
 	ci::Vec3i target;
 	int x,y;
-	int life;
 };

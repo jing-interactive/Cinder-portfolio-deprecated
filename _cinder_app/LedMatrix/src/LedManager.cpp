@@ -1,7 +1,9 @@
 #include "LedManager.h"
+#include <cinder/app/App.h>
 #include <cinder/gl/gl.h>
 
 using namespace ci;
+using namespace ci::app;
 
 namespace 
 {
@@ -14,7 +16,8 @@ namespace
 LedManager LedManager::mgr[2];
 
 void LedManager::_setup()
-{	
+{
+	k_alpha = 1.0f;
 	reset();
 	int inv_array_x[2] = {0, W-1};//第一列和最后一列
 	int inv_array_y[2][3] =	{
@@ -44,7 +47,7 @@ void LedManager::_setup()
 void LedManager::reset()
 {
 	for (int i=0;i<TOTAL;i++)
-		leds[i].clr = getDarkColor();
+		setLedDark(i);
 }
 
 void LedManager::draw3d()
@@ -97,12 +100,28 @@ LedManager& LedManager::get( int device_id )
 	return mgr[device_id];
 }
 
-ci::ColorA8u LedManager::getDarkColor(uint8_t alpha)
+void LedManager::setLedDark( int idx, ci::uint8_t alpha/*=5*/ )
 {
-	return ci::ColorA8u(229,229,229,alpha);
+	setLedColor(idx, ColorA8u(229,229,229,k_alpha*alpha));
 }
 
-ci::ColorA8u LedManager::getLightColor(uint8_t alpha)
+void LedManager::setLedLight( int idx, ci::uint8_t alpha/*=200*/ )
 {
-	return ci::ColorA8u(50, 179, 225,alpha);
+	setLedColor(idx, ColorA8u(50, 179, 225,k_alpha*alpha));
+}
+
+void LedManager::fadeOutIn( float fadeOutSec, float fadeInSec )
+{
+	timeline().apply(&k_alpha, 1.0f, 0.0f, fadeOutSec, EaseInQuad());
+	timeline().appendTo(&k_alpha, 0.0f, 1.0f, fadeInSec, EaseOutQuad());
+}
+
+void LedManager::fadeIn( float sec )
+{
+	timeline().apply(&k_alpha, 0.0f, 1.0f, sec, EaseInQuad());
+}
+
+void LedManager::fadeOut( float sec )
+{
+	timeline().apply(&k_alpha, 1.0f, 0.0f, sec, EaseInQuad());
 }

@@ -44,7 +44,7 @@ void Spark::update(int dev_id)
 	{
 		if (--life <= 0)
 		{
-			LedManager::get(dev_id).setLedColor(idx, LedManager::getDarkColor());
+			LedManager::get(dev_id).setLedDark(idx);
 			reset();
 			return;
 		}
@@ -52,7 +52,7 @@ void Spark::update(int dev_id)
 	}
 	
 	k = lmap<float>(k*k, 0, 1, 0, 250);
-	LedManager::get(dev_id).setLedColor(idx,LedManager::getDarkColor((int)k));
+	LedManager::get(dev_id).setLedLight(idx,k);
 }
 
 void Spark::setCenter( const Vec3i& pos )
