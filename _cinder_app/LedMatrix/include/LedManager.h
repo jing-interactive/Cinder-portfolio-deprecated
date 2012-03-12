@@ -2,18 +2,20 @@
 
 #include <cinder/Color.h>
 #include <cinder/Timeline.h>
+#include <cinder/Surface.h>
+#include <cinder/gl/Texture.h>
 
 struct Led
 {
 	Led():visible(true){}
-	ci::ColorA clr;
+	ci::ColorA8u clr;
 	bool visible;
 };
 
 struct LedManager
 {
 	enum{
-		W = 8,
+		W = 6,
 		H = 6,
 		Z = 45,
 		TOTAL = W*H*Z,
@@ -24,6 +26,8 @@ struct LedManager
 	static LedManager& get(int dev);
 
 	int device_id;
+	ci::Surface8u led_mapping;
+	ci::gl::Texture gl_mapping;
 
 	Led leds[TOTAL];
 

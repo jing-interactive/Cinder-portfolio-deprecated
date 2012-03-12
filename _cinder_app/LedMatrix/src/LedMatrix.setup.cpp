@@ -12,6 +12,7 @@ namespace
 
 void LedMatrixApp::setup()
 {
+	show_3d = true;
 	Rand::randomize();
 	//kinect/osc
 	listener = shared_ptr<osc::Listener>(new osc::Listener());

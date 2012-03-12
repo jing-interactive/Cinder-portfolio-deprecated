@@ -7,10 +7,12 @@ using namespace ci::app;
 
 namespace 
 {
-	const float CUBE_SIZE = 1.0f;//尺寸
-	const float KX = 5;//间隔X
-	const float KY = 5;//间隔Y
-	const float KZ = 5;//间隔Z
+	const float CUBE_SIZE = 1.0f;
+	const float KX = 5;//spacing X
+	const float KY = 5;//spacing Y
+	const float KZ = 5;//spacing Z
+	const int SCR_W = 29;
+	const int SCR_H = 28;
 
 	static struct LedMgrHelper
 	{
@@ -27,6 +29,8 @@ LedManager LedManager::mgr[2];
 void LedManager::_setup()
 {
 	k_alpha = 1.0f;
+
+	led_mapping = Surface8u(Z, W*H+(SCR_H), true, SurfaceChannelOrder::RGBA);
 	reset();
 	int inv_array_x[2] = {0, W-1};//第一列和最后一列
 	int inv_array_y[2][3] =	{
@@ -82,7 +86,36 @@ void LedManager::draw3d()
 
 void LedManager::draw2d()
 {
+	static int led_offset[]= {0, SCR_H};
+	static int scr_offset[]= {W*H, 0};
 
+	int led_y0 = led_offset[device_id];
+	int scr_y0 = scr_offset[device_id];
+
+	for (int x=0;x<W;x++)
+	{
+		for (int y=0;y<W;y++)
+		{
+			for (int z=0;z<Z;z++)
+			{
+				int idx = index(x,y,z);
+				const ColorA8u& clr = leds[idx].clr;
+				led_mapping.setPixel(Vec2i(z, led_y0+x*W+y), clr);
+			}
+		}
+	}
+	for (int x=0;x<SCR_W;x++)
+	{
+		for (int y=0;y<SCR_H;y++)
+		{
+			led_mapping.setPixel(Vec2i(x, scr_y0+y), ColorA8u(x*10,y*10,0,122));
+		}
+	}
+	gl::color(1,1,1);
+	gl::pushModelView();
+	gl::translate(0,(led_mapping.getHeight())*device_id);
+	gl::draw(led_mapping);
+	gl::popModelView();
 }
 
 Vec3f LedManager::getWatchPoint()

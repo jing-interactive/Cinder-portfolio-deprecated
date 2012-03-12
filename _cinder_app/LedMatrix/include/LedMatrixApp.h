@@ -25,13 +25,15 @@ namespace cinder {
 class LedMatrixApp : public AppBasic{
 public:
 	void setup();
+	void keyUp( KeyEvent event );
 	void mouseDown( MouseEvent event );
 	void mouseDrag( MouseEvent event );
 	void update();
 	void draw();
 
-public://camera
+public://redering
 	shared_ptr<MayaCamUI> maya_cam;
+	bool show_3d;
 
 public://osc
 	void onKinect(const osc::Message* msg);

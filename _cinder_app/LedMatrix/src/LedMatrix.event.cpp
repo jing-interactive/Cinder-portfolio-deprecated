@@ -10,3 +10,9 @@ void LedMatrixApp::mouseDrag( MouseEvent event )
 {
 	maya_cam->mouseDrag( event.getPos(), event.isLeftDown(), event.isMiddleDown(), event.isRightDown());
 }
+
+void LedMatrixApp::keyUp( KeyEvent event )
+{
+	if (event.getCode() == KeyEvent::KEY_SPACE)
+		show_3d = !show_3d;
+}

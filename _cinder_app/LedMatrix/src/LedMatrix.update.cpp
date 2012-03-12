@@ -44,7 +44,12 @@ void LedMatrixApp::update()
 			time_last_signal_came[dev_id] = elapsed;//update time
 
 			vector<Vec3f> raw_centers = kinect_queues[dev_id].front();
-			kinect_queues[dev_id].pop_front();
+
+			while (!kinect_queues[dev_id].empty())
+			{
+				raw_centers = kinect_queues[dev_id].front();
+				kinect_queues[dev_id].pop_front();
+			}
 			mtx_kinect_queues[dev_id].unlock();//unlock
 
 			int n_raws = raw_centers.size();

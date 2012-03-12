@@ -30,7 +30,7 @@ struct Animal
 				for (int z=0;z<LedManager::Z;z++)
 				{
 					p.z = z;
-					Vec3f diff = center - p;
+					Vec3f diff = p - center;
 					bool ok = false;
 					if (diff.z >= 1) 
 					{

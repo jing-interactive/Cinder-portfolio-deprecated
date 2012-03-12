@@ -5,22 +5,31 @@
 
 void LedMatrixApp::draw()
 {
-	gl::enableDepthWrite();
-	gl::enableDepthRead();
-	gl::enableAlphaBlending();
 	gl::clear();
-	gl::setMatrices( maya_cam->getCamera() );
 
-	gl::pushModelView();
-	gl::scale(Vec3f(20,20,20));
-	gl::drawCoordinateFrame();
-	gl::popModelView();
-
-	for (int i=0;i<2;i++)
+	if (show_3d)
 	{
-		current_states[i]->draw();
+		gl::enableDepthWrite();
+		gl::enableDepthRead();
+		gl::enableAlphaBlending();
+		gl::setMatrices( maya_cam->getCamera() );
 
-		LedManager::get(i).draw3d();
-		LedManager::get(i).draw2d();
+		gl::pushModelView();
+		gl::scale(Vec3f(20,20,20));
+		gl::drawCoordinateFrame();
+		gl::popModelView();
+
+		//all the led state draws nothing
+		for (int i=0;i<2;i++)
+			LedManager::get(i).draw3d();
+	}
+
+	{//2d mapping
+		gl::enableAlphaBlending();
+		gl::disableDepthRead();
+		gl::setMatricesWindow(getWindowSize());
+
+		for (int i=0;i<2;i++)
+			LedManager::get(i).draw2d();
 	}
 }
