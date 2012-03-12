@@ -7,8 +7,6 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-const int device_id = 0;
-
 struct Blob
 {
 	Blob():visible(false),radius(10){}
@@ -26,7 +24,7 @@ struct Blob
 		gl::drawSolidCircle(pos, radius);
 	}
 
-	void addToBundle( osc::Bundle& bundle ) 
+	void addToBundle( osc::Bundle& bundle, int dev_id ) 
 	{
 		if (!visible)
 			return;
@@ -39,7 +37,7 @@ struct Blob
 		m.addFloatArg(0);					//4
 		m.addFloatArg(z);					//5	-> cz
 		m.addFloatArg(0);					//6 rotation
-		m.addIntArg(device_id);				//7 -> device id
+		m.addIntArg(dev_id);				//7 -> device id
 
 		bundle.addMessage(m);
 	}
@@ -107,15 +105,13 @@ void KinServerSimApp::mouseDown( MouseEvent event )
 void KinServerSimApp::update()
 {
 	bundle.clear();
+	for (int i=0;i<2;i++)
 	{
 		osc::Message m;
 		m.setAddress("/start"); 
-		m.addIntArg(device_id);
+		m.addIntArg(i);
 		bundle.addMessage(m);
-	}
-	for (int i=0;i<2;i++)
-	{
-		blobs[i].addToBundle(bundle);
+		blobs[i].addToBundle(bundle, i);
 	}
 	sender.sendBundle(bundle);
 }
