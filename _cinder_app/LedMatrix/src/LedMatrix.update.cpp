@@ -58,7 +58,7 @@ void LedMatrixApp::update()
 				const Vec3f& ct = raw_centers[i];
 				int x = static_cast<int>(ct.x*LedManager::W);
 				int y = static_cast<int>(ct.y*LedManager::H);
-				int z = (int)lmap<float>(ct.z, Z_NEAR, Z_FAR, 0, LedManager::Z-1);
+				int z = (int)lmap<float>(ct.z, Z_NEAR, Z_FAR, LedManager::Z-1, 0);
 				centers[dev_id].push_back(Vec3i(x,y,z));
 			}
 			//send to interactive state

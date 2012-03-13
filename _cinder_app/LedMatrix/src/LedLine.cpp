@@ -84,7 +84,7 @@ void Line::reset()
 	y = randInt(target.y-radius_y, target.y+radius_y);
 	x = constrain(x, 0, LedManager::W-1);
 	y = constrain(y, 0, LedManager::H-1);
-	speed = randFloat(max_speed*0.75f, max_speed);
+	speed = randFloat(max_speed*0.5f, max_speed);
 	decay = randFloat(MIN_ALPHA_DECAY, MAX_ALPHA_DECAY);
 	if (T_BOUNCING == mode)
 	{

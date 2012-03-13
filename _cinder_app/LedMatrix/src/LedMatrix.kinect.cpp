@@ -3,6 +3,11 @@
 
 using namespace ci;
 
+namespace
+{
+	const int N_SKELETON = 6;
+}
+
 void LedMatrixApp::onKinect( const osc::Message* msg )
 {
 	if (msg->getAddress() == "/start")
@@ -18,8 +23,9 @@ void LedMatrixApp::onKinect( const osc::Message* msg )
 	if (msg->getAddress() == "/contour")
 	{
 		Vec3f pos(msg->getArgAsFloat(2), msg->getArgAsFloat(3),
-			msg->getArgAsFloat(5));
- 		int dev_id = msg->getArgAsInt32(7); 
+			msg->getArgAsFloat(6));
+		int blob_id = msg->getArgAsInt32(0);
+ 		int dev_id = blob_id/N_SKELETON; 
 		single_session[dev_id].push_back(pos);
 	}
 }
