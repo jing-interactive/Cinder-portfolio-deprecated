@@ -11,7 +11,7 @@ namespace
 
 void StateSparkInteractive::enter()
 {
-	n_countdown = 2;
+	n_countdown = 60;
 	printf("%d %s\n", _dev_id, "SparkInteractive");
 	resetTimer();
 	items = new Spark[n_sparks];

@@ -30,6 +30,6 @@ void LedMatrixApp::draw()
 		gl::setMatricesWindow(getWindowSize());
 
 		for (int i=0;i<2;i++)
-			LedManager::get(i).draw2d();
+			LedManager::get(i).draw2d(getElapsedSeconds());
 	}
 }

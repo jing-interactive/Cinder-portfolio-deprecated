@@ -1,9 +1,11 @@
 #include "LedMatrixApp.h"
 #include "OscListener.h"
 #include "LedManager.h"
+#include "Resources.h"
 #include <cinder/Arcball.h>
 #include <cinder/MayaCamUI.h>
 #include <cinder/Rand.h>
+#include <cinder/ImageIo.h>
 
 namespace
 {
@@ -14,6 +16,8 @@ void LedMatrixApp::setup()
 {
 	show_3d = true;
 	Rand::randomize();
+
+	LedManager::setTexture(loadImage(loadResource(IMG_PARTICLE)));
 	//kinect/osc
 	listener = shared_ptr<osc::Listener>(new osc::Listener());
 	listener->setup(port);

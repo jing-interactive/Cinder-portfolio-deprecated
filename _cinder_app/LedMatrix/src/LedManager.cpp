@@ -1,6 +1,6 @@
 #include "LedManager.h"
 #include <cinder/app/App.h>
-#include <cinder/gl/gl.h>
+#include <cinder/Rand.h>
 
 using namespace ci;
 using namespace ci::app;
@@ -14,23 +14,45 @@ namespace
 	const int SCR_W = 29;
 	const int SCR_H = 28;
 
+	const int SP = 5;//texture spacing
+
+	gl::Texture tex_particle;
+	
+	Area current_tex_area[2];
+	Vec2i sub_regions[] = {
+		Vec2i(0,0), Vec2i(0,1), Vec2i(0,3), 	
+		Vec2i(1,3), 
+		Vec2i(2,3), 
+		Vec2i(3,0), 
+	};
+	const int n_sub_regions = _countof(sub_regions);
+	void setRandomTexArea(int dev)
+	{
+		Vec2i pos = sub_regions[randInt(n_sub_regions)];
+		current_tex_area[dev].set(pos.x*32+SP, pos.y*32+SP,
+			(pos.x+1)*32-SP, (pos.y+1)*32-SP);
+	}
+
 	static struct LedMgrHelper
 	{
 		LedMgrHelper()
 		{
-			LedManager::get(0).device_id = 0;
-			LedManager::get(1).device_id = 1;
+			for (int dev=0;dev<2;dev++)
+			{
+				LedManager::get(dev).device_id = dev;
+				setRandomTexArea(dev);
+			}
 		}
 	}helper;
 }
 
-LedManager LedManager::mgr[2];
+LedManager LedManager::mgr[2]; 
 
 void LedManager::_setup()
 {
 	k_alpha = 1.0f;
 
-	led_mapping = Surface8u(Z, W*H+(SCR_H), true, SurfaceChannelOrder::RGBA);
+	led_mapping = Surface8u(Z, W*H, true, SurfaceChannelOrder::RGBA);
 	reset();
 	int inv_array_x[2] = {0, W-1};//第一列和最后一列
 	int inv_array_y[2][3] =	{
@@ -84,13 +106,13 @@ void LedManager::draw3d()
 	}
 }
 
-void LedManager::draw2d()
+void LedManager::draw2d(double absoluteTime)
 {
+	static int base_offset[]= {0, W*H+SCR_H};
 	static int led_offset[]= {0, SCR_H};
 	static int scr_offset[]= {W*H, 0};
-
-	int led_y0 = led_offset[device_id];
-	int scr_y0 = scr_offset[device_id];
+	int led_y0 = base_offset[device_id] + led_offset[device_id];
+	int scr_y0 = base_offset[device_id] + scr_offset[device_id];
 
 	for (int x=0;x<W;x++)
 	{
@@ -100,22 +122,20 @@ void LedManager::draw2d()
 			{
 				int idx = index(x,y,z);
 				const ColorA8u& clr = leds[idx].clr;
-				led_mapping.setPixel(Vec2i(z, led_y0+x*W+y), clr);
+				led_mapping.setPixel(Vec2i(z, x*W+y), clr);
 			}
-		}
-	}
-	for (int x=0;x<SCR_W;x++)
-	{
-		for (int y=0;y<SCR_H;y++)
-		{
-			led_mapping.setPixel(Vec2i(x, scr_y0+y), ColorA8u(x*10,y*10,0,122));
 		}
 	}
 	gl::color(1,1,1);
 	gl::pushModelView();
-	gl::translate(0,(led_mapping.getHeight())*device_id);
-	gl::draw(led_mapping);
+	{
+		gl::translate(0,led_y0);
+		gl::draw(led_mapping);
+	}
 	gl::popModelView();
+	float alpha = sin(0.2f*absoluteTime);
+	gl::color(0.1f,0.2f,0.25f, alpha);
+	gl::draw(tex_particle, current_tex_area[device_id], Rectf(0,scr_y0,SCR_W, scr_y0+SCR_H));	
 }
 
 Vec3f LedManager::getWatchPoint()
@@ -164,4 +184,9 @@ Tween<float>::Options LedManager::fadeIn( float sec )
 Tween<float>::Options LedManager::fadeOut( float sec )
 {
 	return timeline().apply(&k_alpha, 1.0f, 0.0f, sec, EaseInQuad());
+}
+
+void LedManager::setTexture( ImageSourceRef img )
+{
+	tex_particle = gl::Texture(img);
 }

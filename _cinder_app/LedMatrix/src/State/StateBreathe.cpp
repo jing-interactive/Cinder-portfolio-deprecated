@@ -49,7 +49,7 @@ struct BreatheLine
 
 void StateBreathe::enter()
 {
-	n_countdown = 5;
+	n_countdown = 60;
 	printf("%d %s\n", _dev_id, "[idle]Breathe");
 	resetTimer();
 	items = new BreatheLine[n_items];

@@ -1,8 +1,6 @@
 #pragma once
 
-#include <cinder/Color.h>
 #include <cinder/Timeline.h>
-#include <cinder/Surface.h>
 #include <cinder/gl/Texture.h>
 
 struct Led
@@ -24,6 +22,8 @@ struct LedManager
 	ci::Anim<float> k_alpha;//[0,1)
 
 	static LedManager& get(int dev);
+	static ci::Vec3f getWatchPoint();
+	static void setTexture( ci::ImageSourceRef img );
 
 	int device_id;
 	ci::Surface8u led_mapping;
@@ -56,12 +56,9 @@ struct LedManager
 	//render colorful cubes
 	void draw3d();
 	//render 2d led mappings
-	void draw2d();
-
-	static ci::Vec3f getWatchPoint();
+	void draw2d(double absoluteTime);
 
 private:
-
 	static LedManager mgr[2];
 	LedManager();//forbid ctr
 	void _setup();
