@@ -30,14 +30,14 @@ struct Blob
 			return;
 		osc::Message m;			
 		m.setAddress("/contour");
-		m.addIntArg(id);                        //0
+		m.addIntArg(dev_id*6+id);                        //0
 		m.addStringArg("/move");				//1
 		m.addFloatArg(pos.x/getWindowWidth());					//2 -> cx
 		m.addFloatArg(pos.y/getWindowHeight());					//3 -> cy
 		m.addFloatArg(0);					//4
-		m.addFloatArg(z);					//5	-> cz
-		m.addFloatArg(0);					//6 rotation
-		m.addIntArg(dev_id);				//7 -> device id
+		m.addFloatArg(0);					//5
+		m.addFloatArg(z);					//6 -> cz
+		m.addIntArg(0);						//7 -> n_pts
 
 		bundle.addMessage(m);
 	}
@@ -69,7 +69,7 @@ void KinServerSimApp::setup()
 	//osc
 	sender.setup("localhost", 7777);
 	//blob
-	blobs[0].id = 0;
+	blobs[0].id = 1;
 	blobs[1].id = 1;
 	//param GUI
 	param = params::InterfaceGl( "param", Vec2i( 200, 100 ));
