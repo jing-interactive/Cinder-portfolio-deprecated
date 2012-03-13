@@ -6,7 +6,7 @@
 
 namespace
 {
-	const int n_sparks = 20;
+	const int n_sparks = 30;
 }
 
 void StateSparkInteractive::enter()
@@ -26,6 +26,7 @@ void StateSparkInteractive::update()
 		if (updated)
 			items[i].setCenter(center);
 		items[i].update(_dev_id);
+		items[i].life = 1;//hack..
 	}
 
 	LedState::update();

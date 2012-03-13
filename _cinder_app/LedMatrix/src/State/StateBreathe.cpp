@@ -11,9 +11,9 @@ namespace
 {
 	const int n_items = LedManager::W*LedManager::H;
 	const float MIN_ALPHA_SPEED = 0.003f;
-	const float MAX_ALPHA_SPEED = 0.008f;
+	const float MAX_ALPHA_SPEED = 0.01f;
 	const float MIN_BREATH_DECAY = 5.4f;
-	const float MAX_BREATH_DECAY = 7.4f;
+	const float MAX_BREATH_DECAY = 8.0f;
 }
 
 struct BreatheLine
@@ -53,10 +53,10 @@ void StateBreathe::enter()
 	printf("%d %s\n", _dev_id, "[idle]Breathe");
 	resetTimer();
 	items = new BreatheLine[n_items];
+	speed = randFloat(MIN_ALPHA_SPEED, MAX_ALPHA_SPEED);
 	min_br = randFloat(1.0f, 10.0f);
 	breathe_decay = randFloat(MIN_BREATH_DECAY, MAX_BREATH_DECAY);
-	sin_counter = 0;
-	speed = MIN_ALPHA_SPEED;
+	sin_counter = 0; 
 }
 
 void StateBreathe::update()

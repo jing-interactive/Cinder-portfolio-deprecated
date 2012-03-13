@@ -20,10 +20,10 @@ namespace
 	
 	Area current_tex_area[2];
 	Vec2i sub_regions[] = {
-		Vec2i(0,0), Vec2i(0,1), Vec2i(0,3), 	
-		Vec2i(1,3), 
-		Vec2i(2,3), 
-		Vec2i(3,0), 
+		Vec2i(0,0), Vec2i(1,0), Vec2i(3,0), 	
+		Vec2i(3,1), 
+		Vec2i(3,2), 
+		Vec2i(0,3), 
 	};
 	const int n_sub_regions = _countof(sub_regions);
 	void setRandomTexArea(int dev)
@@ -133,7 +133,7 @@ void LedManager::draw2d(double absoluteTime)
 		gl::draw(led_mapping);
 	}
 	gl::popModelView();
-	float alpha = sin(0.2f*absoluteTime);
+	float alpha = abs(sin(0.2f*absoluteTime));
 	gl::color(0.1f,0.2f,0.25f, alpha);
 	gl::draw(tex_particle, current_tex_area[device_id], Rectf(0,scr_y0,SCR_W, scr_y0+SCR_H));	
 }

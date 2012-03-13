@@ -12,9 +12,9 @@ struct StateBreathe: public LedState
 	void exit();
 private:
 	struct BreatheLine* items;
-	float breathe_decay;
-	float sin_counter;//
+	float breathe_decay; 
 	float sin_value;//
+	float sin_counter;
 	float speed;// 
 	float min_br;
 };

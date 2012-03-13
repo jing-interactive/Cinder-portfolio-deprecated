@@ -26,7 +26,7 @@ void LedMatrixApp::setupStates()
 
 void LedMatrixApp::changeToRandomIdleState( int dev )
 {
-#if 0
+#if 1
 	static StateType idle_states[3] = {T_SPARK,T_BREATHE,T_LOTS};
 	changeToStateAmong(dev, idle_states);
 #else
@@ -37,7 +37,7 @@ void LedMatrixApp::changeToRandomIdleState( int dev )
 
 void LedMatrixApp::changeToRandomInteractiveState( int dev )
 {
-#if 0
+#if 1
 	static StateType interative_states[3] = {T_FOLLOWING,T_SPARK_INT,T_ANIMAL};
 	changeToStateAmong(dev, interative_states);
 #else	

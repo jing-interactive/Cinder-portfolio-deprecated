@@ -1,10 +1,13 @@
 #include <cinder/Utilities.h>
+#include <cinder/Rand.h>
 #include "States.h"
 #include "LedMatrixApp.h"
 #include "LedManager.h"
 
 namespace
-{ 
+{ 	
+	const float MIN_GROW_SPEED = 0.003f;
+	const float MAX_GROW_SPEED = 0.012f;
 }
 
 struct Animal
@@ -13,12 +16,26 @@ struct Animal
 	Animal()
 	{
 		radius = 3;
+		sin_value = 0;
+		sin_counter = 0;
+		speed = randFloat(MIN_GROW_SPEED, MAX_GROW_SPEED);
 	}
+	float sin_counter;
+	float sin_value;
 	Vec3f center;
 	Vec3f target_center;
+	float speed;
+
 	void update(int dev, float time)
 	{
-		radius = lmap<float>(abs(sinf(0.5f*time)), 0, 1,2,3.5);
+		sin_counter += speed;
+		float tmp = sinf(sin_counter);
+		if (sin_value > 0 && tmp <= 0)//if hitting bottom
+		{
+			speed = randFloat(MIN_GROW_SPEED, MAX_GROW_SPEED);
+		}
+		sin_value = tmp; 
+		radius = lmap<float>(abs(sin_value), 0, 1,2,3.5); 
 		center = center.lerp(0.1f, target_center);
 		Vec3f p;
 		for (int x=0;x<LedManager::W;x++)
