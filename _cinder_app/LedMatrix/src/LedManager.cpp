@@ -81,7 +81,7 @@ void LedManager::reset()
 
 void LedManager::draw3d()
 {
-	gl::translate(Vec3f(0, device_id*(KY+2)*LedManager::H, 0));
+	gl::translate(Vec3f(0, -device_id*(KY+2)*LedManager::H, 0));
 	for (int z=0;z<Z;z++)
 	{
 		for (int x=0;x<W;x++)
@@ -92,7 +92,7 @@ void LedManager::draw3d()
 				if (leds[idx].visible)
 				{
 					gl::color(leds[idx].clr);
-					gl::drawCube(Vec3f(x*KX, y*KY, z*KZ),
+					gl::drawCube(Vec3f(x*KX, -y*KY, z*KZ),
 						Vec3f(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
 				}
 			}
@@ -134,7 +134,7 @@ void LedManager::draw2d(double absoluteTime)
 
 Vec3f LedManager::getWatchPoint()
 {
-	return Vec3f(W*1.5f*KX,H*1.3f*KY, Z*0.5f*KZ);
+	return Vec3f(W*3*KX,H*0.5f*KY, Z*1.0f*KZ);
 }
 
 void LedManager::setLedColor( int idx, const ColorA& clr )
