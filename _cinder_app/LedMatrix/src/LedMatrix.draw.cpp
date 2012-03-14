@@ -13,6 +13,7 @@ void LedMatrixApp::draw()
 		gl::enableDepthRead();
 		gl::enableAlphaBlending();
 		gl::setMatrices( maya_cam->getCamera() );
+		gl::setViewport(Area(100,0, getWindowWidth(), getWindowHeight()));
 
 		gl::pushModelView();
 		gl::scale(Vec3f(20,20,20));

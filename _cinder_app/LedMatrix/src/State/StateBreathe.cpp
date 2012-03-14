@@ -4,16 +4,13 @@
 #include "States.h"
 #include "LedMatrixApp.h"
 #include "LedManager.h"
+#include "Config.h"
 
 using namespace ci;
 
 namespace
 {
 	const int n_items = LedManager::W*LedManager::H;
-	const float MIN_ALPHA_SPEED = 0.003f;
-	const float MAX_ALPHA_SPEED = 0.01f;
-	const float MIN_BREATH_DECAY = 5.4f;
-	const float MAX_BREATH_DECAY = 8.0f;
 }
 
 struct BreatheLine
@@ -25,7 +22,7 @@ struct BreatheLine
 		reset();
 	}
 
-	void update(int dev, int line_id, float sin_value, float breath_decay, float min_br)
+	void update(int dev, int line_id, float sin_value, float breath_decay, float thresh_alpha)
 	{
 		root_alpha = lmap<float>(abs(sin_value), 0, 1, 
 			min_root_alpha,max_root_alpha);
@@ -33,7 +30,7 @@ struct BreatheLine
 		for (int z=0;z<LedManager::Z;z++)
 		{
 			alpha -= breath_decay;
-			if (alpha < min_br)
+			if (alpha < thresh_alpha)
 				break;
 			int idx = z*LedManager::W*LedManager::H + line_id;
 			LedManager::get(dev).setLedLight(idx, (int)alpha);
@@ -42,20 +39,20 @@ struct BreatheLine
 
 	void reset() 
 	{
-		min_root_alpha = randFloat(0,10);
-		max_root_alpha = randFloat(170,255);
+		min_root_alpha = randFloat(BREATH_MIN_ROOT_ALPHA_LOW, BREATH_MIN_ROOT_ALPHA_HIGH);
+		max_root_alpha = randFloat(BREATH_MAX_ROOT_ALPHA_LOW, BREATH_MAX_ROOT_ALPHA_HIGH);
 	}
 };
 
 void StateBreathe::enter()
 {
-	n_countdown = 60;
+	n_countdown = BREATHE_COUNTDOWN;
 	printf("%d %s\n", _dev_id, "[idle]Breathe");
 	resetTimer();
 	items = new BreatheLine[n_items];
-	speed = randFloat(MIN_ALPHA_SPEED, MAX_ALPHA_SPEED);
-	min_br = randFloat(1.0f, 10.0f);
-	breathe_decay = randFloat(MIN_BREATH_DECAY, MAX_BREATH_DECAY);
+	speed = randFloat(BREATHE_MIN_ALPHA_SPEED, BREATHE_MAX_ALPHA_SPEED);
+	min_br = randFloat(BRETHE_MIN_THRESH_ALPHA, BRETHE_MAX_THRESH_ALPHA);
+	breathe_decay = randFloat(BREATHE_MIN_DECAY, BREATHE_MAX_DECAY);
 	sin_counter = 0; 
 }
 
@@ -65,9 +62,14 @@ void StateBreathe::update()
 	float sinv = sinf(sin_counter);
 	if (sin_value > 0 && sinv <= 0)//if hitting bottom
 	{
-		speed = randFloat(MIN_ALPHA_SPEED, MAX_ALPHA_SPEED);
-		min_br = randFloat(1.0f, 10.0f);
-		breathe_decay = randFloat(MIN_BREATH_DECAY, MAX_BREATH_DECAY);//generate new breathe_decay
+		speed = randFloat(BREATHE_MIN_ALPHA_SPEED, BREATHE_MAX_ALPHA_SPEED);
+		min_br = randFloat(BRETHE_MIN_THRESH_ALPHA, BRETHE_MAX_THRESH_ALPHA);
+		breathe_decay = randFloat(BREATHE_MIN_DECAY, BREATHE_MAX_DECAY);//generate new breathe_decay
+		for (int i=0;i<n_items;i++)
+		{
+			items[i].reset();
+		}
+		
 	}
 	sin_value = sinv;
 

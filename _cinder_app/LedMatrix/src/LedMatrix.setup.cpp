@@ -6,10 +6,21 @@
 #include <cinder/MayaCamUI.h>
 #include <cinder/Rand.h>
 #include <cinder/ImageIo.h>
+#include "config.h"
 
 namespace
 {
-	const int port = 7777;
+	const char* configFile = "./config.xml";
+}
+
+void LedMatrixApp::prepareSettings( Settings *settings )
+{
+	if (!loadConfig(configFile))
+		saveConfig(configFile);
+
+	settings->setAlwaysOnTop(false);
+	settings->setBorderless(true);
+	settings->setWindowPos(Vec2i::zero());
 }
 
 void LedMatrixApp::setup()
@@ -20,7 +31,7 @@ void LedMatrixApp::setup()
 	LedManager::setTexture(loadImage(loadResource(IMG_PARTICLE)));
 	//kinect/osc
 	listener = shared_ptr<osc::Listener>(new osc::Listener());
-	listener->setup(port);
+	listener->setup(OSC_PORT);
 	listener->registerMessageReceived(this, &LedMatrixApp::onKinect);
 
 	//cam

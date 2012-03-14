@@ -13,7 +13,7 @@ void LedMatrixApp::changeToState(LedState* new_state)
 	}
 	current_states[dev] = shared_ptr<LedState>(new_state);
 	current_states[dev]->enter();
-	LedManager::get(dev).k_alpha = 1.f;
+	LedManager::get(dev).resetAlpha();
 }
 
 void LedMatrixApp::setupStates()

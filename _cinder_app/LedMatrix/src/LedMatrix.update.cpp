@@ -1,13 +1,11 @@
 #include "LedMatrixApp.h"
 #include "LedState.h"
 #include "LedManager.h"
+#include "Config.h"
 
 namespace
 {
-	const float Z_NEAR = 800;//kinect sensor value
-	const float Z_FAR = 4000;
 	double time_last_signal_came[N_DEVICES]={0};
-	const double sec_turn_to_idle = 5;//change to idle states if no one moving
 }
 
 void LedMatrixApp::update()
@@ -19,7 +17,7 @@ void LedMatrixApp::update()
 	for (int dev_id=0;dev_id<2;dev_id++)
 	{
 		bool isIdle = LedState::isIdleState(current_states[dev_id]->_type);
-		if (!isIdle && elapsed - time_last_signal_came[dev_id] > sec_turn_to_idle)
+		if (!isIdle && elapsed - time_last_signal_came[dev_id] > SEC_TURN_IDLE)
 		{ 
 //			LedManager::get(dev_id).fadeIn(2);
 //				.finishFn(std::bind(&LedMatrixApp::changeToRandomIdleState, this, dev_id));

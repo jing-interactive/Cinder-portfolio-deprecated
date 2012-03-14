@@ -3,25 +3,21 @@
 #include "LedMatrixApp.h"
 #include "LedManager.h"
 #include "Spark.h"
-
-namespace
-{
-	const int n_sparks = 30;
-}
+#include "Config.h"
 
 void StateSparkInteractive::enter()
 {
-	n_countdown = 60;
+	n_countdown = SPARKINT_COUNTDOWN;
 	printf("%d %s\n", _dev_id, "SparkInteractive");
 	resetTimer();
-	items = new Spark[n_sparks];
+	items = new Spark[SPARKINT_N_ITEMS];
 }
 
 void StateSparkInteractive::update()
 {
 	Vec3i center;
 	bool updated = _app.getNewCenter(center, _dev_id);
-	for (int i=0;i<n_sparks;i++)
+	for (int i=0;i<SPARKINT_N_ITEMS;i++)
 	{
 		if (updated)
 			items[i].setCenter(center);

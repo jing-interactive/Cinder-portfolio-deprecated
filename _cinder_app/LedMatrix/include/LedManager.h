@@ -19,7 +19,9 @@ struct LedManager
 		TOTAL = W*H*Z,
 	};
 
-	ci::Anim<float> k_alpha;//[0,1)
+	ci::Anim<float> k_alpha;//[k_min_alpha,k_max_alpha)
+
+	void resetAlpha();
 
 	static LedManager& get(int dev);
 	static ci::Vec3f getWatchPoint();

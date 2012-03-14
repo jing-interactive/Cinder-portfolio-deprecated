@@ -25,6 +25,8 @@ namespace cinder {
 class LedMatrixApp : public AppBasic{
 public:
 	void setup();
+	void prepareSettings( Settings *settings );
+
 	void keyUp( KeyEvent event );
 	void mouseDown( MouseEvent event );
 	void mouseDrag( MouseEvent event );

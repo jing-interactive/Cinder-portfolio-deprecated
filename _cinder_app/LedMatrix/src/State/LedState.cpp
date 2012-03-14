@@ -2,6 +2,7 @@
 #include "States.h"
 #include "LedMatrixApp.h"
 #include "LedManager.h"
+#include "Config.h"
 
 double LedState::getElapsedSeconds()
 {
@@ -51,18 +52,16 @@ void LedState::update()
 {
 	if (getElapsedSeconds() > n_countdown && inner_state == T_RUNNING)
 	{
-		ci::Tween<float>::Options option = LedManager::get(_dev_id).fadeOut(2);
+		ci::Tween<float>::Options option = LedManager::get(_dev_id).fadeOut(SEC_FADE_OUT);
 		inner_state = T_DYING;
 
 		if (LedState::isIdleState(_type))
 		{
 			option = option.finishFn(std::bind(&LedMatrixApp::changeToRandomIdleState, &_app, _dev_id));
-			//	_app.changeToRandomIdleState(_dev_id);
 		}
 		else
 		{
 			option = option.finishFn(std::bind(&LedMatrixApp::changeToRandomInteractiveState, &_app, _dev_id));
-//			_app.changeToRandomInteractiveState(_dev_id);
 		}
 	}
 }
@@ -72,7 +71,7 @@ LedState::LedState( LedMatrixApp& app, int dev_id, StateType type )
 _dev_id(dev_id), 
 _type(type), 
 inner_state(T_RUNNING),
-n_countdown(60)
+n_countdown(DEFAULT_COUNTDOWN)
 {
 
 }

@@ -2,19 +2,9 @@
 #include "LedManager.h"
 #include <cinder/Rand.h>
 #include <cinder/Utilities.h>
+#include "Config.h"
 
 using namespace ci;
-
-namespace
-{
-	const int MIN_LIFE = 2;
-	const int MAX_LIFE = 4;
-	const float MIN_SPEED = 0.01f;
-	const float MAX_SPEED = 0.04f;
-	const int radius_x = 2;
-	const int radius_y = 2;
-	const int radius_z = 4;
-}
 
 Spark::Spark()
 {
@@ -29,8 +19,8 @@ void Spark::reset()
 	int y = randInt(min.y, max.y);
 	int z = randInt(min.z, max.z);
 	idx = LedManager::index(x,y,z);
-	life = randInt(MIN_LIFE, MAX_LIFE);
-	speed = randFloat(MIN_SPEED, MAX_SPEED);
+	life = randInt(SPARK_MIN_LIFE, SPARK_MAX_LIFE);
+	speed = randFloat(SPARK_MIN_SPEED, SPARK_MAX_SPEED);
 
 	speed_accum = 0;
 	speed_accum = 0;
@@ -57,10 +47,10 @@ void Spark::update(int dev_id)
 
 void Spark::setCenter( const Vec3i& pos )
 {
-	min.x = constrain(pos.x-radius_x,0,LedManager::W-1);
-	max.x = constrain(pos.x+radius_x,0,LedManager::W-1);
-	min.y = constrain(pos.y-radius_y,0,LedManager::H-1);
-	max.y = constrain(pos.y+radius_y,0,LedManager::H-1);
-	min.z = constrain(pos.z-radius_z,0,LedManager::Z-1);
-	max.z = constrain(pos.z+radius_z,0,LedManager::Z-1);
+	min.x = constrain(pos.x-SPARK_RADIUS_X,0,LedManager::W-1);
+	max.x = constrain(pos.x+SPARK_RADIUS_X,0,LedManager::W-1);
+	min.y = constrain(pos.y-SPARK_RADIUS_Y,0,LedManager::H-1);
+	max.y = constrain(pos.y+SPARK_RADIUS_Y,0,LedManager::H-1);
+	min.z = constrain(pos.z-SPARK_RADIUS_Z,0,LedManager::Z-1);
+	max.z = constrain(pos.z+SPARK_RADIUS_Z,0,LedManager::Z-1);
 }

@@ -2,22 +2,9 @@
 #include <cinder/Color.h>
 #include "LedLine.h"
 #include "LedManager.h"
+#include "Config.h"
 
 using namespace ci;
-
-namespace
-{	
-	const int MIN_LIFE = 1;
-	const int MAX_LIFE = 3;
-	const float MIN_SPEED = 0.3f;
-	const float MAX_SPEED = 0.5f;
-	const int MIN_SNAKE = 5;
-	const int MAX_SNAKE = 30;
-	const int radius_x = 2;
-	const int radius_y = 3;
-	const float MIN_ALPHA_DECAY = 0.8f;
-	const float MAX_ALPHA_DECAY = 0.95f;
-}
 
 void Line::update(int dev)
 {
@@ -80,12 +67,12 @@ void Line::update(int dev)
 
 void Line::reset()
 {
-	x = randInt(target.x-radius_x, target.x+radius_x);
-	y = randInt(target.y-radius_y, target.y+radius_y);
+	x = randInt(target.x-LINE_RADIUS_X, target.x+LINE_RADIUS_X);
+	y = randInt(target.y-LINE_RADIUS_Y, target.y+LINE_RADIUS_Y);
 	x = constrain(x, 0, LedManager::W-1);
 	y = constrain(y, 0, LedManager::H-1);
 	speed = randFloat(max_speed*0.5f, max_speed);
-	decay = randFloat(MIN_ALPHA_DECAY, MAX_ALPHA_DECAY);
+	decay = randFloat(LINE_MIN_ALPHA_DECAY, LINE_MAX_ALPHA_DECAY);
 	if (T_BOUNCING == mode)
 	{
 		snake_z[0] = 0;
@@ -99,7 +86,7 @@ void Line::reset()
 			snake_z[0] = LedManager::Z-1;
 	}
 	
-	bouncing_times = randInt(MIN_LIFE, MAX_LIFE);
+	bouncing_times = randInt(LINE_MIN_LIFE, LINE_MAX_LIFE);
 }
 
 Line::Line()
@@ -108,7 +95,7 @@ Line::Line()
 	x = y = 0;
 	direction = T_COME;
 	max_speed = 0.5f;
-	snake_z.resize(randInt(MIN_SNAKE, MAX_SNAKE));
+	snake_z.resize(randInt(LINE_MIN_SNAKE, LINE_MAX_SNAKE));
 	target.set(LedManager::W/2,LedManager::H/2,LedManager::Z-1);
 	reset();
 }

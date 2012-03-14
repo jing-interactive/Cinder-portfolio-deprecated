@@ -4,25 +4,21 @@
 #include "LedMatrixApp.h"
 #include "LedManager.h"
 #include "Spark.h"
+#include "Config.h"
 
 using namespace std;
 
-namespace
-{
-	const int n_items = 100;//duplicates might exist
-}
-
 void StateSpark::enter()
 {	
-	n_countdown = 60;
+	n_countdown = SPARK_COUNTDOWN;
 	printf("%d %s\n", _dev_id, "[idle]Spark");
 	resetTimer();
-	items = new Spark[n_items];
+	items = new Spark[SPARK_N_ITEMS];
 }
 
 void StateSpark::update()
 {
-	for (int i=0;i<n_items;i++)
+	for (int i=0;i<SPARK_N_ITEMS;i++)
 	{
 		items[i].update(_dev_id);
 	}

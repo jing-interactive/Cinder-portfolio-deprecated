@@ -4,24 +4,22 @@
 #include "LedMatrixApp.h"
 #include "LedManager.h"
 #include "LedLine.h"
+#include "Config.h"
 
 namespace
-{  
-	const float transition_time = 2;
-	const int n_items = int(LedManager::W*LedManager::H*0.75f);
+{
+	const int n_items = int(LedManager::W*LedManager::H*LOTS_K_ITEMS);
 	enum{
 		T_COME,
 		T_FADE,
 		T_CHANGE,
 		T_GO,
 	};
-	const float COME_SPEED = 0.6f;
-	const float GO_SPEED = 2.4f;
 }
 
 void StateLotsOfLines::enter()
 {	
-	n_countdown = 60;
+	n_countdown = LOTS_COUNTDOWN;
 	inner_state = T_COME;
 	printf("%d %s\n", _dev_id, "[idle]LotsOfStars");
 	resetTimer();
@@ -32,7 +30,7 @@ void StateLotsOfLines::enter()
 			randInt(LedManager::H),
 			LedManager::Z-1);
 		items[i].setTarget(target);
-		items[i].setMaxSpeed(COME_SPEED);
+		items[i].setMaxSpeed(LOTS_COME_SPEED);
 	}
 }
 
@@ -48,12 +46,12 @@ void StateLotsOfLines::update()
 	{
 	case T_COME:
 		{
-			if (elapsed > n_countdown - transition_time)
+			if (elapsed > n_countdown - LOTS_SEC_FADEOUT)
 				inner_state = T_FADE;
 		}break;	
 	case T_FADE:
 		{
-			LedManager::get(_dev_id).fadeOutIn(2,2);
+			LedManager::get(_dev_id).fadeOutIn(LOTS_SEC_FADEOUT,LOTS_SEC_FADEIN);
 			inner_state = T_CHANGE;
 		}break;	
 	case T_CHANGE:
@@ -62,7 +60,7 @@ void StateLotsOfLines::update()
 			{
 				for (int i=0;i<n_items;i++)
 				{
-					items[i].setMaxSpeed(GO_SPEED);
+					items[i].setMaxSpeed(LOTS_GO_SPEED);
 					items[i].direction = Line::T_GO;
 				}
 				inner_state = T_GO;

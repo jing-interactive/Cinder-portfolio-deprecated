@@ -36,6 +36,11 @@ void LedMatrixApp::keyUp( KeyEvent event )
 		{
 			key_id = 2;
 		}break;
+	case  KeyEvent::KEY_ESCAPE:
+		{
+			if (IDYES == ::MessageBox(NULL, L"Sure to exit?", L"LedMatrix", MB_YESNO))
+				quit();
+		}
 	default:
 		break;
 	}

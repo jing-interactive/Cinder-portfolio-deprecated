@@ -3,12 +3,7 @@
 #include "States.h"
 #include "LedMatrixApp.h"
 #include "LedManager.h"
-
-namespace
-{ 	
-	const float MIN_GROW_SPEED = 0.003f;
-	const float MAX_GROW_SPEED = 0.012f;
-}
+#include "Config.h"
 
 struct Animal
 {
@@ -18,7 +13,7 @@ struct Animal
 		radius = 3;
 		sin_value = 0;
 		sin_counter = 0;
-		speed = randFloat(MIN_GROW_SPEED, MAX_GROW_SPEED);
+		speed = randFloat(ANIMAL_MIN_GROW_SPEED, ANIMAL_MAX_GROW_SPEED);
 	}
 	float sin_counter;
 	float sin_value;
@@ -32,10 +27,10 @@ struct Animal
 		float tmp = sinf(sin_counter);
 		if (sin_value > 0 && tmp <= 0)//if hitting bottom
 		{
-			speed = randFloat(MIN_GROW_SPEED, MAX_GROW_SPEED);
+			speed = randFloat(ANIMAL_MIN_GROW_SPEED, ANIMAL_MAX_GROW_SPEED);
 		}
 		sin_value = tmp; 
-		radius = lmap<float>(abs(sin_value), 0, 1,2,3.5); 
+		radius = lmap<float>(abs(sin_value), 0, 1,ANIMAL_MIN_BODY_RADIUS,ANIMAL_MAX_BODY_RADIUS); 
 		center = center.lerp(0.1f, target_center);
 		Vec3f p;
 		for (int x=0;x<LedManager::W;x++)
@@ -52,16 +47,18 @@ struct Animal
 					if (diff.z >= 1) 
 					{
 						Vec3f d(diff);
-						d.x *= 1.5f;
-						d.z *= 0.3f;
+						d.x *= ANIMAL_POS_SCALE_X;
+						d.y *= ANIMAL_POS_SCALE_Y;
+						d.z *= ANIMAL_POS_SCALE_Z;
 						float len = d.length();
 						ok = len < radius && len>radius-0.5f;
 					}
 					else if (diff.z <= -1) 
 					{
 						Vec3f d(diff);
-						d.y *= 1.5f;
-						d.z *= 0.2f;
+						d.x *= ANIMAL_NEG_SCALE_X;
+						d.y *= ANIMAL_NEG_SCALE_Y;
+						d.z *= ANIMAL_NEG_SCALE_Z;
 						float len = d.length();
 						ok = len < radius/2 && len>radius/2-0.5f;
 					}
@@ -85,7 +82,7 @@ struct Animal
 
 void StateAnimal::enter()
 {	
-	n_countdown = 60;
+	n_countdown = ANIMAL_COUNTDOWN;
 	item = new Animal;
 	printf("%d %s\n", _dev_id, "Animal");
 	resetTimer();

@@ -1,21 +1,13 @@
 #include "LedManager.h"
 #include <cinder/app/App.h>
 #include <cinder/Rand.h>
+#include "Config.h"
 
 using namespace ci;
 using namespace ci::app;
 
 namespace 
 {
-	const float CUBE_SIZE = 1.0f;
-	const float KX = 5;//spacing X
-	const float KY = 5;//spacing Y
-	const float KZ = 5;//spacing Z
-	const int SCR_W = 29;
-	const int SCR_H = 28;
-
-	const int SP = 5;//texture spacing
-
 	gl::Texture tex_particle;
 	
 	Area current_tex_area[2];
@@ -30,7 +22,7 @@ namespace
 	{
 		Vec2i pos = sub_regions[randInt(n_sub_regions)];
 		current_tex_area[dev].set(pos.x*32+SP, pos.y*32+SP,
-			(pos.x+1)*32-SP, (pos.y+1)*32-SP);
+			(pos.x+1)*32-SP*2, (pos.y+1)*32-SP*2);
 	}
 
 	static struct LedMgrHelper
@@ -50,22 +42,24 @@ LedManager LedManager::mgr[2];
 
 void LedManager::_setup()
 {
-	k_alpha = 1.0f;
+	LED_MIN_ALPHA = 0.0f;
+	LED_MAX_ALPHA = 1.0f;
+	k_alpha = LED_MAX_ALPHA;
 
 	led_mapping = Surface8u(Z, W*H, true, SurfaceChannelOrder::RGBA);
 	reset();
-	int inv_array_x[2] = {0, W-1};//第一列和最后一列
+	int inv_array_x[2] = {0, W-1};//fisrt row && last row
 	int inv_array_y[2][3] =	{
-		//奇数层不可见的索引
+		//odd layers
 		{1, 3, 5},
-		//偶数层不可见的索引
+		//even layers
 		{0, 2, 4}
 	};
 
-	//设置不可见的项
+	//set the visibility
 	for (int z=0;z<Z;z++)
 	{   
-		int odd_idx = z%2;//奇数（2n)为0，偶数(2n+1)为1
+		int odd_idx = z%2;//odd(2n) -> 0, even(2n+1) -> 1
 		for (int i =0;i<2;i++)
 		{
 			int x = inv_array_x[i];
@@ -133,8 +127,8 @@ void LedManager::draw2d(double absoluteTime)
 		gl::draw(led_mapping);
 	}
 	gl::popModelView();
-	float alpha = abs(sin(0.2f*absoluteTime));
-	gl::color(0.1f,0.2f,0.25f, alpha);
+	float alpha = 255*abs(sin(SCR_LED_SPEED*absoluteTime));
+	gl::color(ColorA8u(LIGHT_CLR_R, LIGHT_CLR_G, LIGHT_CLR_B,k_alpha*alpha));
 	gl::draw(tex_particle, current_tex_area[device_id], Rectf(0,scr_y0,SCR_W, scr_y0+SCR_H));	
 }
 
@@ -162,31 +156,36 @@ LedManager& LedManager::get( int device_id )
 
 void LedManager::setLedDark( int idx, ci::uint8_t alpha/*=5*/ )
 {
-	setLedColor(idx, ColorA8u(229,229,229,k_alpha*alpha));
+	setLedColor(idx, ColorA8u(DARK_CLR_R,DARK_CLR_G,DARK_CLR_B,k_alpha*alpha));
 }
 
 void LedManager::setLedLight( int idx, ci::uint8_t alpha/*=200*/ )
 {
-	setLedColor(idx, ColorA8u(50, 179, 225,k_alpha*alpha));
+	setLedColor(idx, ColorA8u(LIGHT_CLR_R, LIGHT_CLR_G, LIGHT_CLR_B,k_alpha*alpha));
 }
 
 Tween<float>::Options LedManager::fadeOutIn( float fadeOutSec, float fadeInSec )
 {
-	timeline().apply(&k_alpha, 1.0f, 0.0f, fadeOutSec, EaseInQuad());
-	return timeline().appendTo(&k_alpha, 0.0f, 1.0f, fadeInSec, EaseOutQuad());
+	timeline().apply(&k_alpha, LED_MAX_ALPHA, LED_MIN_ALPHA, fadeOutSec, EaseInQuad());
+	return timeline().appendTo(&k_alpha, LED_MIN_ALPHA, LED_MAX_ALPHA, fadeInSec, EaseOutQuad());
 }
 
 Tween<float>::Options LedManager::fadeIn( float sec )
 {
-	return timeline().apply(&k_alpha, 0.0f, 1.0f, sec, EaseInQuad());
+	return timeline().apply(&k_alpha, LED_MIN_ALPHA, LED_MAX_ALPHA, sec, EaseInQuad());
 }
 
 Tween<float>::Options LedManager::fadeOut( float sec )
 {
-	return timeline().apply(&k_alpha, 1.0f, 0.0f, sec, EaseInQuad());
+	return timeline().apply(&k_alpha, LED_MAX_ALPHA, LED_MIN_ALPHA, sec, EaseInQuad());
 }
 
 void LedManager::setTexture( ImageSourceRef img )
 {
 	tex_particle = gl::Texture(img);
+}
+
+void LedManager::resetAlpha()
+{
+	k_alpha = LED_MAX_ALPHA;
 }
