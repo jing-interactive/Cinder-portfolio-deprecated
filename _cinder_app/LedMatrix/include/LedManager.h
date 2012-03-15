@@ -48,7 +48,7 @@ struct LedManager
 		return y*W+x;
 	}
 
-	void setLedDark(int idx, ci::uint8_t alpha=5);
+	void setLedDark(int idx, ci::uint8_t alpha=0);
 	void setLedLight(int idx, ci::uint8_t alpha=200);
 	void setLedColor(int idx, const ci::ColorA& clr);
 
@@ -58,7 +58,7 @@ struct LedManager
 	//render colorful cubes
 	void draw3d();
 	//render 2d led mappings
-	void draw2d(double absoluteTime);
+	void draw2d(double absoluteTime, bool scrVisible = true, bool mappingPreCalculated = false);
 
 private:
 	static LedManager mgr[2];

@@ -21,12 +21,15 @@ void StateFollowingLines::enter()
 
 void StateFollowingLines::update()
 {	
-	Vec3i center;
-	bool updated = _app.getNewCenter(center, _dev_id);
+	vector<Vec3i> centers;
+	bool updated = _app.getNewCenter(centers, _dev_id);
+
 	for (int i=0;i<FOLLOWING_N_ITEMS;i++)
 	{
 		if (updated)
-			items[i].setTarget(center);
+		{
+			items[i].setTarget(centers[0]);
+		}
 		items[i].update(_dev_id);
 	}
 	LedState::update();

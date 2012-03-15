@@ -67,6 +67,8 @@ struct Animal
 						float alpha = lmap<float>(abs(diff.z), 0, 10, 255, 10);
 						alpha = constrain<float>(alpha, 0, 255);
 						int idx = LedManager::index(x,y,z);
+						int beta = LedManager::get(dev).leds[idx].clr.a;
+						alpha = constrain<float>(alpha+beta, 0, 255);
 						LedManager::get(dev).setLedLight(idx, alpha);
 					}
 				}
@@ -83,19 +85,22 @@ struct Animal
 void StateAnimal::enter()
 {	
 	n_countdown = ANIMAL_COUNTDOWN;
-	item = new Animal;
+	items = new Animal[2];
 	printf("%d %s\n", _dev_id, "Animal");
 	resetTimer();
 }
 
 void StateAnimal::update()
 {	
-	Vec3i center;
-	bool updated = _app.getNewCenter(center, _dev_id);
+	vector<Vec3i> centers;
+	bool updated = _app.getNewCenter(centers, _dev_id);
+	int n_centers = std::min<int>(centers.size(), 2);
 
 	if (updated)
-		item->setCenter(center);
-	item->update(_dev_id, getElapsedSeconds()); 
+	{ 
+		items[0].setCenter(centers[0]);
+	}	
+	items[0].update(_dev_id, getElapsedSeconds());
 
 	LedState::update();	
 }
@@ -107,5 +112,5 @@ void StateAnimal::draw()
 
 void StateAnimal::exit()
 {
-	delete item;
+	delete[] items;
 }

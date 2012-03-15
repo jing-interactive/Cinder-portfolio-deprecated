@@ -10,6 +10,8 @@ namespace
 
 void LedMatrixApp::update()
 {
+	debug_puts("LedMatrixApp::update()");
+
 	int win_w = getWindowWidth();
 	int win_h = getWindowHeight();
 	double elapsed = getElapsedSeconds();

@@ -31,12 +31,12 @@ void LedMatrixApp::onKinect( const osc::Message* msg )
 }
 
 
-bool LedMatrixApp::getNewCenter( Vec3i& center, int dev )
+bool LedMatrixApp::getNewCenter( vector<Vec3i>& center, int dev )
 {
 	bool updated = !centers[dev].empty();
 	if (updated)
-	{//TODO: add support to more centers
-		center = centers[dev].front();
+	{
+		center = centers[dev];
 	}
 	return updated;
 }

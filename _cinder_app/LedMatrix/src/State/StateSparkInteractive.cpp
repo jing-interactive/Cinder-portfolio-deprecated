@@ -15,16 +15,18 @@ void StateSparkInteractive::enter()
 
 void StateSparkInteractive::update()
 {
-	Vec3i center;
-	bool updated = _app.getNewCenter(center, _dev_id);
+	vector<Vec3i> centers;
+	bool updated = _app.getNewCenter(centers, _dev_id);
+
 	for (int i=0;i<SPARKINT_N_ITEMS;i++)
 	{
 		if (updated)
-			items[i].setCenter(center);
+		{ 
+			items[i].setCenter(centers[0]);
+		}
 		items[i].update(_dev_id);
 		items[i].life = 1;//hack..
 	}
-
 	LedState::update();
 }
 

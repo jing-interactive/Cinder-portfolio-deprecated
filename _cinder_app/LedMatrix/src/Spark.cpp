@@ -23,7 +23,6 @@ void Spark::reset()
 	speed = randFloat(SPARK_MIN_SPEED, SPARK_MAX_SPEED);
 
 	speed_accum = 0;
-	speed_accum = 0;
 }
 
 void Spark::update(int dev_id)

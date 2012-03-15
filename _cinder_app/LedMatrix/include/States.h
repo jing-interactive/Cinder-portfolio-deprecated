@@ -31,6 +31,26 @@ private:
 	struct Line* items;
 };
 
+struct StateRipple: public LedState
+{
+	StateRipple(LedMatrixApp& app, int dev_id)
+		:LedState(app, dev_id, T_RIPPLE){}
+	void enter();
+	void update();
+	void draw();
+	void exit();
+};
+
+struct StateCube: public LedState
+{
+	StateCube(LedMatrixApp& app, int dev_id)
+		:LedState(app, dev_id, T_CUBE){}
+	void enter();
+	void update();
+	void draw();
+	void exit();
+};
+
 struct StateSpark: public LedState
 {
 	StateSpark(LedMatrixApp& app, int dev_id)
@@ -64,7 +84,7 @@ struct StateAnimal: public LedState
 	void draw();
 	void exit();
 private:
-	struct Animal* item;
+	struct Animal* items;
 };
 
 struct StateSparkInteractive: public LedState

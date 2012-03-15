@@ -12,7 +12,7 @@ namespace
 	
 	Area current_tex_area[2];
 	Vec2i sub_regions[] = {
-		Vec2i(0,0), Vec2i(1,0), Vec2i(3,0), 	
+		Vec2i(0,0), Vec2i(1,0), Vec2i(3,0),
 		Vec2i(3,1), 
 		Vec2i(3,2), 
 		Vec2i(0,3), 
@@ -22,7 +22,7 @@ namespace
 	{
 		Vec2i pos = sub_regions[randInt(n_sub_regions)];
 		current_tex_area[dev].set(pos.x*32+SP, pos.y*32+SP,
-			(pos.x+1)*32-SP*2, (pos.y+1)*32-SP*2);
+			(pos.x+1)*32-SP, (pos.y+1)*32-SP);
 	}
 
 	static struct LedMgrHelper
@@ -42,8 +42,6 @@ LedManager LedManager::mgr[2];
 
 void LedManager::_setup()
 {
-	LED_MIN_ALPHA = 0.0f;
-	LED_MAX_ALPHA = 1.0f;
 	k_alpha = LED_MAX_ALPHA;
 
 	led_mapping = Surface8u(Z, W*H, true, SurfaceChannelOrder::RGBA);
@@ -100,23 +98,32 @@ void LedManager::draw3d()
 	}
 }
 
-void LedManager::draw2d(double absoluteTime)
+void LedManager::draw2d(double absoluteTime, bool scrVisible, bool mappingPreCalculated)
 {
-	static int base_offset[]= {0, W*H+SCR_H};
-	static int led_offset[]= {0, SCR_H};
-	static int scr_offset[]= {W*H, 0};
-	int led_y0 = base_offset[device_id] + led_offset[device_id];
-	int scr_y0 = base_offset[device_id] + scr_offset[device_id];
+	static int led_offset[]= {LED_OFFSET_0, LED_OFFSET_1};
+	static int scr_offset[]= {SCR_OFFSET_0, SCR_OFFSET_1};
+	int led_y0 = led_offset[device_id];
+	int scr_y0 = scr_offset[device_id];
 
-	for (int x=0;x<W;x++)
-	{
-		for (int y=0;y<W;y++)
+	if (!mappingPreCalculated)
+	{//calculate according to leds[] array
+		for (int x=0;x<Z;x++)
 		{
-			for (int z=0;z<Z;z++)
+			for (int y=0;y<W*H;y++)
 			{
-				int idx = index(x,y,z);
-				const ColorA8u& clr = leds[idx].clr;
-				led_mapping.setPixel(Vec2i(z, x*W+y), clr);
+				led_mapping.setPixel(Vec2i(x, y), Color8u::black());
+			}
+		}
+		for (int x=0;x<W;x++)
+		{
+			for (int y=0;y<W;y++)
+			{
+				for (int z=0;z<Z;z++)
+				{
+					int idx = index(x,y,z);
+					const ColorA8u& clr = leds[idx].clr;
+					led_mapping.setPixel(Vec2i(z, x*W+y), clr);
+				}
 			}
 		}
 	}
@@ -127,9 +134,12 @@ void LedManager::draw2d(double absoluteTime)
 		gl::draw(led_mapping);
 	}
 	gl::popModelView();
-	float alpha = 255*abs(sin(SCR_LED_SPEED*absoluteTime));
-	gl::color(ColorA8u(LIGHT_CLR_R, LIGHT_CLR_G, LIGHT_CLR_B,k_alpha*alpha));
-	gl::draw(tex_particle, current_tex_area[device_id], Rectf(0,scr_y0,SCR_W, scr_y0+SCR_H));	
+	if (scrVisible)
+	{
+		float alpha = 255*abs(sin(SCR_LED_SPEED*absoluteTime));
+		gl::color(ColorA8u(LIGHT_CLR_R, LIGHT_CLR_G, LIGHT_CLR_B,k_alpha*alpha));
+		gl::draw(tex_particle, current_tex_area[device_id], Rectf(0,scr_y0,SCR_W, scr_y0+SCR_H));	
+	}
 }
 
 Vec3f LedManager::getWatchPoint()

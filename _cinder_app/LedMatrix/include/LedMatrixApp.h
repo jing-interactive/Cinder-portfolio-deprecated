@@ -26,7 +26,6 @@ class LedMatrixApp : public AppBasic{
 public:
 	void setup();
 	void prepareSettings( Settings *settings );
-
 	void keyUp( KeyEvent event );
 	void mouseDown( MouseEvent event );
 	void mouseDrag( MouseEvent event );
@@ -36,10 +35,11 @@ public:
 public://redering
 	shared_ptr<MayaCamUI> maya_cam;
 	bool show_3d;
+	void reloadConfig();
 
 public://osc
 	void onKinect(const osc::Message* msg);
-	bool getNewCenter(Vec3i& center, int dev);//try get
+	bool getNewCenter(vector<Vec3i>& center, int dev);//try get
 	vector<Vec3i> centers[N_DEVICES];
 private://osc
 	shared_ptr<osc::Listener> listener;

@@ -63,6 +63,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="cinder_d.lib"
+				OutputFile="bin\$(ProjectName)_d.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\cinder_0.8.3_vc2008\lib;..\..\..\cinder_0.8.3_vc2008\lib\msw"
 				GenerateDebugInformation="true"
@@ -138,6 +139,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="cinder.lib"
+				OutputFile="bin\$(ProjectName).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\cinder_0.8.3_vc2008\lib;..\..\..\cinder_0.8.3_vc2008\lib\msw"
 				GenerateDebugInformation="true"
@@ -234,6 +236,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\Config_def.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\LedLine.h"
 				>
 			</File>
@@ -313,6 +319,10 @@
 			</File>
 			<File
 				RelativePath="..\src\State\StateLotsOfLines.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\State\StateRipple.cpp"
 				>
 			</File>
 			<File

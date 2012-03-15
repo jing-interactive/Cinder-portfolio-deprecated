@@ -8,15 +8,18 @@
 #include <cinder/ImageIo.h>
 #include "config.h"
 
-namespace
+
+void LedMatrixApp::reloadConfig()
 {
-	const char* configFile = "./config.xml";
+	const char* configFile = "config.xml";
+	string config = getAppPath().generic_string() + configFile;
+	if (!loadConfig(config.c_str()))
+		saveConfig(config.c_str());
 }
 
 void LedMatrixApp::prepareSettings( Settings *settings )
 {
-	if (!loadConfig(configFile))
-		saveConfig(configFile);
+	reloadConfig();
 
 	settings->setAlwaysOnTop(false);
 	settings->setBorderless(true);
@@ -30,9 +33,11 @@ void LedMatrixApp::setup()
 
 	LedManager::setTexture(loadImage(loadResource(IMG_PARTICLE)));
 	//kinect/osc
+	debug_puts("[start]listener->registerMessageReceived()\n");
 	listener = shared_ptr<osc::Listener>(new osc::Listener());
 	listener->setup(OSC_PORT);
 	listener->registerMessageReceived(this, &LedMatrixApp::onKinect);
+	debug_puts("[end]listener->registerMessageReceived()\n");
 
 	//cam
 	maya_cam = shared_ptr<MayaCamUI>(new MayaCamUI);
@@ -44,5 +49,7 @@ void LedMatrixApp::setup()
 	}
 
 	//state
+	debug_puts("[start]setupStates()\n");
 	setupStates();
+	debug_puts("[end]setupStates()\n");
 }

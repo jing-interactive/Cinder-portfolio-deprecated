@@ -11,6 +11,8 @@ enum StateType
 	T_BREATHE,
 	T_LOTS,
 	T_SPARK,
+	T_RIPPLE,
+	T_CUBE,
 	//interactive
 	T_FOLLOWING,
 	T_ANIMAL,
@@ -19,7 +21,7 @@ enum StateType
 
 enum{
 	T_RUNNING,
-	T_DYING,
+	T_DYING = -1,
 };
 
 struct LedState : public State<LedMatrixApp>

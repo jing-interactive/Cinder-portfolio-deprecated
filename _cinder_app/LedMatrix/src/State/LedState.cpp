@@ -28,6 +28,9 @@ LedState* LedState::create(LedMatrixApp& app, int dev_id, StateType typ)
 	case T_LOTS:
 		st = new StateLotsOfLines(app, dev_id);
 		break;
+	case T_RIPPLE:
+		st = new StateRipple(app, dev_id);
+		break;
 	case T_FOLLOWING:
 		st = new StateFollowingLines(app, dev_id);
 		break;
@@ -45,12 +48,12 @@ LedState* LedState::create(LedMatrixApp& app, int dev_id, StateType typ)
 
 bool LedState::isIdleState( StateType typ )
 {
-	return typ == T_BREATHE || typ == T_LOTS || typ == T_SPARK;
+	return typ == T_BREATHE || typ == T_LOTS || typ == T_SPARK || typ == T_RIPPLE;
 }
 
 void LedState::update()
 {
-	if (getElapsedSeconds() > n_countdown && inner_state == T_RUNNING)
+	if (getElapsedSeconds() > n_countdown && inner_state != T_DYING)//using ! and T_DYING = -1
 	{
 		ci::Tween<float>::Options option = LedManager::get(_dev_id).fadeOut(SEC_FADE_OUT);
 		inner_state = T_DYING;

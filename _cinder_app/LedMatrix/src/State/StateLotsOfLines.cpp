@@ -46,18 +46,19 @@ void StateLotsOfLines::update()
 	{
 	case T_COME:
 		{
-			if (elapsed > n_countdown - LOTS_SEC_FADEOUT)
+			if (elapsed > n_countdown - SEC_FOR_GO - LOTS_SEC_FADEOUT)
 				inner_state = T_FADE;
 		}break;	
 	case T_FADE:
 		{
-			LedManager::get(_dev_id).fadeOutIn(LOTS_SEC_FADEOUT,LOTS_SEC_FADEIN);
+			LedManager::get(_dev_id).fadeOut(LOTS_SEC_FADEOUT);
 			inner_state = T_CHANGE;
 		}break;	
 	case T_CHANGE:
 		{
-		//	if (elapsed > n_come_countdown+transition_time)
+			if (elapsed > n_countdown - SEC_FOR_GO)
 			{
+				LedManager::get(_dev_id).fadeIn(LOTS_SEC_FADEIN);
 				for (int i=0;i<n_items;i++)
 				{
 					items[i].setMaxSpeed(LOTS_GO_SPEED);
