@@ -10,8 +10,6 @@ namespace
 
 void LedMatrixApp::update()
 {
-	debug_puts("LedMatrixApp::update()");
-
 	int win_w = getWindowWidth();
 	int win_h = getWindowHeight();
 	double elapsed = getElapsedSeconds();
@@ -59,6 +57,9 @@ void LedMatrixApp::update()
 				int x = static_cast<int>(ct.x*LedManager::W);
 				int y = static_cast<int>(ct.y*LedManager::H);
 				int z = (int)lmap<float>(ct.z, Z_NEAR, Z_FAR, LedManager::Z-1, 0);
+				z = constrain(z, 0, LedManager::Z-1);
+				if (DEBUG_MODE)
+					printf("#%d, [%d, %d, %d]\n", dev_id, x, y, z);
 				centers[dev_id].push_back(Vec3i(x,y,z));
 			}
 			//send to interactive state

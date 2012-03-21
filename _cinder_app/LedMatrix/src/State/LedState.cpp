@@ -40,6 +40,14 @@ LedState* LedState::create(LedMatrixApp& app, int dev_id, StateType typ)
 	case T_SPARK:
 		st = new StateSpark(app, dev_id);
 		break;
+	case T_0:
+	case T_1:
+		{
+			int idx = typ - T_0;
+			st = new StateSuper(app, dev_id);
+			st->_type = typ;
+			((StateSuper*)st)->setIndex(idx);
+		}break;
 	default:
 		break;
 	}
@@ -48,23 +56,24 @@ LedState* LedState::create(LedMatrixApp& app, int dev_id, StateType typ)
 
 bool LedState::isIdleState( StateType typ )
 {
-	return typ == T_BREATHE || typ == T_LOTS || typ == T_SPARK || typ == T_RIPPLE;
+	return typ == T_BREATHE || typ == T_LOTS || typ == T_SPARK || typ == T_RIPPLE || typ == T_0 ||typ == T_1;
 }
 
 void LedState::update()
 {
 	if (getElapsedSeconds() > n_countdown && inner_state != T_DYING)//using ! and T_DYING = -1
 	{
-		ci::Tween<float>::Options option = LedManager::get(_dev_id).fadeOut(SEC_FADE_OUT);
+//		ci::Tween<float>::Options option = LedManager::get(_dev_id).fadeOut(SEC_FADE_OUT);
 		inner_state = T_DYING;
 
 		if (LedState::isIdleState(_type))
 		{
-			option = option.finishFn(std::bind(&LedMatrixApp::changeToRandomIdleState, &_app, _dev_id));
+			_app.changeToRandomIdleState(_dev_id);
+//			option = option.finishFn(std::bind(&LedMatrixApp::changeToRandomIdleState, &_app, _dev_id));
 		}
 		else
 		{
-			option = option.finishFn(std::bind(&LedMatrixApp::changeToRandomInteractiveState, &_app, _dev_id));
+		//	option = option.finishFn(std::bind(&LedMatrixApp::changeToRandomInteractiveState, &_app, _dev_id));
 		}
 	}
 }

@@ -14,8 +14,8 @@ void LedMatrixApp::mouseDrag( MouseEvent event )
 
 void LedMatrixApp::keyUp( KeyEvent event )
 {
-	static StateType idle_states[] = {T_SPARK,T_BREATHE,T_LOTS, T_RIPPLE};
-	static StateType interative_states[] = {T_FOLLOWING,T_SPARK_INT,T_ANIMAL};
+	static StateType idle_states[] = {T_0, T_1, T_SPARK,T_LOTS};
+	static StateType interative_states[] = {T_ANIMAL, T_FOLLOWING, T_SPARK_INT};
 	int key_id = -1;
 
 	switch (event.getCode())
@@ -39,7 +39,7 @@ void LedMatrixApp::keyUp( KeyEvent event )
 	case KeyEvent::KEY_3:
 		{
 			key_id = 2;
-		}break;
+		}break;	
 	case KeyEvent::KEY_4:
 		{
 			key_id = 3;

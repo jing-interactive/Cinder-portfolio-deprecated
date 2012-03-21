@@ -12,7 +12,7 @@ using namespace ci::app;
 // global variables
 int			counter = 0;
 float		floorLevel = 400.0f;
-gl::Texture *particleImg, *emitterImg;
+gl::Texture particleImg, emitterImg;
 bool		ALLOWFLOOR = false;
 bool		ALLOWGRAVITY = false;
 bool		ALLOWPERLIN = false;
@@ -44,8 +44,8 @@ void HodginParticlesApp::prepareSettings( Settings *settings )
 
 void HodginParticlesApp::setup()
 {
-	particleImg = new gl::Texture( loadImage( loadResource( RES_PARTICLE ) ) );
-	emitterImg = new gl::Texture( loadImage( loadResource( RES_EMITTER ) ) );
+	particleImg = gl::Texture( loadImage( loadResource( RES_PARTICLE ) ) );
+	emitterImg = gl::Texture( loadImage( loadResource( RES_EMITTER ) ) );
 	mouseIsDown = false;
 }
 

@@ -6,8 +6,6 @@
 
 void LedMatrixApp::draw()
 {
-	debug_puts("LedMatrixApp::draw()");
-
 	gl::clear();
 
 	if (show_3d)
@@ -35,8 +33,16 @@ void LedMatrixApp::draw()
 
 		for (int dev=0;dev<2;dev++)
 		{
-			bool scrVisible = !LedState::isIdleState(current_states[dev]->_type);;
-			LedManager::get(dev).draw2d(getElapsedSeconds(), scrVisible, current_states[dev]->_type == T_RIPPLE);
+			bool idle = LedState::isIdleState(current_states[dev]->_type);
+			if (current_states[dev]->_type == T_0 ||current_states[dev]->_type == T_1)
+			{
+			//	gl::disableAlphaBlending();
+				LedManager::get(dev).draw2d(getElapsedSeconds(), !idle, true);
+			}
+			else
+			{
+				LedManager::get(dev).draw2d(getElapsedSeconds());
+			}
 		}
 	}
 }

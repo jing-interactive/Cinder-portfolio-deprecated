@@ -2,6 +2,7 @@
 
 #include <cinder/Timeline.h>
 #include <cinder/gl/Texture.h>
+#include <cinder/Utilities.h>
 
 struct Led
 {
@@ -40,6 +41,9 @@ struct LedManager
 
 	static int index(int x, int y, int z)
 	{
+		x = ci::constrain(x, 0, W-1);
+		y = ci::constrain(y, 0, H-1);
+		z = ci::constrain(z, 0, Z-1);
 		return z*(W*H)+y*W+x;
 	}
 

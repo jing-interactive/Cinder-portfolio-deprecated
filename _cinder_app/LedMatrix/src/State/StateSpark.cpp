@@ -11,6 +11,7 @@ using namespace std;
 void StateSpark::enter()
 {	
 	n_countdown = SPARK_COUNTDOWN;
+//	LedManager::get(_dev_id).fadeIn(2);
 	printf("%d %s\n", _dev_id, "[idle]Spark");
 	resetTimer();
 	items = new Spark[SPARK_N_ITEMS];

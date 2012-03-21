@@ -240,6 +240,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\ImageList.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\LedLine.h"
 				>
 			</File>
@@ -331,6 +335,10 @@
 			</File>
 			<File
 				RelativePath="..\src\State\StateSparkInteractive.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\State\StateSuper.cpp"
 				>
 			</File>
 		</Filter>

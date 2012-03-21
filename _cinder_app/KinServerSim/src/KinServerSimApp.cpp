@@ -75,10 +75,10 @@ void KinServerSimApp::setup()
 	param = params::InterfaceGl( "param", Vec2i( 200, 100 ));
 	{
 		blobs[0].z = 2000;
-		param.addParam( "z1", &blobs[0].z, "min=800 max=4000 step=100 keyIncr=a keyDecr=A");
+		param.addParam( "z1", &blobs[0].z, "min=-1000 max=8000 step=100 keyIncr=a keyDecr=A");
 
 		blobs[1].z = 2000;
-		param.addParam( "z2", &blobs[1].z, "min=800 max=4000 step=100 keyIncr=b keyDecr=B");
+		param.addParam( "z2", &blobs[1].z, "min=-1000 max=8000 step=100 keyIncr=b keyDecr=B");
 	}
 }
 

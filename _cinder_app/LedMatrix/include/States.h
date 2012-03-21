@@ -98,3 +98,16 @@ struct StateSparkInteractive: public LedState
 private:
 	struct Spark* items;
 };
+
+struct StateSuper: public LedState
+{
+	StateSuper(LedMatrixApp& app, int dev_id)
+		:LedState(app, dev_id, T_SPARK_INT){}
+	void enter();
+	void update();
+	void draw();
+	void exit();
+	void setIndex(int idx);
+private:
+	int idx;
+};

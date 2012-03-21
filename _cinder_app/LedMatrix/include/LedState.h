@@ -17,6 +17,8 @@ enum StateType
 	T_FOLLOWING,
 	T_ANIMAL,
 	T_SPARK_INT,
+	T_0,
+	T_1,
 };
 
 enum{

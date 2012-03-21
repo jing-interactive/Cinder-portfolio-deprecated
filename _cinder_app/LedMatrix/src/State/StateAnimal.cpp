@@ -79,6 +79,8 @@ struct Animal
 	void setCenter(const Vec3f& pos)
 	{
 		target_center = pos;
+// 		target_center.x = constrain(target_center.x, 1, LedManager::W-1);
+// 		target_center.y = constrain(target_center.y, 1, LedManager::H-1);
 	}
 };
 

@@ -55,6 +55,6 @@ public://state
 
 private://state
 	void changeToState(struct LedState* new_state);
-	void changeToStateAmong( int dev_id, enum StateType idle_states[3]);
+	void changeToStateAmong( int dev_id, enum StateType* state_types, int n_types);
 	void setupStates();
 };

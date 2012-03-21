@@ -127,7 +127,10 @@ void LedManager::draw2d(double absoluteTime, bool scrVisible, bool mappingPreCal
 			}
 		}
 	}
-	gl::color(1,1,1);
+	if (mappingPreCalculated)
+		gl::color(1,1,1);
+	else
+		gl::color(1,1,1);
 	gl::pushModelView();
 	{
 		gl::translate(0,led_y0);

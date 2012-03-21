@@ -6,8 +6,10 @@
 #include <cinder/MayaCamUI.h>
 #include <cinder/Rand.h>
 #include <cinder/ImageIo.h>
+#include "ImageList.h"
 #include "config.h"
 
+ImageList image_lists[2];
 
 void LedMatrixApp::reloadConfig()
 {
@@ -23,6 +25,7 @@ void LedMatrixApp::prepareSettings( Settings *settings )
 
 	settings->setAlwaysOnTop(false);
 	settings->setBorderless(true);
+	settings->setFrameRate(60);
 	settings->setWindowPos(Vec2i::zero());
 }
 
@@ -30,6 +33,13 @@ void LedMatrixApp::setup()
 {
 	show_3d = true;
 	Rand::randomize();
+
+	//
+	string folders[] = {"block01", "block02"};
+	for (int i=0;i<2;i++)
+	{
+		image_lists[i].setup(folders[i], RIPPLE_MOVE_SPEED);
+	}
 
 	LedManager::setTexture(loadImage(loadResource(IMG_PARTICLE)));
 	//kinect/osc
