@@ -31,7 +31,7 @@ void PuzzleApp::setup()
 	hideCursor();
 
 	listener = shared_ptr<osc::Listener>(new osc::Listener());
-	listener->setup(3333);
+	listener->setup(7777);
 	listener->registerMessageReceived(this, &PuzzleApp::onOscMessage);
 
 	fs::path mediaPath = getAppPath() / "media/";

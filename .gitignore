@@ -14,7 +14,8 @@
 *.sdf
 *.ipch
 *.slnx
-
+*.cache
+*.aps
 cinder_0.8.3_vc2008/docs
 _common/SDAR
 
@@ -48,3 +49,4 @@ _common/SDAR
 /_cinder_app/BookAR/BookAR_bin
 /cinder_0.8.3_vc2008/lib/cinder.lib
 /cinder_0.8.3_vc2008/lib/cinder_d.lib
+/_cinder_app/LedMatrix/vc9/config.xml
