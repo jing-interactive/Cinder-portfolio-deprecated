@@ -1,20 +1,21 @@
 #include "BlobTracker.h"
 #include "point2d.h"
 #include <list>
+#include <functional>
+
+#define OPENCV_VERSION CVAUX_STR(CV_MAJOR_VERSION)""CVAUX_STR(CV_MINOR_VERSION)""CVAUX_STR(CV_SUBMINOR_VERSION)
 
 #if defined _DEBUG
-#pragma comment(lib,"opencv_video232d.lib")
-#pragma comment(lib,"opencv_objdetect232d.lib")
+#pragma comment(lib,"opencv_video"OPENCV_VERSION"d.lib")
+#pragma comment(lib,"opencv_objdetect"OPENCV_VERSION"d.lib")
+#pragma comment(lib,"opencv_features2d"OPENCV_VERSION"d.lib")
 #else
-#pragma comment(lib,"opencv_video232.lib")
-#pragma comment(lib,"opencv_objdetect232.lib")
+#pragma comment(lib,"opencv_video"OPENCV_VERSION".lib")
+#pragma comment(lib,"opencv_objdetect"OPENCV_VERSION".lib")
+#pragma comment(lib,"opencv_features2d"OPENCV_VERSION".lib")
 #endif
 
 using namespace cv;
-
-//Just some convienience macros
-#define CV_CVX_WHITE	CV_RGB(0xff,0xff,0xff)
-#define CV_CVX_BLACK	CV_RGB(0x00,0x00,0x00)
 
 bool cmp_blob_area(const vBlob& a, const vBlob& b)
 {
@@ -23,26 +24,23 @@ bool cmp_blob_area(const vBlob& a, const vBlob& b)
 
 #define CVCONTOUR_APPROX_LEVEL  1   // Approx.threshold - the bigger it is, the simpler is the boundary
 
+
+void vFindBlobs( cv::Mat& src, vector<vBlob>& blobs, int minArea /*= 1*/, int maxArea /*= 3072000*/, bool convexHull/*=false*/, bool (*sort_func)(const vBlob& a, const vBlob& b) /*= NULL*/ )
+{
+	vFindBlobs(&(IplImage)src, blobs, minArea, maxArea, convexHull, sort_func);
+}
+
 void vFindBlobs(IplImage *src, vector<vBlob>& blobs, int minArea, int maxArea, bool convexHull, bool (*sort_func)(const vBlob& a, const vBlob& b))
 {
-	static MemStorage	contour_mem	= NULL;
-	static MemStorage	hull_mem	= NULL;
-	CvMoments myMoments;
+	static MemStorage mem_storage(cvCreateMemStorage());
+	static CvMoments myMoments;
 
-	if( contour_mem.empty() ) 
-		contour_mem = cvCreateMemStorage(100);
-	else 
-		cvClearMemStorage(contour_mem);
-
-	if( hull_mem.empty() ) 
-		hull_mem = cvCreateMemStorage(100);
-	else 
-		cvClearMemStorage(hull_mem);
+	cvClearMemStorage(mem_storage);
 
 	blobs.clear();
 
 	CvSeq* contour_list = 0;
-	cvFindContours(src,contour_mem,&contour_list, sizeof(CvContour),
+	cvFindContours(src,mem_storage,&contour_list, sizeof(CvContour),
 		CV_RETR_CCOMP,CV_CHAIN_APPROX_SIMPLE);
 
 	for (CvSeq* d = contour_list; d != NULL; d=d->h_next)
@@ -52,15 +50,15 @@ void vFindBlobs(IplImage *src, vector<vBlob>& blobs, int minArea, int maxArea, b
 		while (c != NULL)
 		{
 			double area = fabs(cvContourArea( c ));
-			if( area > minArea && area < maxArea)
+			if( area >= minArea && area <= maxArea)
 			{
 				int length = cvArcLength(c);
 
 				CvSeq* approx;
 				if(convexHull) //Convex Hull of the segmentation
-					approx = cvConvexHull2(c,hull_mem,CV_CLOCKWISE,1);
+					approx = cvConvexHull2(c,mem_storage,CV_CLOCKWISE,1);
 				else //Polygonal approximation of the segmentation
-					approx = cvApproxPoly(c,sizeof(CvContour),hull_mem,CV_POLY_APPROX_DP, std::min(length*0.003,2.0));
+					approx = cvApproxPoly(c,sizeof(CvContour),mem_storage,CV_POLY_APPROX_DP, std::min(length*0.003,2.0));
 
 				area = cvContourArea( approx ); //update area
 				cvMoments( approx, &myMoments );
@@ -107,7 +105,7 @@ void vFindBlobs(IplImage *src, vector<vBlob>& blobs, int minArea, int maxArea, b
 		}//END while (c != NULL)
 	}
 
-    if (!sort_func) sort_func = &cmp_blob_area;
+	if (!sort_func) sort_func = &cmp_blob_area;
 	std::sort(blobs.begin(), blobs.end(), sort_func);
 }
 
@@ -115,11 +113,9 @@ void vFindBlobs(IplImage *src, vector<vBlob>& blobs, int minArea, int maxArea, b
 
 void vFindBlobs(IplImage *src, int minArea, int maxArea, bool convexHull)
 {
-	static MemStorage	mem_storage	= NULL;
+	static MemStorage mem_storage(cvCreateMemStorage());
 
-	//FIND CONTOURS AROUND ONLY BIGGER REGIONS
-	if( mem_storage.empty() ) mem_storage = cvCreateMemStorage(0);
-	else cvClearMemStorage(mem_storage);
+	cvClearMemStorage(mem_storage);
 
 	CvContourScanner scanner = cvStartFindContours(src,mem_storage,sizeof(CvContour),CV_RETR_LIST,CV_CHAIN_APPROX_SIMPLE);
 
@@ -127,7 +123,7 @@ void vFindBlobs(IplImage *src, int minArea, int maxArea, bool convexHull)
 	while( c = cvFindNextContour( scanner ) )
 	{
 		double area = fabs(cvContourArea( c ));
-		if( area > minArea && area < maxArea)
+		if( area >= minArea && area <= maxArea)
 		{
 			CvSeq* contour;
 			if(convexHull) //Polygonal approximation of the segmentation
@@ -135,26 +131,22 @@ void vFindBlobs(IplImage *src, int minArea, int maxArea, bool convexHull)
 			else //Convex Hull of the segmentation
 				contour = cvConvexHull2(c,mem_storage,CV_CLOCKWISE,1);
 
-			cvDrawContours(src,contour,CV_CVX_WHITE,CV_CVX_WHITE,-1,CV_FILLED,8); //draw to src
+			cvDrawContours(src,contour,CV_RGB(0,0,0),CV_RGB(255,255,255),-1,CV_FILLED,8); //draw to src
 		}
 	}
 	cvEndFindContours( &scanner );
 }
 
+
 void vFindBlobs( IplImage *src, vector<vBlob>& blobs, vector<vector<vDefect>>& defects, int minArea/*=1*/, int maxArea/*=3072000*/)
 {
-	static MemStorage	contour_mem	= NULL;
-	static MemStorage	hull_mem	= NULL;
+	static MemStorage contour_mem(cvCreateMemStorage(100));
+	static MemStorage hull_mem(cvCreateMemStorage(100));
 
 	CvMoments myMoments;
 
-	if( contour_mem.empty() )
-		contour_mem = cvCreateMemStorage(100);
-	else cvClearMemStorage(contour_mem);
-
-	if( hull_mem.empty() ) 
-		hull_mem = cvCreateMemStorage(100);
-	else cvClearMemStorage(hull_mem);
+	cvClearMemStorage(contour_mem);
+	cvClearMemStorage(hull_mem);
 
 	blobs.clear();
 	defects.clear();
@@ -370,7 +362,7 @@ bool vFingerDetector::findFingers (const vBlob& blob, int k/* = 10*/)
 
 	for(int i=k; i<nPts-k; i++)
 	{
-		//calculating angre between vectors
+		//calculating angles between vectors
 		v1.set(blob.pts[i].x-blob.pts[i-k].x,	blob.pts[i].y-blob.pts[i-k].y);
 		v2.set(blob.pts[i].x-blob.pts[i+k].x,	blob.pts[i].y-blob.pts[i+k].y);
 
@@ -509,30 +501,29 @@ vHaarFinder::vHaarFinder()
 { 
 	scale = 1.2;
 }
- 
+
 bool vHaarFinder::init(char* cascade_name)
 {
 	return _cascade.load(cascade_name);
 }
 
 
-void vHaarFinder::find(IplImage* img, int minArea, bool findAllFaces)
+void vHaarFinder::find(const Mat& img, int minArea, bool findAllFaces)
 {
 	blobs.clear();
 
-	Ptr<IplImage> gray = cvCreateImage( cvSize(img->width,img->height), 8, 1 );
-	Ptr<IplImage> tiny = cvCreateImage( cvSize( cvRound (img->width/scale),
-		cvRound (img->height/scale)), 8, 1 );
-
+	Mat gray(img.rows, img.cols, CV_8UC1);
 	vGrayScale(img, gray);
-	cvResize( gray, tiny );
-	cvEqualizeHist( tiny, tiny );
+
+	Mat tiny;
+	resize( gray, tiny, Size( cvRound (img.cols/scale), cvRound (img.rows/scale)));
+	equalizeHist( tiny, tiny );
 
 	vector<Rect> faces;
 
-	_cascade.detectMultiScale( (IplImage*)tiny, faces,
+	_cascade.detectMultiScale(tiny, faces,
 		1.1, 2, 0
-		| findAllFaces ? CV_HAAR_DO_CANNY_PRUNING : CV_HAAR_FIND_BIGGEST_OBJECT|CV_HAAR_DO_CANNY_PRUNING
+		| findAllFaces ? CV_HAAR_FIND_BIGGEST_OBJECT|CV_HAAR_DO_CANNY_PRUNING : CV_HAAR_DO_CANNY_PRUNING
 		//|CV_HAAR_FIND_BIGGEST_OBJECT
 		//|CV_HAAR_DO_ROUGH_SEARCH
 		|CV_HAAR_SCALE_IMAGE
@@ -567,20 +558,16 @@ void vHaarFinder::find(IplImage* img, int minArea, bool findAllFaces)
 		std::sort(blobs.begin(), blobs.end(), cmp_blob_area);
 }
 
-vOpticalFlowLK::vOpticalFlowLK(IplImage* gray, int blocksize)
+vOpticalFlowLK::vOpticalFlowLK(const cv::Mat& gray, int blocksize):
+vel_x(Mat::zeros(gray.rows, gray.cols, CV_32FC1)),
+	  vel_y(Mat::zeros(gray.rows, gray.cols, CV_32FC1)),
+	  prev(Mat(gray.rows, gray.cols, CV_8UC1))
 {
-	width = gray->width;
-	height = gray->height;
+	width = gray.cols;
+	height = gray.rows;
 
-	vel_x = cvCreateImage( cvSize( width ,height ), IPL_DEPTH_32F, 1  );
-	vel_y = cvCreateImage( cvSize( width ,height ), IPL_DEPTH_32F, 1  );
-
-	cvSetZero(vel_x);
-	cvSetZero(vel_y);
-
-	prev = cvCreateImage(cvSize( width ,height ), 8, 1);
-	if (gray->nChannels == 1)
-		cvCopy(gray, prev);
+	if (gray.channels() == 1)
+		gray.copyTo(prev);
 	else
 		vGrayScale(gray, prev);
 
@@ -590,20 +577,20 @@ vOpticalFlowLK::vOpticalFlowLK(IplImage* gray, int blocksize)
 	maxVector = 10;
 }
 
-void vOpticalFlowLK::update(IplImage* gray)
+void vOpticalFlowLK::update(const cv::Mat& gray)
 {
 	//cout<<"CALC-ING FLOW"<<endl;
-	cvCalcOpticalFlowLK( prev, gray,
-		cvSize( block_size, block_size), vel_x, vel_y);
-	cvCopy(gray, prev);
+	cvCalcOpticalFlowLK( &(IplImage)prev, &(IplImage)gray,
+		cvSize( block_size, block_size), &(IplImage)vel_x, &(IplImage)vel_y);
+	gray.copyTo(prev);
 }
 
 cv::point2df vOpticalFlowLK::flowAtPoint(int x, int y){
 	if(x >= width || x < 0 || y >= height || y < 0){
 		return point2df(0.0f,0.0f);
 	}
-	float fdx = cvGetReal2D( vel_x, y, x );
-	float fdy = cvGetReal2D( vel_y, y, x );
+	float fdx = vel_x.at<float>(y, x );
+	float fdy = vel_y.at<float>(y, x );
 	float mag2 = fdx*fdx + fdy*fdy;
 
 	if (mag2 > 0)
@@ -628,8 +615,8 @@ bool vOpticalFlowLK::flowInRegion(int x, int y, int w, int h, cv::point2df& vec)
 	float fdy = 0;
 	for(int i = 0; i < w; i++){
 		for (int j = 0; j < h; j++) {
-			fdx += cvGetReal2D( vel_x, y, x );
-			fdy += cvGetReal2D( vel_y, y, x );
+			fdx += vel_x.at<float>(y, x );
+			fdy += vel_y.at<float>(y, x );
 		}
 	}
 	fdx /= w*h;
@@ -641,250 +628,10 @@ bool vOpticalFlowLK::flowInRegion(int x, int y, int w, int h, cv::point2df& vec)
 		return false;
 }
 
-
-
 vBlobTracker::vBlobTracker()
 {
 	IDCounter = 0;
 }
- 
-//assigns IDs to each blob in the contourFinder
-void vBlobTracker::trackBlobs(const vector<vBlob>& _newBlobs)
-{
-	leaveBlobs.clear();
-
-	vector<vTrackedBlob> newBlobs;
-	int nNewBlobs = _newBlobs.size();
-	for (int i=0;i<nNewBlobs;i++)
-		newBlobs.push_back(vTrackedBlob(_newBlobs[i]));
-// 	//initialize ID's of all trackedBlobs
-// 	for(int i=0; i<nNewBlobs; i++)
-// 		newBlobs[i].id=-1;
-
-	//go through all tracked trackedBlobs to compute nearest new point
-	for(int i=0; i<trackedBlobs.size(); i++)
-	{
-		/******************************************************************
-		* *****************TRACKING FUNCTION TO BE USED*******************
-		* Replace 'trackKnn(...)' with any function that will take the
-		* current track and find the corresponding track in the newBlobs
-		* 'winner' should contain the index of the found blob or '-1' if
-		* there was no corresponding blob
-		*****************************************************************/
-		int winner = trackKnn(newBlobs, trackedBlobs[i], KNN);
-
-		if(winner == -1) //track has died, mark it for deletion
-		{
-			//SEND BLOB OFF EVENT
-			doBlobOff( trackedBlobs[i] );
-		}
-		else //still alive, have to update
-		{
-			//if winning new blob was labeled winner by another track\
-			//then compare with this track to see which is closer
-			if(newBlobs[winner].id != vTrackedBlob::BLOB_UN_NAMED)
-			{
-				//find the currently assigned blob
-				int j; //j will be the index of it
-				for(j=0; j<trackedBlobs.size(); j++)
-				{
-					if(trackedBlobs[j].id==newBlobs[winner].id)
-						break;
-				}
-
-				if(j==trackedBlobs.size())//got to end without finding it
-				{
-					newBlobs[winner].id = trackedBlobs[i].id;
-					Point2f lastCenter = trackedBlobs[i].center;
-					trackedBlobs[i] = newBlobs[winner];
-					trackedBlobs[i].velocity.x = trackedBlobs[i].center.x - lastCenter.x;
-					trackedBlobs[i].velocity.y = trackedBlobs[i].center.y - lastCenter.y;
-				}
-				else //found it, compare with current blob
-				{
-					double x = newBlobs[winner].center.x;
-					double y = newBlobs[winner].center.y;
-					double xOld = trackedBlobs[j].center.x;
-					double yOld = trackedBlobs[j].center.y;
-					double xNew = trackedBlobs[i].center.x;
-					double yNew = trackedBlobs[i].center.y;
-					double distOld = (x-xOld)*(x-xOld)+(y-yOld)*(y-yOld);
-					double distNew = (x-xNew)*(x-xNew)+(y-yNew)*(y-yNew);
-
-					//if this track is closer, update the ID of the blob
-					//otherwise delete this track.. it's dead
-					if(distNew<distOld) //update
-					{
-						newBlobs[winner].id = trackedBlobs[i].id;
-
-						//TODO--------------------------------------------------------------------------
-						//now the old winning blob has lost the win.
-						//I should also probably go through all the newBlobs
-						//at the end of this loop and if there are ones without
-						//any winning matches, check if they are close to this
-						//one. Right now I'm not doing that to prevent a
-						//recursive mess. It'll just be a new track.
-
-						//SEND BLOB OFF EVENT
-						doBlobOff( trackedBlobs[j] );
-						//------------------------------------------------------------------------------
-					}
-					else //delete
-					{
-						//SEND BLOB OFF EVENT
-						doBlobOff( trackedBlobs[i] );
-					}
-				}
-			}
-			else //no conflicts, so simply update
-			{
-				newBlobs[winner].id = trackedBlobs[i].id;
-			}
-		}
-	}
-
-	//--Update All Current Tracks
-	//remove every track labeled as dead (ID='-1')
-	//find every track that's alive and copy it's data from newBlobs
-	for(int i=0; i<trackedBlobs.size(); i++)
-	{
-		if(trackedBlobs[i].id == vTrackedBlob::BLOB_TO_DELETE) //dead
-		{
-			//erase track
-			trackedBlobs.erase(trackedBlobs.begin()+i,
-				trackedBlobs.begin()+i+1);
-
-			i--; //decrement one since we removed an element
-		}
-		else //living, so update it's data
-		{
-			for(int j=0; j<nNewBlobs; j++)
-			{
-				if(trackedBlobs[i].id==newBlobs[j].id)
-				{
-					//update track
-					Point2f lastCenter = trackedBlobs[i].center;
-					trackedBlobs[i] = newBlobs[j];
-					trackedBlobs[i].velocity.x = trackedBlobs[i].center.x - lastCenter.x;
-					trackedBlobs[i].velocity.y = trackedBlobs[i].center.y - lastCenter.y;
-
-					//SEND BLOB MOVED EVENT
-					doBlobMoved( trackedBlobs[i] );
-				}
-			}
-		}
-	}
-
-	//--Add New Living Tracks
-	//now every new blob should be either labeled with a tracked ID or\
-	//have ID of -1... if the ID is -1... we need to make a new track
-	for(int i=0; i<nNewBlobs; i++)
-	{
-		if(newBlobs[i].id == vTrackedBlob::BLOB_UN_NAMED)
-		{
-			//add new track
-			newBlobs[i].id=IDCounter++;
-			trackedBlobs.push_back(newBlobs[i]);
-
-			//SEND BLOB ON EVENT
-			doBlobOn( trackedBlobs[i] );
-		}
-	}
-}
-
-
-/*************************************************************************
-* Finds the blob in 'newBlobs' that is closest to the trackedBlob with index
-* 'ind' according to the KNN algorithm and returns the index of the winner
-* newBlobs	= list of trackedBlobs detected in the latest frame
-* track		= current tracked blob being tested
-* k			= number of nearest neighbors to consider\
-*			  1,3,or 5 are common numbers..\
-*			  must always be an odd number to avoid tying
-* thresh	= threshold for optimization
-**************************************************************************/
-
-int vBlobTracker::trackKnn(const vector<vTrackedBlob>& newBlobs, vTrackedBlob& track, int k, double thresh)
-{
-	int winner = -1; //initially label track as '-1'=dead
-	if((k%2)==0) k++; //if k is not an odd number, add 1 to it
-
-	//if it exists, square the threshold to use as square distance
-	if(thresh>0)
-		thresh *= thresh;
-
-	//list of neighbor point index and respective distances
-	std::list<std::pair<int,double> > nbors;
-	std::list<std::pair<int,double> >::iterator iter;
-
-	//find 'k' closest neighbors of testpoint
-	double x, y, xT, yT, dist;
-	int nNewBlobs = newBlobs.size();
-
-	for(int i=0; i<nNewBlobs; i++)
-	{
-		x = newBlobs[i].center.x;
-		y = newBlobs[i].center.y;
-		xT = track.center.x;
-		yT = track.center.y;
-		dist = (x-xT)*(x-xT)+(y-yT)*(y-yT);
-
-		if(dist<=thresh)//it's good, apply label if no label yet and return
-		{
-			winner = i;
-			return winner;
-		}
-
-		/****************************************************************
-		* check if this blob is closer to the point than what we've seen
-		*so far and add it to the index/distance list if positive
-		****************************************************************/
-
-		//search the list for the first point with a longer distance
-		//insert sort by new blobs' distance
-		for(iter=nbors.begin(); iter!=nbors.end()
-			&& dist>=iter->second; iter++);
-
-			if((iter!=nbors.end())||(nbors.size()<k)) //it's valid, insert it
-			{
-				nbors.insert(iter, 1, std::pair<int, double>(i, dist));//(newblob's id, newblob's dist to track)
-				if(nbors.size()>k)//too many items in list, get rid of farthest neighbor
-					nbors.pop_back();
-			}
-	}
-
-	/********************************************************************
-	* we now have k nearest neighbors who cast a vote, and the majority
-	* wins. we use each class average distance to the target to break any
-	* possible ties.
-	*********************************************************************/
-
-	// a mapping from labels (IDs) to count/distance
-	// votes save the accumulation
-	std::map<int, std::pair<int, double> > votes;
-
-	//remember:
-	//iter->first = index of newBlob
-	//iter->second = distance of newBlob to current tracked blob
-	for(iter=nbors.begin(); iter!=nbors.end(); iter++)
-	{
-		int newBlobId = iter->first;
-		double newBlobDist = iter->second;
-		//add up how many counts each neighbor got
-		int count = ++(votes[newBlobId].first);
-		double total_dist = (votes[newBlobId].second+=newBlobDist);
-
-		/* check for a possible tie and break with distance */
-		if(count > votes[winner].first || count == votes[winner].first
-			&& total_dist < votes[winner].second)
-		{
-			winner = iter->first;
-		}
-	}
-
-	return winner;
-}
-
 
 /************************************
 * Delegate to Callbacks
@@ -902,9 +649,92 @@ void vBlobTracker::doBlobMoved( vTrackedBlob& b ) {
 
 void vBlobTracker::doBlobOff( vTrackedBlob& b ) {
 	b.status = statusLeave;
-	leaveBlobs.push_back(b);
+	deadBlobs.push_back(b);
 	printf("blob: %d leave-\n" , b.id);
 	b.id = vTrackedBlob::BLOB_TO_DELETE;
+}
+
+void vBlobTracker::trackBlobs( const vector<vBlob>& newBlobs )
+{
+	deadBlobs.clear();
+	const int n_old = trackedBlobs.size();
+	const int n_new = newBlobs.size();
+	vector<vTrackedBlob> newTrackedBlobs(n_new);
+	std::copy(newBlobs.begin(), newBlobs.end(), newTrackedBlobs.begin());
+
+	vector<int> nn_of_a(n_old);//nearest neighbor of pta in ptb
+	vector<int> dist_of_a(n_old);//nearest neighbor of pta in ptb
+	fill(nn_of_a.begin(), nn_of_a.end(),-1);
+	fill(dist_of_a.begin(), dist_of_a.end(),INT_MAX);
+
+	if (n_old != 0 && n_new != 0)
+	{
+		Mat ma(trackedBlobs.size(),2,CV_32SC1);
+		Mat mb(newBlobs.size(),2,CV_32SC1);
+		for (int i=0;i<n_old;i++)
+		{
+			ma.at<int>(i,0) = trackedBlobs[i].center.x;
+			ma.at<int>(i,1) = trackedBlobs[i].center.y;
+		}
+		for (int i=0;i<n_new;i++)
+		{
+			mb.at<int>(i,0) = newTrackedBlobs[i].center.x;
+			mb.at<int>(i,1) = newTrackedBlobs[i].center.y;
+		}
+
+		BruteForceMatcher<L2<int> > matcher;
+		vector<DMatch> matches;
+		matcher.match(mb, ma, matches);
+		const int n_matches = matches.size();
+		for (int i=0;i<n_matches;i++)
+		{
+			const DMatch& match = matches[i];
+			int t_id = match.trainIdx;
+			int q_id = match.queryIdx;
+			float dist = match.distance;
+
+			if (dist < 500 && dist < dist_of_a[t_id])
+			{
+				dist_of_a[t_id] = dist;
+				nn_of_a[t_id] = q_id;
+			}
+		}
+	}
+
+	for (int i=0;i<n_old;i++)
+	{
+		int nn = nn_of_a[i];
+		if (nn != -1)
+		{//moving blobs
+			Point2f lastCenter = trackedBlobs[i].center;
+			newTrackedBlobs[nn].id = trackedBlobs[i].id;//save id, cause we will overwrite the data
+			trackedBlobs[i] = newTrackedBlobs[nn];//update with new data
+			trackedBlobs[i].velocity.x = newBlobs[nn].center.x - lastCenter.x;
+			trackedBlobs[i].velocity.y = newBlobs[nn].center.y - lastCenter.y;
+			doBlobMoved(trackedBlobs[i]);
+		}
+		else
+		{//leaving blobs
+			doBlobOff(trackedBlobs[i]);
+		}
+	}
+	trackedBlobs.erase(remove_if(trackedBlobs.begin(), trackedBlobs.end(), std::mem_fun_ref(&vTrackedBlob::isDead)),
+		trackedBlobs.end());
+	//entering blobs
+	for(int i=0; i<n_new; i++)
+	{
+		if (newTrackedBlobs[i].id == vTrackedBlob::BLOB_NEW_ID)
+		{
+			//add new track
+			if (IDCounter > UINT_MAX)
+				IDCounter = 0;
+			newTrackedBlobs[i].id=IDCounter++;
+			trackedBlobs.push_back(newTrackedBlobs[i]);
+
+			//SEND BLOB ON EVENT
+			doBlobOn( trackedBlobs.back());
+		}
+	}
 }
 
 CvFGDStatModelParams cvFGDStatModelParams()
@@ -935,196 +765,236 @@ CvFGDStatModelParams cvFGDStatModelParams()
 	return  p;
 }
 
-void vBackFGDStat::init(IplImage* initial, void* param)
+void vBackFGDStat::init(cv::Mat initial, void* param)
 {
 	CvFGDStatModelParams* p = (CvFGDStatModelParams*)param;
-	bg_model = cvCreateFGDStatModel( initial, p );
+	bg_model = cvCreateFGDStatModel(&(IplImage)initial, p );
 }
 
-void vBackGaussian::init(IplImage* initial, void* param)
+void vBackGaussian::init(cv::Mat initial, void* param)
 {
 	CvGaussBGStatModelParams* p = (CvGaussBGStatModelParams*)param;
-	bg_model = cvCreateGaussianBGModel( initial, p );
+	bg_model = cvCreateGaussianBGModel(&(IplImage)initial, p );
 }
 
-void vBackGrayDiff::setIntParam(int idx, int value)
+
+void vBackGrayDiff::init(cv::Mat initial, void* param/* = NULL*/)
 {
-	IBackGround::setIntParam(idx, value);
-	if (idx == 1)
-		dark_thresh = 255-value;
+	cv::Size size(initial.cols, initial.rows);
+
+	frame.create(size, CV_8UC1);
+	bg.create(size, CV_8UC1);
+	fore.create(size, CV_8UC1);
+
+	if (initial.channels() == 1)
+		initial.copyTo(bg);
+	else
+		vGrayScale(initial, bg);
 }
 
-void vBackGrayDiff::init(IplImage* initial, void* param/* = NULL*/){
-	cv::Size size = cvGetSize(initial);
 
-	Frame.release();
-	Frame = cvCreateImage(size, 8, 1);
-	Bg.release();
-	Bg = cvCreateImage(size, 8, 1);
-	Fore.release();
-	Fore = cvCreateImage(size, 8, 1);
-
-	thresh = 50;
-	dark_thresh = 200;
-
-	if (initial->nChannels == 1)
-		cvCopy(initial, Bg);
+void vBackGrayDiff::update(cv::Mat image, int mode/* = 0*/)
+{
+	if (image.channels() == 1)
+		image.copyTo(frame);
 	else
-		vGrayScale(initial, Bg);
-}
-
-void vBackGrayDiff::update(IplImage* image, int mode/* = 0*/){
-	if (image->nChannels == 1)
-		cvCopy(image, Frame);
-	else
-		vGrayScale(image, Frame); 
+		vGrayScale(image, frame); 
 	if (mode == DETECT_BOTH)
 	{
-		BwImage frame(Frame);
-		BwImage bg(Bg);
-		BwImage fore(Fore);
+		// 		BwImage frame(Frame);
+		// 		BwImage bg(Bg);
+		// 		BwImage fore(Fore);
 
-		cvZero(Fore);
-		for (int y=0;y<image->height;y++)
-			for (int x=0;x<image->width;x++)
+		fore = CV_RGB(0,0,0);
+		for (int y=0;y<image.rows;y++)
+			for (int x=0;x<image.cols;x++)
 			{
-				int delta = frame[y][x] - bg[y][x];
-				if (delta >= thresh || delta <= -dark_thresh)
-					fore[y][x] = 255;
+				int delta = frame.at<uchar>(y, x) - bg.at<uchar>(y, x);
+				if (delta >= threshes[0] || delta <= -threshes[1])
+					fore.at<uchar>(y, x) = 255;
 			}
 	}
 	else if (mode == DETECT_DARK)
 	{
-		cvSub(Bg, Frame, Fore);
-		vThresh(Fore, dark_thresh);
+		fore = bg - frame;
+ 		vThresh(fore, threshes[1]);
 	}
 	else if (mode == DETECT_BRIGHT)
 	{
-		cvSub(Frame, Bg, Fore);
-		vThresh(Fore, thresh);
+		fore = frame - bg;
+		vThresh(fore, threshes[0]);
 	}
 }
 
 
-void vBackColorDiff::init(IplImage* initial, void* param/* = NULL*/){
-	cv::Size size = cvGetSize(initial);
-	nChannels = initial->nChannels;
-
-	Frame.release();
-	Frame = cvCloneImage(initial);
-	Bg.release();
-	Bg = cvCloneImage(initial);
-	Fore.release();
-	Fore = cvCreateImage(size, 8, 1);
-
-	thresh = 220;
-	dark_thresh = 30;
-}
-
-void vBackColorDiff::update(IplImage* image, int mode/* = 0*/){
-	//	vGrayScale(image, Frame);
-	cvCopy(image, Frame);
-	if (mode == DETECT_BOTH)
-	{
-		if (nChannels == 1)
-		{
-			BwImage frame(Frame);
-			BwImage bg(Bg);
-			BwImage fore(Fore);
-
-			cvZero(Fore);
-			for (int y=0;y<image->height;y++)
-				for (int x=0;x<image->width;x++)
-				{
-					int delta = frame[y][x] - bg[y][x];
-					if (delta >= thresh || delta <= -dark_thresh)
-						fore[y][x] = 255;
-				}
-		}
-		else
-		{
-			RgbImage frame(Frame);
-			RgbImage bg(Bg);
-			BwImage fore(Fore);
-
-			int min_t = 255-thresh;
-			int max_t = 255-dark_thresh;
-			cvZero(Fore);
-			for (int y=0;y<image->height;y++)
-				for (int x=0;x<image->width;x++)
-				{
-					int r = frame[y][x].r - bg[y][x].r;
-					int g = frame[y][x].g - bg[y][x].g;
-					int b = frame[y][x].b - bg[y][x].b;
-#if 1
-					if ((r >= thresh || r <= -dark_thresh)
-						&& (g >= thresh || g <= -dark_thresh)
-						&& (b >= thresh || b <= -dark_thresh))
-#else
-					int delta = r*r+g*g+b*b;
-					if (delta >= min_t*min_t && delta <= max_t*max_t)
-#endif
-						fore[y][x] = 255;
-				}
-		}
-	}
-	else if (mode == DETECT_DARK)
-	{
-		cvSub(Bg, Frame, Fore);
-		vThresh(Fore, dark_thresh);
-	}
-	else if (mode == DETECT_BRIGHT)
-	{
-		cvSub(Frame, Bg, Fore);
-		vThresh(Fore, thresh);
-	}
-}
-
-void vThreeFrameDiff::init(IplImage* initial, void* param/* = NULL*/)
+void vBackColorDiff::init(cv::Mat initial, void* param/* = NULL*/)
 {
-	cv::Size size = cvGetSize(initial);
+	nChannels = initial.channels();
 
-	grayFrameOne.release();
-	grayFrameOne = cvCreateImage(size, 8, 1);
-	vGrayScale(initial, grayFrameOne);
-	grayFrameTwo.release();
-	grayFrameTwo = cvCreateImage(size, 8, 1);
-	vGrayScale(initial, grayFrameTwo);
-	grayFrameThree.release();
-	grayFrameThree = cvCreateImage(size, 8, 1);
-	vGrayScale(initial, grayFrameThree);
-	grayDiff.release();
-	grayDiff = cvCreateImage(size, 8, 1);
+	frame = initial.clone();
+	bg = initial.clone();
+	fore.create(initial.rows, initial.cols, CV_8UC1);
+
+	threshes[0] = 220;
+	threshes[1] = 30;
 }
 
-void vThreeFrameDiff::update(IplImage* image, int mode/* = 0*/){
-	vGrayScale(image, grayFrameThree);
+void vBackColorDiff::update(cv::Mat image, int mode/* = 0*/)
+{
+	//	vGrayScale(image, Frame);
+// 	cvCopy(image, frame);
+// 	if (mode == DETECT_BOTH)
+// 	{
+// 		if (nChannels == 1)
+// 		{
+// 			// BwImage frame(Frame);
+// 			// BwImage bg(Bg);
+// 			// BwImage fore(Fore);
+// 
+// 			fore = CV_RGB(0,0,0);
+// 			for (int y=0;y<image.rows;y++)
+// 				for (int x=0;x<image.cols;x++)
+// 				{
+// 					int delta = frame.at<uchar>(y, x) - bg.at<uchar>(y, x);
+// 					if (delta >= threshes[0] || delta <= -threshes[1])
+// 						fore.at<uchar>(y, x) = 255;
+// 				}
+// 		}
+// 		else
+// 		{
+// 			int min_t = 255-threshes[0];
+// 			int max_t = 255-threshes[1];
+// 			fore = CV_RGB(0,0,0);
+// 			for (int y=0;y<image.rows;y++)
+// 				for (int x=0;x<image.cols;x++)
+// 				{
+// 					int r = frame.at<uchar>(y, x).r - bg.at<uchar>(y, x).r;
+// 					int g = frame.at<uchar>(y, x).g - bg.at<uchar>(y, x).g;
+// 					int b = frame.at<uchar>(y, x).b - bg.at<uchar>(y, x).b;
+// #if 1
+// 					if ((r >= threshes[0] || r <= -threshes[1])
+// 						&& (g >= threshes[0] || g <= -threshes[1])
+// 						&& (b >= threshes[0] || b <= -threshes[1]))
+// #else
+// 					int delta = r*r+g*g+b*b;
+// 					if (delta >= min_t*min_t && delta <= max_t*max_t)
+// #endif
+// 						fore.at<uchar>(y, x) = 255;
+// 				}
+// 		}
+// 	}
+// 	else if (mode == DETECT_DARK)
+// 	{
+// 		fore = bg - frame;
+// 		vThresh(fore, threshes[1]);
+// 	}
+// 	else if (mode == DETECT_BRIGHT)
+// 	{
+// 		fore = frame - bg;
+// 		vThresh(fore, threshes[0]);
+// 	}
+}
 
-	BwImage one(grayFrameOne);
-	BwImage two(grayFrameTwo);
-	BwImage three(grayFrameThree);
-	BwImage diff(grayDiff);
+void vThreeFrameDiff::init(cv::Mat initial, void* param/* = NULL*/)
+{
+	for (int i=0;i<3;i++)
+	{	
+		grays[i].create(initial.rows, initial.cols, CV_8UC1);
+		vGrayScale(initial, grays[i]);
+	}
+}
 
-	cvZero(grayDiff);
-	for (int y=0;y<image->height;y++)
-		for (int x=0;x<image->width;x++)
+void vThreeFrameDiff::update(cv::Mat image, int mode/* = 0*/)
+{
+	vGrayScale(image, grays[2]);
+
+	// BwImage one(gray1);
+	// BwImage two(gray2);
+	// BwImage three(gray3);
+	// BwImage diff(grayDiff);
+
+	grayDiff = CV_RGB(0,0,0);
+
+	for (int y=0;y<image.rows;y++)
+	{
+		for (int x=0;x<image.cols;x++)
 		{
-			if (abs(one[y][x] - two[y][x]) > thresh ||
-				abs(three[y][x] - two[y][x]) > thresh)
-				diff[y][x] = 255;
+			if (abs(grays[0].at<uchar>(y, x) - grays[1].at<uchar>(y, x)) > threshes[0] ||
+				abs(grays[2].at<uchar>(y, x) - grays[1].at<uchar>(y, x)) > threshes[0])
+				grayDiff.at<uchar>(y, x) = 255;
 		}
+	}
 
-		show_image(grayFrameOne);
-		show_image(grayFrameTwo);
-		show_image(grayFrameThree);
-		cvCopy(grayFrameTwo, grayFrameOne);
-		cvCopy(grayFrameThree, grayFrameTwo);
+// 	show_mat<uchar>(gray1);
+// 	show_mat<uchar>(gray2);
+// 	show_mat<uchar>(gray3);
 
-		//if (mode == DETECT_BOTH)
-		//	cvAbsDiff(grayFrame, grayBg, grayDiff);
-		//else if (mode == DETECT_DARK)
-		//	cvSub(grayBg, grayFrame, grayDiff);
-		//else if (mode == DETECT_BRIGHT)
-		//	cvSub(grayFrame, grayBg, grayDiff);
-		//vThresh(grayDiff, thresh);
+	grays[1].copyTo(grays[0]);
+	grays[2].copyTo(grays[1]);
+
+	//if (mode == DETECT_BOTH)
+	//	cvAbsDiff(grayFrame, grayBg, grayDiff);
+	//else if (mode == DETECT_DARK)
+	//	cvSub(grayBg, grayFrame, grayDiff);
+	//else if (mode == DETECT_BRIGHT)
+	//	cvSub(grayFrame, grayBg, grayDiff);
+	//vThresh(grayDiff, thresh);
+}
+
+cv::Mat& vThreeFrameDiff::getForeground()
+{
+	return grayDiff;
+}
+
+cv::Mat& vThreeFrameDiff::getBackground()
+{
+	return grayDiff;
+}
+
+IStaticBackground::IStaticBackground()
+{
+	threshes[0] = 50;
+	threshes[1] = 200;
+}
+
+void IStaticBackground::setIntParam( int idx, int value )
+{
+	assert(idx >=0 && idx <= 1);
+	threshes[idx] =	255-value;
+}
+
+cv::Mat& IStaticBackground::getForeground()
+{
+	return fore;
+}
+
+cv::Mat& IStaticBackground::getBackground()
+{
+	return bg;
+}
+
+IStaticBackground::~IStaticBackground()
+{
+
+}
+
+void IAutoBackGround::update( cv::Mat image, int mode /*= 0*/ )
+{
+	cvUpdateBGStatModel(&(IplImage)image, bg_model );
+}
+
+cv::Mat& IAutoBackGround::getForeground()
+{
+	return cv::Mat(bg_model->foreground);
+}
+
+cv::Mat& IAutoBackGround::getBackground()
+{
+	return cv::Mat(bg_model->background);
+}
+
+IAutoBackGround::~IAutoBackGround()
+{
+	if (bg_model)
+		cvReleaseBGStatModel(&bg_model);
 }

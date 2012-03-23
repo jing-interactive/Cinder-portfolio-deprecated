@@ -1,21 +1,25 @@
 #include "OpenCV.h"
 
-#if defined _DEBUG
-#pragma comment(lib,"opencv_core232d.lib")
-#pragma comment(lib,"opencv_imgproc232d.lib")
-#pragma comment(lib,"opencv_highgui232d.lib")
-#else
-#pragma comment(lib,"opencv_core232.lib")
-#pragma comment(lib,"opencv_imgproc232.lib")
-#pragma comment(lib,"opencv_highgui232.lib")
-#endif
+#define OPENCV_VERSION CVAUX_STR(CV_MAJOR_VERSION)""CVAUX_STR(CV_MINOR_VERSION)""CVAUX_STR(CV_SUBMINOR_VERSION)
+
+#ifdef WIN32
+#ifdef _DEBUG
+#pragma comment(lib,"opencv_core"OPENCV_VERSION"d.lib")
+#pragma comment(lib,"opencv_imgproc"OPENCV_VERSION".lib")
+#pragma comment(lib,"opencv_highgui"OPENCV_VERSION".lib")
+#else	//_DEBUG
+#pragma comment(lib,"opencv_core"OPENCV_VERSION".lib")
+#pragma comment(lib,"opencv_imgproc"OPENCV_VERSION".lib")
+#pragma comment(lib,"opencv_highgui"OPENCV_VERSION".lib")
+#endif	//_DEBUG
+#endif	//WIN32
 
 #ifdef KINECT 
 #include "../clnui/ofxKinectCLNUI.h"
-#endif
-#ifdef PS3 
-#include "../CLEye/ofxCLeye.h"
-#endif
+#endif	//KINECT
+#ifdef VIDEOINPUT_LIB 
+#include "../videoInput/videoInput.h"
+#endif	//WIN32
 
 using namespace cv;
 
@@ -41,79 +45,48 @@ flip_param -> flip_mode
 2 -> 1	:	vertical
 3 -> -1	:	both
 */
-void vFlip(CvArr* src, int flipX, int flipY)
+void vFlip(Mat& src, int flipX, int flipY)
 {
-	int flip_param = flipX*2 + flipY;
-	int mode = NO_FLIP;//NO FLIP
-	switch(flip_param)
-	{
-	case 1:
-		mode = 0;break;
-	case 2:
-		mode = 1;break;
-	case 3:
-		mode = -1;break;
-	default:
-		break;
-	}
-	if (mode != NO_FLIP)
-		cvFlip(src, 0, mode);
-}
-//============================================================================
-static bool IsEdgeIn(int ind1, int ind2,
-					 const std::vector<std::vector<int> > &edges)
-{
-	for (int i = 0; i < edges.size (); i++)
-	{
-		if ((edges[i][0] == ind1 && edges[i][1] == ind2) ||
-			(edges[i][0] == ind2 && edges[i][1] == ind1) )
-			return true;
-	}
-	return false;
+	assert (flipX == 0 ||flipX == 1);
+	assert (flipY == 0 ||flipY == 1);
+	static int mapper[2][2] = {{1,-1},{NO_FLIP,0}};
+	int code = mapper[flipY][flipX];
+
+	if (code != NO_FLIP)
+		flip(src, src, code);
 }
 
-//============================================================================
-static bool IsTriangleNotIn(const std::vector<int>& one_tri,
-							const std::vector<std::vector<int> > &tris)
+void vFastCopyImageTo( const cv::Mat& src, cv::Mat& dst, const cv::Rect& roi )
 {
-	std::set<int> tTriangle;
-	std::set<int> sTriangle;
+	assert(src.size() == roi.size());
+	Mat sub = dst(roi);
 
-	for (int i = 0; i < tris.size (); i ++)
+	if (src.channels() == 1 && dst.channels() == 3)
 	{
-		tTriangle.clear();
-		sTriangle.clear();
-		for (int j = 0; j < 3; j++ )
-		{
-			tTriangle.insert(tris[i][j]);
-			sTriangle.insert(one_tri[j]);
-		}
-		if (tTriangle == sTriangle)    return false;
-	}
-
-	return true;
-}
-
-void vCopyImageTo(CvArr* tiny_image, IplImage* big_image, const CvRect& region)
-{
-	CV_Assert(tiny_image && big_image);
-	// Set the image ROI to display the current image
-	cvSetImageROI(big_image, region);
-
-	IplImage* t = (IplImage*)tiny_image;
-	if (t->nChannels == 1 && big_image->nChannels == 3)
-	{
-		Ptr<IplImage> _tiny = cvCreateImage(cvGetSize(t), 8, 3);
-		cvCvtColor(tiny_image, _tiny, CV_GRAY2BGR);
-		cvResize(_tiny, big_image);
+		Mat src_clr(src.rows, src.cols, CV_8UC3);
+		vColorFul(src, src_clr);
+		src_clr.copyTo(sub);
 	}
 	else
 	{
-		// Resize the input image and copy the it to the Single Big Image
-		cvResize(tiny_image, big_image);
+		src.copyTo(sub);
 	}
-	// Reset the ROI in order to display the next image
-	cvResetImageROI(big_image);
+}
+
+void vCopyImageTo(const cv::Mat& src, cv::Mat& dst, const cv::Rect& roi)
+{
+	Mat sub = dst(roi);
+
+	if (src.channels() == 1 && dst.channels() == 3)
+	{
+		Mat src_clr(src.rows, src.cols, CV_8UC3);
+		vColorFul(src, src_clr);
+		resize(src_clr, sub, sub.size());
+	}
+	else
+	{
+		resize(src, sub, sub.size());
+	}
 }
 
 void vDrawText(cv::Mat& img, int x,int y,char* str, CvScalar clr)
@@ -148,103 +121,80 @@ CvScalar default_colors[] =
 const int sizeOfColors = sizeof(default_colors)/sizeof(CvScalar);
 CvScalar vDefaultColor(int idx){ return default_colors[idx%sizeOfColors];}
 
-char* get_time(bool full_length)
-{
-	static char str[256];
-	time_t timep;
-	tm *p;
-	time(&timep);
-	p = gmtime(&timep);
-
-	if (full_length)
-		sprintf(str, "%d-%d-%d__%d_%d_%d",
-		1900+p->tm_year, 1+p->tm_mon, p->tm_mday,
-		p->tm_hour, p->tm_min, p->tm_sec);
-	else
-		sprintf(str, "%d_%d_%d",
-		p->tm_hour, p->tm_min, p->tm_sec);
-
-	return str;
-}
-
-void feature_out(IplImage* img, IplImage* mask, int thresh)
-{
-	int w = img->width;
-	int h = img->height;
-	int step = img->widthStep;
-	int channels = img->nChannels;
-	uchar* data   = (uchar *)img->imageData;
-	uchar* mdata   = (uchar *)mask->imageData;
-
-	for(int i=0;i<h;i++)
-		for(int j=0;j<w;j++)
-			for(int k=0;k<channels;k++)
-			{
-				if (mdata[i*mask->widthStep+j] < thresh)
-					data[i*step+j*channels+k] = 0;
-			}
-
-}
-
 VideoInput::VideoInput()
 {
 	_fps = 0;
-	_capture = NULL;
 	_frame = NULL;
 	_InputType = From_Count;
+	device_id = 0;
 }
 
 void VideoInput::showSettingsDialog()
 {
-// 	if (_capture)
-// 		cvSetCaptureProperty(_capture,CV_CAP_PROP_SHOW_DIALOG, true);
+#if VIDEOINPUT_LIB
+	if (VI)
+		VI->showSettingsWindow(device_id);
+#endif
 }
 
 bool VideoInput::init(int cam_idx)
 {
-	bool ret = true;
+	bool opened = false;
+	device_id = cam_idx;
 	do 
 	{
-		_capture = cvCaptureFromCAM(CV_CAP_DSHOW+cam_idx);
-
-		if( !_capture )
+#ifdef VIDEOINPUT_LIB
+		//try direct show directly (VideoInput)
+		VI = new videoInput();
+		VI->setVerbose(false);
+		if (VI)
 		{
-			_capture = cvCaptureFromCAM(cam_idx);
+	//		int numDevices = VI->listDevices();
+			if (opened = VI->setupDevice(cam_idx))
+				break;
+		}	
+#endif	//WIN32
+		_capture.open(CV_CAP_DSHOW+cam_idx); 
+		if (_capture.isOpened())
+		{
+			_InputType = From_Camera;
+			sprintf(buffer, "Reading from camera # %d via DirectShow.", cam_idx);
+			opened = true;
+			break;
+		}
+		else
+		{
+			_capture.open(cam_idx); 
 
-			if (!_capture)
-			{
-				sprintf(buffer, "Failed to open camera # %d", cam_idx);
-				ret = false;
+			if (_capture.isOpened())
+			{		
+				_InputType = From_Camera;
+				sprintf(buffer, "Reading from camera # %d.", cam_idx);
+				opened = true;
 				break;
 			}
 			else
 			{
-				_InputType = From_Camera;
-				sprintf(buffer, "Reading from camera # %d.", cam_idx);
-				_post_init();
-				ret = true;
+				sprintf(buffer, "Failed to open camera # %d", cam_idx);
+				opened = false;
 				break;
 			}
 		}
-		else
-		{
-			_InputType = From_Camera;
-			sprintf(buffer, "Reading from camera # %d via DirectShow.", cam_idx);
-			_post_init();
-			ret = true;
-			break;
-		}
 	} while (0);
 
+	if (opened)
+	{
+		_post_init();
+	}
 	printf("\n%s\n",buffer);
-	return ret;
+	return opened;
 }
 
-bool VideoInput::init(char* file_name)
+bool VideoInput::init(const std::string& file_name)
 {
 	bool loaded = false;
 #ifdef KINECT
-	if (strcmp(file_name, "kinect")==0)
+	if (file_name == "kinect")
 	{
 		bool b = init_kinect();
 		if (b)
@@ -261,38 +211,19 @@ bool VideoInput::init(char* file_name)
 		}
 	}
 #endif
-#ifdef PS3
-	if (strcmp(file_name, "ps3")==0)
-	{
-		bool b = init_ps3();
-		if (b)
-		{
-			_InputType = From_PS3;
-			loaded = true;
-			printf("Reading from ps3 camera.\n");
-		}
-		else
-		{
-			printf("Failed to open ps3 camera.\n"
-				"You can download the driver from http://codelaboratories.com/get/cl-eye-driver/\n\n");
-			return false;
-		}
-	}
-#endif
-
 	if (!loaded)
 	{
-		_frame = cvLoadImage(file_name);
+		_frame = imread(file_name);
 
-		if (_frame)
+		if (!_frame.empty())
 		{
 			printf("Reading from image %s.\n", file_name);
 			_InputType = From_Image;
 		}
 		else
 		{
-			_capture = cvCaptureFromAVI(file_name);
-			if( _capture )
+			_capture = _capture.open(file_name);
+			if(_capture.isOpened())
 			{
 				printf("Reading from video %s.\n", file_name);
 				_InputType = From_Video;
@@ -323,12 +254,22 @@ bool VideoInput::init(int argc, char** argv)
 
 void VideoInput::resize( int w, int h )
 {
-	if (_capture)
+	if (_capture.isOpened())
 	{
-		cvSetCaptureProperty(_capture,CV_CAP_PROP_FRAME_WIDTH, (double)w);
-		cvSetCaptureProperty(_capture,CV_CAP_PROP_FRAME_HEIGHT, (double)h);
+		_capture.set(CV_CAP_PROP_FRAME_WIDTH, (double)w);
+		_capture.set(CV_CAP_PROP_FRAME_HEIGHT, (double)h);
+		_post_init();
+		return;
+	}
+
+#ifdef VIDEOINPUT_LIB
+	if( w != VI->getWidth(device_id) || h != VI->getHeight(device_id) )
+	{
+		VI->stopDevice(device_id);
+		VI->setupDevice(device_id, w, h);
 		_post_init();
 	}
+#endif // WIN32
 }
 
 void VideoInput::wait(int t)
@@ -339,52 +280,57 @@ void VideoInput::wait(int t)
 		get_frame();
 }
 
-IplImage* VideoInput::get_frame()
+Mat VideoInput::get_frame()
 {
-	switch (_InputType)
+	do 
 	{
-	case From_Camera:
-	case From_Video:
-		{
-			_frame = cvQueryFrame(_capture);
-			_frame_num ++;
-// 			if (_frame == NULL)
-// 			{
-// 				cvReleaseCapture(&_capture);
-// 				init(_argc, _argv);
-// 			}
-		}break;
 #ifdef KINECT
-	case From_Kinect:
+		if (_kinect)
 		{
 			bool b = _kinect->getDepthBW();
 			_frame = _kinect->bwImage;
 			_frame_num ++;
-		}break;
+			break;
+		}
 #endif
-#ifdef PS3
-	case From_PS3:
+#ifdef VIDEOINPUT_LIB
+		if (VI)
 		{
-			bool b = _ps3_cam->getFrame();
-			_frame = _ps3_cam->frame;
-			_frame_num ++;
-		}break;
+			VI->getPixels( device_id, _frame.ptr(), false, true );
+			break;;
+		}
 #endif
-	default:
-		break;
-	}
+		if (_capture.isOpened())
+		{
+			_capture >> _frame;
+
+			// 			if (_frame == NULL)
+			// 			{
+			// 				cvReleaseCapture(&_capture);
+			// 				init(_argc, _argv);
+			// 			}
+			break;
+		}
+	} while (0);
 
 	return _frame;
 }
 
 void VideoInput::_post_init()
 {
+#ifdef VIDEOINPUT_LIB
+	if (VI)
+	{
+		int w = VI->getWidth(device_id), h = VI->getHeight(device_id);
+		_frame.create( Size(w,h), CV_8UC3);
+	}
+#endif
 	_frame = get_frame();
 
 	if (_InputType == From_Video)
 	{
-		_fps = cvGetCaptureProperty(_capture, CV_CAP_PROP_FPS);
-		_codec = cvGetCaptureProperty(_capture, CV_CAP_PROP_FOURCC);
+		_fps = _capture.get(CV_CAP_PROP_FPS);
+		_codec = _capture.get(CV_CAP_PROP_FOURCC);
 		if (_fps == 0)
 			printf("Fps: unknown");
 		else
@@ -396,22 +342,14 @@ void VideoInput::_post_init()
 		_fps = 24;
 	}
 
-	_size.width = _frame->width;
-	_size.height = _frame->height;
+	_size.width = _frame.cols;
+	_size.height = _frame.rows;
 	_half_size.width  = _size.width/2;
 	_half_size.height  = _size.height/2;
-	_channel = _frame->nChannels;
+	_channel = _frame.channels();
 	_frame_num = 0;
 
 	printf("Size: <%d,%d>\n",  _size.width, _size.height);
-}
-
-VideoInput::~VideoInput()
-{
-	if (_capture != NULL)
-		cvReleaseCapture( &_capture );
-	//	if (_frame != NULL)
-	//		cvReleaseImage(&_frame);
 }
 
 #ifdef KINECT
@@ -422,36 +360,21 @@ bool VideoInput::init_kinect()
 }
 #endif
 
-#ifdef PS3
-bool VideoInput::init_ps3()
-{
-	_ps3_cam = new ofxCLeye;
-	int n_ps3 = ofxCLeye::listDevices();
-	if (n_ps3 > 0)
-	{
-		return _ps3_cam->init(320, 240, false);
-	}
-	else
-	{
-		return false;
-	}
-}
-#endif
-
-void vHighPass(IplImage* src, IplImage* dst, int blurLevel/* = 10*/, int noiseLevel/* = 3*/)
+void vHighPass(const cv::Mat& src, cv::Mat& dst, int blurLevel/* = 10*/, int noiseLevel/* = 3*/)
 {
 	if (blurLevel > 0 && noiseLevel > 0)
 	{
 		// create the unsharp mask using a linear average filter
-		cvSmooth(src, dst, CV_BLUR, blurLevel*2+1);
+		cv::blur(src, dst, Size(blurLevel*2+1, blurLevel*2+1));
 
-		cvSub(src, dst, dst);
+		dst = src - dst;
+//		cvSub(src, dst, dst);
 
 		// filter out the noise using a median filter
-		cvSmooth(dst, dst, CV_MEDIAN, noiseLevel*2+1);
+		cv::medianBlur(dst, dst, noiseLevel*2+1);
 	}
 	else
-		cvCopy(src, dst);
+		src.copyTo(dst);
 }
 
 void vGetPerspectiveMatrix(CvMat*& warp_matrix, cv::Point2f xsrcQuad[4], cv::Point2f xdstQuad[4])
@@ -502,450 +425,6 @@ bool operator < (const Point& a, const Point& b)
 {
 	return a.x < b.x && a.y < b.y;
 }
-
-static void draw_edge( IplImage* img, CvSubdiv2DEdge edge, CvScalar color )
-{
-	CvSubdiv2DPoint* org_pt = cvSubdiv2DEdgeOrg(edge);
-	CvSubdiv2DPoint* dst_pt = cvSubdiv2DEdgeDst(edge);
-
-	if( org_pt && dst_pt )
-	{
-		CvPoint2D32f org = org_pt->pt;
-		CvPoint2D32f dst = dst_pt->pt;
-
-		CvPoint iorg = cvPoint( cvRound( org.x ), cvRound( org.y ));
-		CvPoint idst = cvPoint( cvRound( dst.x ), cvRound( dst.y ));
-
-		cvLine( img, iorg, idst, color, 1, CV_AA, 0 );
-	}
-}
-
-
-static void draw_facet( CvSubdiv2D * subdiv, IplImage * dst, IplImage * src, CvSubdiv2DEdge edge, bool drawLine )
-{
-	CvSubdiv2DEdge e = edge;
-	int i, count = 0;
-	vector<CvPoint> buf;
-
-	// count number of edges in facet
-	do
-	{
-		count++;
-		e = cvSubdiv2DGetEdge( e, CV_NEXT_AROUND_LEFT );
-	}
-	while( e != edge && count < subdiv->quad_edges * 4 );
-
-	// gather points
-	e = edge;
-	assert(count == 3);
-	for( i = 0; i < count; i++ )
-	{
-		CvSubdiv2DPoint *pt = cvSubdiv2DEdgeOrg( e );
-
-		if( !pt )
-			break;
-		assert( fabs( pt->pt.x ) < 10000 && fabs( pt->pt.y ) < 10000 );
-		buf.push_back(cvPoint( cvRound( pt->pt.x ), cvRound( pt->pt.y )));
-
-		e = cvSubdiv2DGetEdge( e, CV_NEXT_AROUND_LEFT );
-	}
-
-	if( i == count )
-	{
-		CvSubdiv2DPoint *pt = cvSubdiv2DEdgeDst( cvSubdiv2DRotateEdge( edge, 1 ));
-		if (!pt)
-			pt = cvSubdiv2DEdgeOrg( cvSubdiv2DRotateEdge( edge, 0 ));
-		CvPoint ip = cvPoint( cvRound( pt->pt.x ), cvRound( pt->pt.y ));
-		CvScalar color = {{0,0,0,0}};
-
-		//printf("count = %d, (%d,%d)\n", ip.x, ip.y );
-
-		if( 0 <= ip.x && ip.x < src->width && 0 <= ip.y && ip.y < src->height )
-		{
-			uchar *ptr = (uchar*)(src->imageData + ip.y * src->widthStep + ip.x * 3);
-			color = CV_RGB( ptr[2], ptr[1], ptr[0] );
-		}
-
-		cvFillConvexPoly( dst, &buf[0], count, color );
-
-		if (drawLine)
-		{
-			for (i = 1;i<count;i++)
-			{
-				cvDrawLine(dst, buf[i], buf[i-1], CV_RGB(30,30,30),1);
-			}
-		}
-	}
-}
-
-
-
-
-void vDrawDelaunay( CvSubdiv2D* subdiv,IplImage* src,IplImage * dst , bool drawLine)
-{
-	int i, total = subdiv->edges->total;
-
-	cvCalcSubdivVoronoi2D( subdiv );
-
-	for( i = 0; i < total; i++ )
-	{
-		CvQuadEdge2D *edge = (CvQuadEdge2D *) cvGetSetElem( subdiv->edges, i );
-
-		if( edge && CV_IS_SET_ELEM( edge ))
-		{
-			CvSubdiv2DEdge e = (CvSubdiv2DEdge) edge;
-
-			//	draw_edge( src, (CvSubdiv2DEdge)edge + 1, CV_RGB(0,0,0) );//voroni edge
-			//	draw_edge( src, (CvSubdiv2DEdge)edge, CV_RGB(0,0,0) );//delaunay edge
-
-			//e itslef
-			draw_facet( subdiv, dst, src, cvSubdiv2DRotateEdge( e, 0 ), drawLine);
-			//reversed e
-			draw_facet( subdiv, dst, src, cvSubdiv2DRotateEdge( e, 2 ), drawLine);
-		}
-	}
-}
-
-void vDrawVoroni( CvSubdiv2D * subdiv, IplImage * src, IplImage * dst, bool drawLine )
-{
-	int i, total = subdiv->edges->total;
-
-	cvCalcSubdivVoronoi2D( subdiv );
-
-	//icvSet( dst, 255 );
-	for( i = 0; i < total; i++ )
-	{
-		CvQuadEdge2D *edge = (CvQuadEdge2D *) cvGetSetElem( subdiv->edges, i );
-
-		if( edge && CV_IS_SET_ELEM( edge ))
-		{
-			CvSubdiv2DEdge e = (CvSubdiv2DEdge) edge;
-
-			// left
-			draw_facet( subdiv, dst, src, cvSubdiv2DRotateEdge( e, 1 ), drawLine);
-			// right
-			draw_facet( subdiv, dst, src, cvSubdiv2DRotateEdge( e, 3 ), drawLine);
-		}
-	}
-}
-
-
-
-DelaunaySubdiv::DelaunaySubdiv(int w, int h)
-{
-	storage = cvCreateMemStorage();
-	rect = cvRect(0, 0, w, h);
-
-	subdiv = cvCreateSubdivDelaunay2D(rect, storage);
-}
-
-void DelaunaySubdiv::insert(float x, float y)
-{
-	Point2f pt(x,y);
-	cvSubdivDelaunay2DInsert(subdiv, pt);
-	pt_map.insert(std::make_pair(point2di(x, y), points.size() ) );
-	points.push_back(Point(x,y));
-}
-
-void DelaunaySubdiv::clear()
-{
-	cvClearMemStorage(storage);
-	subdiv = cvCreateSubdivDelaunay2D(rect, storage);
-	pt_map.clear();
-	points.clear();
-}
-
-void DelaunaySubdiv::intoEdge(CvSubdiv2DEdge edge)
-{
-	CvSubdiv2DEdge e = edge;
-	int i;
-	const int count = 3;
-	Point triple[count];
-
-	//// count number of edges in facet
-	//do
-	//{
-	//	count++;
-	//	e = cvSubdiv2DGetEdge( e, CV_NEXT_AROUND_LEFT );
-	//}
-	//while( e != edge && count < subdiv->quad_edges * 4 );
-
-	//// gather points
-	//e = edge;
-	//assert(count == 3);
-	for( i = 0; i < count; i++ )
-	{
-		CvSubdiv2DPoint *pt = cvSubdiv2DEdgeOrg( e );
-		if( !pt || fabs( pt->pt.x ) > 1500 || fabs( pt->pt.y ) > 1500)
-			break;
-
-		triple[i] = Point(pt->pt.x ,  pt->pt.y);
-		e = cvSubdiv2DGetEdge( e, CV_NEXT_AROUND_LEFT );
-	}
-
-	if( i == count )
-	{
-		Triangle aTri;
-
-		for (int k=0;k<3;k++)
-		{
-			aTri[k] = getIndex(triple[k].x, triple[k].y);
-			if (aTri[k] == -1) return;
-		}
-		aTri.center.X = (triple[0].x + triple[1].x + triple[2].x)/3;
-		aTri.center.Y = (triple[0].y + triple[1].y + triple[2].y)/3;
-
-		triangles.push_back(aTri);
-	}
-}
-
-int  DelaunaySubdiv::getIndex(float x, float y)
-{
-	int ret = -1;
-	map<point2di, int>::const_iterator it =  pt_map.find(point2di(x,y));
-	if (it != pt_map.end())
-		ret = it->second;
-	return ret;
-}
-
-void DelaunaySubdiv::buildTriangles()
-{
-	triangles.clear();
-	int i, total = subdiv->edges->total;
-
-	for( i = 0; i < total; i++ )
-	{
-		CvQuadEdge2D *edge = (CvQuadEdge2D *) cvGetSetElem( subdiv->edges, i );
-
-		if( edge && CV_IS_SET_ELEM( edge ))
-		{
-			CvSubdiv2DEdge e = (CvSubdiv2DEdge) edge;
-			//e itslef
-			intoEdge( cvSubdiv2DRotateEdge( e, 0 ));
-			//reversed e
-			intoEdge( cvSubdiv2DRotateEdge( e, 2 ));
-		}
-	}
-	sort(triangles.begin(),triangles.end());
-	std::vector<Triangle>::iterator it = unique(triangles.begin(),triangles.end());
-	triangles.erase(it, triangles.end());
-}
-
-
-void DelaunaySubdiv::build()
-{
-	//	cvCalcSubdivVoronoi2D( subdiv );
-
-	buildTriangles();
-
-	return;
-
-	cv_try_begin();
-
-	int count = points.size();
-	int __n = count;
-	//hull.resize(count);
-	//	hull = Mat(1, count, CV_32FC2);
-
-	//CvPoint* _points =new CvPoint[count];
-	//int* _hull = new int[count];
-	cv::Mat pointMat( 1, count, CV_32SC2, &points[0] );
-	//	 CvMat hullMat = cvMat( 1, count, CV_32SC1, &hull[0]);
-	//  for(int  i = 0; i < count; i++ )
-	//  {
-	//      pt0.x = rand() % (width/2) + width/4;
-	//      pt0.y = rand() % (height/2) + height/4;
-	//     _points[i] = pt0;
-	//points[i] = points[i];
-	//  }
-
-	//  cvConvexHull2( &pointMat, ConvexHull, CV_CLOCKWISE, 0 );
-	cv::convexHull(pointMat, hull);
-
-	CvMat ConvexHull = cvMat (1, __n, CV_32SC2, &hull[0]);
-
-	//	cv::Mat pointMat(1, count, CV_32SC2, &points[0] );
-
-	//		cv::convexHull(pointMat, hullMat);
-	//	convexHull(pointMat, hull);
-	//
-	////	CvMat* pointMa = cvCreateMat(1, count, CV_32SC2);
-	//	cvConvexHull2(&(CvMat)pointMat, ConvexHull, CV_CLOCKWISE, 0);
-	//	cv::Mat hullMat(1, hull.size(), CV_32SC2, &hull[0] );
-	//
-	//	doDelaunay(subdiv,  &ConvexHull);
-	//	cvReleaseMat(&pointMa);
-
-	cv_try_end();
-}
-
-
-void DelaunaySubdiv::drawDelaunay( IplImage* src,IplImage * dst , bool drawLine)
-{
-	int i, total = subdiv->edges->total;
-
-	cvCalcSubdivVoronoi2D( subdiv );
-
-	for( i = 0; i < total; i++ )
-	{
-		CvQuadEdge2D *edge = (CvQuadEdge2D *) cvGetSetElem( subdiv->edges, i );
-
-		if( edge && CV_IS_SET_ELEM( edge ))
-		{
-			CvSubdiv2DEdge e = (CvSubdiv2DEdge) edge;
-
-			//	draw_edge( src, (CvSubdiv2DEdge)edge + 1, CV_RGB(0,0,0) );//voroni edge
-			//	draw_edge( src, (CvSubdiv2DEdge)edge, CV_RGB(0,0,0) );//delaunay edge
-
-			//e itslef
-			draw_facet( subdiv, dst, src, cvSubdiv2DRotateEdge( e, 0 ), drawLine);
-			//reversed e
-			draw_facet( subdiv, dst, src, cvSubdiv2DRotateEdge( e, 2 ), drawLine);
-		}
-	}
-}
-
-
-void DelaunaySubdiv::drawVoroni( IplImage * src, IplImage * dst, bool drawLine )
-{
-	int i, total = subdiv->edges->total;
-
-	cvCalcSubdivVoronoi2D( subdiv );
-
-	//icvSet( dst, 255 );
-	for( i = 0; i < total; i++ )
-	{
-		CvQuadEdge2D *edge = (CvQuadEdge2D *) cvGetSetElem( subdiv->edges, i );
-
-		if( edge && CV_IS_SET_ELEM( edge ))
-		{
-			CvSubdiv2DEdge e = (CvSubdiv2DEdge) edge;
-
-			// left
-			draw_facet( subdiv, dst, src, cvSubdiv2DRotateEdge( e, 1 ), drawLine);
-			// right
-			draw_facet( subdiv, dst, src, cvSubdiv2DRotateEdge( e, 3 ), drawLine);
-		}
-	}
-}
-
-
-void on_default(int )
-{
-
-}
-
-
-int BrightnessAdjust(const IplImage* srcImg,
-					 IplImage* dstImg,
-					 float brightness)
-{
-	assert(srcImg != NULL);
-	assert(dstImg != NULL);
-
-	int h = srcImg->height;
-	int w = srcImg->width;
-	int n = srcImg->nChannels;
-
-	int x,y,i;
-	float val;
-	for (i = 0; i < n; i++)//²ÊÉ«Í¼ÏñÐèÒª´¦Àí3¸öÍ¨µÀ£¬»Ò¶ÈÍ¼ÏñÕâÀï¿ÉÒÔÉ¾µô
-	{
-		for (y = 0; y < h; y++)
-		{
-			for (x = 0; x < w; x++)
-			{
-
-				val = ((uchar*)(srcImg->imageData + srcImg->widthStep*y))[x*n+i];
-				val += brightness;
-				//¶Ô»Ò¶ÈÖµµÄ¿ÉÄÜÒç³ö½øÐÐ´¦Àí
-				if(val>255)	val=255;
-				if(val<0) val=0;
-				((uchar*)(dstImg->imageData + dstImg->widthStep*y))[x*n+i] = (uchar)val;
-			}
-		}
-	}
-
-	return 0;
-}
-
-int ContrastAdjust(const IplImage* srcImg,
-				   IplImage* dstImg,
-				   float nPercent)
-{
-	assert(srcImg != NULL);
-	assert(dstImg != NULL);
-
-	int h = srcImg->height;
-	int w = srcImg->width;
-	int n = srcImg->nChannels;
-
-	int x,y,i;
-	float val;
-	for (i = 0; i < n; i++)//²ÊÉ«Í¼ÏñÐèÒª´¦Àí3¸öÍ¨µÀ£¬»Ò¶ÈÍ¼ÏñÕâÀï¿ÉÒÔÉ¾µô
-	{
-		for (y = 0; y < h; y++)
-		{
-			for (x = 0; x < w; x++)
-			{
-
-				val = ((uchar*)(srcImg->imageData + srcImg->widthStep*y))[x*n+i];
-				val = 128 + (val - 128) * nPercent;
-				//¶Ô»Ò¶ÈÖµµÄ¿ÉÄÜÒç³ö½øÐÐ´¦Àí
-				if(val>255) val=255;
-				if(val<0) val=0;
-				((uchar*)(dstImg->imageData + dstImg->widthStep*y))[x*n+i] = (uchar)val;
-			}
-		}
-	}
-	return 0;
-}
-
-void cvSkinSegment(IplImage* img, IplImage* mask)
-{
-	CvSize imageSize = cvSize(img->width, img->height);
-	IplImage *imgY = cvCreateImage(imageSize, IPL_DEPTH_8U, 1);
-	IplImage *imgCr = cvCreateImage(imageSize, IPL_DEPTH_8U, 1);
-	IplImage *imgCb = cvCreateImage(imageSize, IPL_DEPTH_8U, 1);
-
-
-	IplImage *imgYCrCb = cvCreateImage(imageSize, img->depth, img->nChannels);
-	cvCvtColor(img,imgYCrCb,CV_BGR2YCrCb);
-	cvSplit(imgYCrCb, imgY, imgCr, imgCb, 0);
-	int y, cr, cb, l, x1, y1, value;
-	unsigned char *pY, *pCr, *pCb, *pMask;
-
-	pY = (unsigned char *)imgY->imageData;
-	pCr = (unsigned char *)imgCr->imageData;
-	pCb = (unsigned char *)imgCb->imageData;
-	pMask = (unsigned char *)mask->imageData;
-	cvSetZero(mask);
-	l = img->height * img->width;
-	for (int i = 0; i < l; i++){
-		y  = *pY;
-		cr = *pCr;
-		cb = *pCb;
-		cb -= 109;
-		cr -= 152
-			;
-		x1 = (819*cr-614*cb)/32 + 51;
-		y1 = (819*cr+614*cb)/32 + 77;
-		x1 = x1*41/1024;
-		y1 = y1*73/1024;
-		value = x1*x1+y1*y1;
-		if(y<100)    (*pMask)=(value<700) ? 255:0;
-		else        (*pMask)=(value<850)? 255:0;
-		pY++;
-		pCr++;
-		pCb++;
-		pMask++;
-	}
-	cvReleaseImage(&imgY);
-	cvReleaseImage(&imgCr);
-	cvReleaseImage(&imgCb);
-	cvReleaseImage(&imgYCrCb);
-}
-
 
 void vFillPoly(IplImage* img, const vector<Point>& pt_list, const Scalar& clr/* = Scalar(255,255,255)*/)
 {

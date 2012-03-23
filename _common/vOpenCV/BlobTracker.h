@@ -30,45 +30,37 @@
 // poly1_hull0	If set, approximate connected component by (DEFAULT) polygon, or else convex hull (false)
 // areaScale 	Area = image (width*height)*areaScale.  If contour area < this, delete that contour (DEFAULT: 0.1)
 //
-
+void vFindBlobs(cv::Mat& src, vector<vBlob>& blobs, int minArea = 1, int maxArea = 3072000, bool convexHull=false, bool (*sort_func)(const vBlob& a, const vBlob& b)  = NULL);
 void vFindBlobs(IplImage *src, vector<vBlob>& blobs, int minArea = 1, int maxArea = 3072000, bool convexHull=false, bool (*sort_func)(const vBlob& a, const vBlob& b)  = NULL);
 
 void vFindBlobs(IplImage *mask,	int minArea = 1, int maxArea = 3072000, bool convexHull=false);//draw trackedBlobs only
 
 void vFindBlobs(IplImage *src, vector<vBlob>& blobs, vector<vector<vDefect>>& defects, int minArea=1, int maxArea=3072000);
 
+
 // parameters:
 //  silh - input video frame
-//  dst - resultant motion picture43
+//  dst - resultant motion picture
 //  args - optional parameters
 vector<vBlob>  vUpdateMhi( IplImage* silh, IplImage* dst);
 
 class vBlobTracker
 {
 public:
-	enum{
-		KNN = 3,
-	};
-
 	vBlobTracker();
-
-	//assigns IDs to each blob in the contourFinder
 	void trackBlobs(const vector<vBlob>& newBlobs);
 
 	std::vector<vTrackedBlob>	trackedBlobs; //tracked blobs
-	std::vector<vTrackedBlob>  leaveBlobs;
+	std::vector<vTrackedBlob>  deadBlobs;
 
 private:
-	int trackKnn(const vector<vTrackedBlob>& newBlobs, vTrackedBlob& track, int k, double thresh=0);
-	int						IDCounter;	  //counter of last blob
+	unsigned int						IDCounter;	  //counter of last blob
 
 protected:
-
 	//blob Events
 	void doBlobOn(vTrackedBlob& b );
 	void doBlobMoved(vTrackedBlob& b );
 	void doBlobOff(vTrackedBlob& b );
-
 };
 
 struct vFingerDetector
@@ -98,7 +90,7 @@ struct vFingerDetector
 	cv::Vec3f	v1D,vxv;
 	cv::Vec3f	v2D;
 
-	float teta,lhd;
+	 float teta,lhd;
 };
 
 struct vHaarFinder
@@ -107,7 +99,7 @@ struct vHaarFinder
 	float scale;
 	//
 	bool init(char* cascade_name);
-	void find(IplImage* img, int minArea = 1, bool findAllFaces = true);
+	void find(const cv::Mat& img, int minArea = 1, bool findAllFaces = true);
 
 	vHaarFinder();
 
@@ -119,9 +111,9 @@ protected:
 struct vOpticalFlowLK
 {
 	//blocksize must be odd
-        vOpticalFlowLK(IplImage* gray, int blocksize = 5);
+        vOpticalFlowLK(const cv::Mat& gray, int blocksize = 5);
 
-		void update(IplImage* gray);
+		void update(const cv::Mat& gray);
 
 		cv::point2df flowAtPoint(int x, int y);
 		bool flowInRegion(int x, int y, int w, int h, cv::point2df& vec) ;
@@ -133,109 +125,103 @@ struct vOpticalFlowLK
         int width;
         int height;
 
-		cv::Ptr<IplImage> vel_x;
-        cv::Ptr<IplImage> vel_y;
-		cv::Ptr<IplImage> prev;
+		cv::Mat vel_x;
+        cv::Mat vel_y;
+		cv::Mat prev;
 
 		int block_size;
 };
 
 struct IBackGround
 {
+	virtual void init(cv::Mat initial, void* param = NULL) = 0;
+
+	virtual void update(cv::Mat image, int mode = 0) = 0;
+
+	virtual void setIntParam(int idx, int value){}
+	virtual cv::Mat& getForeground() = 0;
+	virtual cv::Mat& getBackground() = 0;
+
+	virtual ~IBackGround(){}
+};
+
+struct IAutoBackGround : IBackGround
+{
 	CvBGStatModel* bg_model;
 
-	int thresh;
-
-	IBackGround(){
-		bg_model = NULL;
-		thresh = 200;
-	}
-
-	virtual void init(IplImage* initial, void* param = NULL) = 0;
-
-	virtual void update(IplImage* image, int mode = 0){
-		cvUpdateBGStatModel( image, bg_model );
-	}
-	virtual void setIntParam(int idx, int value)
+	IAutoBackGround()
 	{
-		if (idx ==0) thresh = 255-value;
+		bg_model = NULL;
 	}
 
-	virtual IplImage* getForeground(){
-		return bg_model->foreground;
-	}
+	virtual void init(cv::Mat initial, void* param = NULL) = 0;
 
-	virtual IplImage* getBackground(){
-		return bg_model->background;
-	}
+	virtual void update(cv::Mat image, int mode = 0);
 
-	virtual ~IBackGround(){
-		if (bg_model)
-			cvReleaseBGStatModel(&bg_model);
-	}
+	cv::Mat& getForeground();
+
+	cv::Mat& getBackground();
+
+	virtual ~IAutoBackGround();
 };
 
-struct vBackFGDStat: public IBackGround
+struct vBackFGDStat: public IAutoBackGround
 {
-	void init(IplImage* initial, void* param = NULL);
+	void init(cv::Mat initial, void* param = NULL);
 };
 
-struct vBackGaussian: public IBackGround
+struct vBackGaussian: public IAutoBackGround
 {
-	void init(IplImage* initial, void* param = NULL);
+	void init(cv::Mat initial, void* param = NULL);
+};
+
+struct IStaticBackground : IBackGround
+{	
+	cv::Mat frame;
+	cv::Mat bg;
+	cv::Mat fore;
+
+	int threshes[2];
+
+	IStaticBackground();
+
+	virtual ~IStaticBackground();
+	virtual void setIntParam(int idx, int value);
+	cv::Mat& getForeground();
+	cv::Mat& getBackground();
 };
 
 #define DETECT_BOTH 0
 #define DETECT_DARK 1
 #define DETECT_BRIGHT 2
 
-struct vBackGrayDiff: public IBackGround
+struct vBackGrayDiff: public IStaticBackground
 {
-	cv::Ptr<IplImage> Frame;
-	cv::Ptr<IplImage> Bg;
-	cv::Ptr<IplImage> Fore ;
-
-	int dark_thresh;
-
-	void init(IplImage* initial, void* param = NULL);
-
-	void setIntParam(int idx, int value);
+	void init(cv::Mat initial, void* param = NULL);
 	///mode: 0-> ¼ì²âÃ÷Óë°µ 1->¼ì²âºÚ°µ 2->¼ì²âÃ÷ÁÁ
-	void update(IplImage* image, int mode = DETECT_BOTH);
-
-	IplImage* getForeground(){
-		return Fore;
-	}
-	IplImage* getBackground(){
-		return Bg;
-	}
+	void update(cv::Mat image, int mode = DETECT_BOTH);
 };
 
-struct vBackColorDiff: public vBackGrayDiff
+struct vBackColorDiff: public IStaticBackground
 {
 	int nChannels;
-	void init(IplImage* initial, void* param = NULL);
+	void init(cv::Mat initial, void* param = NULL);
 
 	///mode: 0-> ¼ì²âÃ÷Óë°µ 1->¼ì²âºÚ°µ 2->¼ì²âÃ÷ÁÁ
-	void update(IplImage* image, int mode = DETECT_BOTH);
+	void update(cv::Mat image, int mode = DETECT_BOTH);
 };
 
 //ÈýÖ¡²îÖµ·¨
-struct vThreeFrameDiff: public IBackGround
+struct vThreeFrameDiff: public IStaticBackground
 {
-	cv::Ptr<IplImage> grayFrameOne;
-	cv::Ptr<IplImage> grayFrameTwo;
-	cv::Ptr<IplImage> grayFrameThree;
-	cv::Ptr<IplImage> grayDiff ;
+	//TODO: how to deal with gray
+	cv::Mat grays[3];
+	cv::Mat grayDiff ;
 
-	void init(IplImage* initial, void* param = NULL);
+	void init(cv::Mat initial, void* param = NULL);
 
-	void update(IplImage* image, int mode = 0);
+	void update(cv::Mat image, int mode = 0);
 
-	IplImage* getForeground(){
-		return grayDiff;
-	}
-	IplImage* getBackground(){
-		return grayDiff;
-	}
+	cv::Mat& getForeground();
+	cv::Mat& getBackground();
 };
