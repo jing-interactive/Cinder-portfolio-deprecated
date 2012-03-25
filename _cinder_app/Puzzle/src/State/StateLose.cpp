@@ -25,7 +25,7 @@ void StateLose::update()
 void StateLose::draw()
 {
 	gl::color(1,1,1);
-	gl::draw(_app._tex_selected);
+	gl::draw(_app._tex_selected, _app.getWindowBounds());
 	gl::drawStringCentered(welcome, pos, clr, _app.fnt_big);
 }
 

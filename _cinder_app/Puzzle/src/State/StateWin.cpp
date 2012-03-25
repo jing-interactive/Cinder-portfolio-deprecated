@@ -32,7 +32,7 @@ void StateWin::update()
 void StateWin::draw()
 {
 	gl::color(1,1,1);
-	gl::draw(_app._tex_selected); 
+	gl::draw(_app._tex_selected, _app.getWindowBounds()); 
 	gl::drawStringCentered(welcome+timerString, pos, clr, _app.fnt_big);
 }
 

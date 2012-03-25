@@ -46,14 +46,14 @@ void Sprite::draw()
 
 void Sprite::drawBox()
 {	
-	glLineWidth(3);
+	glLineWidth(6);
 	if (_pos_state == CORRECT)
 		drawBox(Color8u(0,255,0));
 	else if (_pos_state == HALF)
-		drawBox(Color8u(255,0,0));
+		drawBox(Color8u(255,0,0), 3);
 }
 
-void Sprite::drawBox(const Color8u& clr)
+void Sprite::drawBox(const Color8u& clr, int k)
 {	
 	gl::pushModelView();
 	{
@@ -62,7 +62,7 @@ void Sprite::drawBox(const Color8u& clr)
 		gl::scale(_scale, _scale);
 		gl::translate(_size*-0.5);
 		gl::color(clr);
-		gl::drawStrokedRoundedRect(Rectf(0,0,_size.x, _size.y), 5);
+		gl::drawStrokedRoundedRect(Rectf(k,k,_size.x-k, _size.y-k), 5);
 	}
 	gl::popModelView();
 }
@@ -96,7 +96,10 @@ void Sprite::setPosFromCursor( const Vec2f& pos )
 		int j = y/_size.y;
 		_center.value().set((i+0.5f)*_size.x, (j+0.5f)*_size.y);
 		if (i == _idx.x && j == _idx.y)
+		{
+			_z = -1000;
 			_pos_state = CORRECT;
+		}
 		else
 			_pos_state = HALF;
 	}

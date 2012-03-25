@@ -85,11 +85,15 @@ void StateGame::update()
 		if (the_spr)
 		{//clear previous sprite status
 			the_spr->_state = Sprite::NORMAL;
+			if (the_spr->isOK())//finish one, so sort all sprites to make the scene clear
+			{
+				std::sort(_app._sprites.begin(), _app._sprites.end(), cmpSpriteByZ); 
+			}
 			the_spr.reset();
 		}
 		BOOST_REVERSE_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
 		{//find the hit one
-			if (spr->isPointInside(_app._hands[RIGHT]->pos))
+			if (!spr->isOK() && spr->isPointInside(_app._hands[RIGHT]->pos))
 			{				
 				the_spr = spr;
 				break;
@@ -118,10 +122,16 @@ void StateGame::draw()
 {
 	shared_ptr<Sprite>& sprite_selected = _app._sprite_selected;
 
+	gl::enableAlphaBlending();
+
+	BOOST_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
+	{		
+		spr->drawBox();
+	}
+
 	if (sprite_selected)
 	{
-		gl::enableAlphaBlending();
-		gl::color(1,1,1,0.3f);
+		gl::color(1,1,1,0.4f);
 		BOOST_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
 		{
 			if (sprite_selected != spr)
@@ -132,8 +142,8 @@ void StateGame::draw()
 	}
 	else
 	{
-		gl::disableAlphaBlending();
-		gl::color(1,1,1);
+	//	gl::disableAlphaBlending();
+		gl::color(1,1,1,0.8f);
 		BOOST_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
 		{
 			spr->draw();
@@ -141,13 +151,11 @@ void StateGame::draw()
 	}
 	if (the_spr)
 	{
-		glLineWidth(6);
-		the_spr->drawBox(Color8u(255,255,255));
+		glLineWidth(4);
+		the_spr->drawBox(Color8u(255,255,255), 5);
+		the_spr->drawBox();
 	}
-	BOOST_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
-	{		
-		spr->drawBox();
-	}
+
 	
 	gl::enableAlphaBlending();
 	gl::drawStringCentered(timer_str, pos, timer_clr, _app.fnt_big);

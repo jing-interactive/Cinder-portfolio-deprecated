@@ -23,8 +23,9 @@ struct Sprite
 	void setPosFromCursor(const Vec2f& pos);
 	void setPivotFromCursor(const Vec2f& pos);
 	void drawBox();
-	void drawBox(const Color8u& clr);
+	void drawBox(const Color8u& clr, int spacing = 0);
 	bool isOK();
+	bool _deg_ok;
 
 	State _state;
 	gl::Texture _tex;
@@ -42,6 +43,5 @@ struct Sprite
 
 private:
 	PosState _pos_state;
-	bool _deg_ok;
 };
 
