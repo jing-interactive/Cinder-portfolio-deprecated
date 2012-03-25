@@ -28,7 +28,8 @@ void StateShuffle::enter()
 	}
 
 	std::random_shuffle(centers.begin(), centers.end());
-	std::random_shuffle(centers.begin(), centers.end());
+//	std::random_shuffle(centers.begin(), centers.end());
+
 	int i = 0;
 	BOOST_FOREACH(shared_ptr<Sprite> spr, _app._sprites)
 	{
