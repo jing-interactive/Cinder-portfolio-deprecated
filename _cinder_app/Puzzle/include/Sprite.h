@@ -29,7 +29,7 @@ struct Sprite
 
 	State _state;
 	gl::Texture _tex;
-	float _scale;
+	Vec2f _scale;
 	Anim<float> _degree;
 	Anim<Vec2f> _center;
 	Vec2f _pivot;
@@ -40,6 +40,7 @@ struct Sprite
 	bool isPointInside(const Vec2f& pt);
 	void draw();
 	static Sprite* createTile( const Surface8u& img, int x, int y, int tile_w, int tile_h );
+	static Sprite* createFromImage( const Surface8u& img, int x, int y, int target_w, int target_h);
 
 private:
 	PosState _pos_state;

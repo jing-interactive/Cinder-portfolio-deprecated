@@ -2,6 +2,8 @@
 #include "PuzzleApp.h"
 #include "cinder/Utilities.h"
 #include <cinder/ImageIo.h>
+#include "Sprite.h"
+#include "Hand.h"
 
 namespace
 {
@@ -10,12 +12,10 @@ namespace
 	const int n_countdown = 60;
 	string welcome = toUtf8(L"’’∆¨∑÷œÌ");
 	string icon_names[]={"/UI/sina-weibo.png", "/UI/mobile-icon.png"};
-	gl::Texture icons[2];
 	const int ICON_W = 128;
 	const int ICON_H = 128;
-	Vec2i poses[2]={Vec2i(40,100), Vec2i(40,300)};
-	Rectf areas[2]={Rectf(poses[0].x, poses[0].y, poses[0].x+ICON_W, poses[0].y+ICON_H), 
-		Rectf(poses[1].x, poses[1].y, poses[1].x+ICON_W, poses[1].y+ICON_H)};
+	Vec2i poses[2]={Vec2i(140,100), Vec2i(140,300)}; 
+	shared_ptr<Sprite> icons[2];
 }
 
 void StateSharepic::enter()
@@ -24,7 +24,9 @@ void StateSharepic::enter()
 	pos.set(_app.getWindowSize()/2);
 	for (int i=0;i<2;i++)
 	{
-		icons[i] = loadImage(_app.getAppPath()/icon_names[i]);
+		Sprite* spr = Sprite::createFromImage(loadImage(_app.getAppPath()/icon_names[i]), 
+			poses[i].x,poses[i].y, ICON_W, ICON_H);
+		icons[i] = shared_ptr<Sprite>(spr);
 	}
 }
 
@@ -41,8 +43,16 @@ void StateSharepic::draw()
 	gl::drawStringCentered(welcome, pos, clr, _app.fnt_big);
 
 	for (int i=0;i<2;i++)
-	{
-		gl::draw(icons[i], areas[i]);
+	{		
+		if (icons[i]->isPointInside(_app._hands[RIGHT]->pos))
+		{
+			gl::color(0.5,.5,0.7);
+		}
+		else
+		{
+			gl::color(1,1,1);
+		}
+		icons[i]->draw();
 	}
 	
 }
