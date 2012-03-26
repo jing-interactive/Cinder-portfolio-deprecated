@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/shared_ptr.hpp>
+#include <cinder/cinder.h>
 
 template <typename AppType>
 struct State
@@ -17,9 +17,9 @@ protected:
 template <typename AppType>
 struct StateMachine
 {
-	boost::shared_ptr<State<AppType>> _current_state;
-	boost::shared_ptr<State<AppType>> _prev_state;
-	boost::shared_ptr<State<AppType>> _global_state;//which never changes
+	std::shared_ptr<State<AppType>> _current_state;
+	std::shared_ptr<State<AppType>> _prev_state;
+	std::shared_ptr<State<AppType>> _global_state;//which never changes
 
 	virtual void setupStates() = 0;
 
@@ -39,7 +39,7 @@ struct StateMachine
 			_current_state->draw();
 	}
 
-	void changeToState(const boost::shared_ptr<State<AppType>>& new_state)
+	void changeToState(const std::shared_ptr<State<AppType>>& new_state)
 	{
 		if (_current_state)
 		{
