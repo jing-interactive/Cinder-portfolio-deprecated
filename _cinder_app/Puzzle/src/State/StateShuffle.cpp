@@ -35,7 +35,7 @@ void StateShuffle::enter()
 	{
 		timeline().apply( &spr->_center, 
 			centers[i++], timeAnim, easeAnim);
-		if (randInt(10) > 4)
+		if (randInt(10) > 7)
 		{
 			spr->_deg_ok = false;
 			timeline().apply( &spr->_degree, randFloat(45,90), timeAnim*0.7f, easeAnim);

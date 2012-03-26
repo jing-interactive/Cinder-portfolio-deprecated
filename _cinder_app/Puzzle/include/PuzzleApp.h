@@ -53,9 +53,10 @@ public://image
 	void selectRandomImage();
 	void shuffleSelectedImage(int size);
 	vector<shared_ptr<Sprite>> _sprites;
+	gl::Texture _tex_company_intro;
 	gl::Texture _tex_selected;
 	Surface8u _img_selected;
-
+	Surface8u _img_sharing;
 	gl::Texture _tex_player;
 
 public://state machine
@@ -74,5 +75,5 @@ public://state machine
 	Font fnt_big;
 	Font fnt_small;
 
-	void setupStates(); 
+	void setupStates();
 }; 

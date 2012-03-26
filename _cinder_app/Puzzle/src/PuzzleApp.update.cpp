@@ -6,6 +6,8 @@ namespace
 {
 	const float k_deltay = 10;
 	const float KINECT_ROTATE = 0.3f;
+	const float minScale = 0.5f;
+	const float maxScale = 2.0f;
 	int transferToClientX( int x )
 	{
 		return x;
@@ -17,7 +19,6 @@ namespace
 	const float Pi = 3.14f;
 	const float Pi_half = Pi*0.5f;
 	const float Pi_two = Pi*2;
-
 }
 
 void PuzzleApp::onOscMessage( const osc::Message* msg )
@@ -52,6 +53,7 @@ void PuzzleApp::update()
 	{
 		Vec2f diff = _hands[RIGHT]->pos - _hands[LEFT]->pos;
 		Vec2f polar = toPolar(diff);
+		console()<<polar.x<<" "<<polar.y<<endl;
 		float theta = polar.y;//[0, PI_two) clockwise
 		float sign = 0.0f;
 		if (theta > Pi)
@@ -62,10 +64,14 @@ void PuzzleApp::update()
 		}
 		else if (theta > Pi_half)
 		{
-			theta -= Pi_half;
+			theta = Pi - theta;
 			sign = -theta*0.5f;
 		}
 		_rotate = sign;
+		float loBound = 150;
+		float hiBound = getWindowWidth();
+		_scale = lmap(polar.x, loBound, hiBound, minScale, maxScale);
+		_scale = constrain(_scale, minScale, maxScale);
 	}
 	StateMachine::update();
 }

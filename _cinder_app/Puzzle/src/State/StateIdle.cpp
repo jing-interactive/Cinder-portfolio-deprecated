@@ -2,6 +2,8 @@
 #include "PuzzleApp.h"
 #include "cinder/Utilities.h"
 
+//TODO: make the game active according to body gestures
+
 void StateIdle::enter()
 {
 	_app.changeToState(_app._state_init);
