@@ -64,7 +64,7 @@ struct vBlob
 	float angle;
 
 	Point2f center;
-	vector<Point> pts;
+	std::vector<Point> pts;
 	float area;
 	float length;
 	bool isHole;

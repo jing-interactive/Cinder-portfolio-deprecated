@@ -24,74 +24,13 @@ class videoInput;
 class ofxKinectCLNUI; 
 #endif
 
-using std::vector;
 
-// enum T_VideoCodec
-// {
-// 	T_MPEG = CV_FOURCC('P','I','M','1'),		//	= MPEG-1 codec
-// 	T_MJPG = CV_FOURCC('M','J','P','G') ,		//	= motion-jpeg codec (does not work well)
-// 	T_MP42 = CV_FOURCC('M', 'P', '4', '2'),		// = MPEG-4.2 codec
-// 	T_DIV3 = CV_FOURCC('D', 'I', 'V', '3'),		// = MPEG-4.3 codec
-// 	T_DIVX = CV_FOURCC('D', 'I', 'V', 'X'),		// = MPEG-4 codec
-// 	T_H263 = CV_FOURCC('U', '2', '6', '3'),		// = H263 codec
-// 	T_H263I = CV_FOURCC('I', '2', '6', '3'),	// = H263I codec
-// 	T_FLV = CV_FOURCC('F', 'L', 'V', '1'),		// = FLV1 codec
-// };
-
-template<class T> class Image
-{
-private:
-	IplImage* imgp;
-public:
-	Image(IplImage* img=0) {imgp=img;}
-	~Image(){imgp=0;}
-	void operator=(IplImage* img) {imgp=img;}
-	inline T* operator[](const int rowIndx) {
-		return ((T *)(imgp->imageData + rowIndx*imgp->widthStep));}
-};
-
-typedef struct{
-	unsigned char b,g,r;
-} RgbPixel;
-
-typedef struct{
-	float b,g,r;
-} RgbPixelFloat;
-
-typedef Image<RgbPixel>       RgbImage;
-typedef Image<RgbPixelFloat>  RgbImageFloat;
-typedef Image<unsigned char>  BwImage;
-typedef Image<float>          BwImageFloat;
-
-/*
-For a single-channel byte image:
-IplImage* img=cvCreateImage(cvSize(640,480),IPL_DEPTH_8U,1);
-BwImage imgA(img);
-imgA[i][j] = 111;
-For a multi-channel byte image:
-IplImage* img=cvCreateImage(cvSize(640,480),IPL_DEPTH_8U,3);
-RgbImage  imgA(img);
-imgA[i][j].b = 111;
-imgA[i][j].g = 111;
-imgA[i][j].r = 111;
-For a multi-channel float image:
-IplImage* img=cvCreateImage(cvSize(640,480),IPL_DEPTH_32F,3);
-RgbImageFloat imgA(img);
-imgA[i][j].b = 111;
-imgA[i][j].g = 111;
-imgA[i][j].r = 111;
-*/
 void vFastCopyImageTo(const cv::Mat& src, cv::Mat& dst, const cv::Rect& roi);
 void vCopyImageTo(const cv::Mat& src, cv::Mat& dst, const cv::Rect& roi);
 void vFlip(cv::Mat& src, int flipX, int flipY);
 void vDrawText(cv::Mat& img, int x,int y,char* str, CvScalar clr=CV_RGB(255,255,255));
-void vPolyLine(cv::Mat& dst, vector<cv::Point>& pts, CvScalar clr=CV_RGB(255,255,255), int thick = 1);
+void vPolyLine(cv::Mat& dst, std::vector<cv::Point>& pts, CvScalar clr=CV_RGB(255,255,255), int thick = 1);
 CvScalar vDefaultColor(int idx);
-
-#define show_image(img_name) do{\
-	cvNamedWindow(#img_name);\
-	cvShowImage(#img_name, img_name);}\
-	while(0);
 
 #define show_mat(img_name) do{\
 	cv::namedWindow(#img_name);\
@@ -234,9 +173,9 @@ void vGetPerspectiveMatrix(CvMat*& warp_matrix, cv::Point2f xsrcQuad[4], cv::Poi
  
 void cvSkinSegment(IplImage* img, IplImage* mask);
 
-void vFillPoly(IplImage* img, const vector<cv::Point>& pt_list, const cv::Scalar& clr = cv::Scalar(255,255,255));
-void vLinePoly(IplImage* img, const vector<cv::Point>& pt_list, const cv::Scalar& clr = cv::Scalar(255,255,255), int thick = 1);
-void vLinePoly(IplImage* img, const vector<cv::Point2f>& pt_list, const cv::Scalar& clr = cv::Scalar(255,255,255), int thick = 1);
+void vFillPoly(IplImage* img, const std::vector<cv::Point>& pt_list, const cv::Scalar& clr = cv::Scalar(255,255,255));
+void vLinePoly(IplImage* img, const std::vector<cv::Point>& pt_list, const cv::Scalar& clr = cv::Scalar(255,255,255), int thick = 1);
+void vLinePoly(IplImage* img, const std::vector<cv::Point2f>& pt_list, const cv::Scalar& clr = cv::Scalar(255,255,255), int thick = 1);
 
 inline bool isPointInsideRect(int x, int y, const cv::Rect& rect)
 {

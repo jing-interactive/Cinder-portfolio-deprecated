@@ -560,8 +560,8 @@ void vHaarFinder::find(const Mat& img, int minArea, bool findAllFaces)
 
 vOpticalFlowLK::vOpticalFlowLK(const cv::Mat& gray, int blocksize):
 vel_x(Mat::zeros(gray.rows, gray.cols, CV_32FC1)),
-	  vel_y(Mat::zeros(gray.rows, gray.cols, CV_32FC1)),
-	  prev(Mat(gray.rows, gray.cols, CV_8UC1))
+vel_y(Mat::zeros(gray.rows, gray.cols, CV_32FC1)),
+prev(Mat(gray.rows, gray.cols, CV_8UC1))
 {
 	width = gray.cols;
 	height = gray.rows;
@@ -669,20 +669,20 @@ void vBlobTracker::trackBlobs( const vector<vBlob>& newBlobs )
 
 	if (n_old != 0 && n_new != 0)
 	{
-		Mat ma(trackedBlobs.size(),2,CV_32SC1);
-		Mat mb(newBlobs.size(),2,CV_32SC1);
+		Mat1f ma(trackedBlobs.size(),2);
+		Mat1f mb(newBlobs.size(),2);
 		for (int i=0;i<n_old;i++)
 		{
-			ma.at<int>(i,0) = trackedBlobs[i].center.x;
-			ma.at<int>(i,1) = trackedBlobs[i].center.y;
+			ma(i,0) = trackedBlobs[i].center.x;
+			ma(i,1) = trackedBlobs[i].center.y;
 		}
 		for (int i=0;i<n_new;i++)
 		{
-			mb.at<int>(i,0) = newTrackedBlobs[i].center.x;
-			mb.at<int>(i,1) = newTrackedBlobs[i].center.y;
+			mb(i,0) = newTrackedBlobs[i].center.x;
+			mb(i,1) = newTrackedBlobs[i].center.y;
 		}
 
-		BruteForceMatcher<L2<int> > matcher;
+		BFMatcher matcher(NORM_L2);
 		vector<DMatch> matches;
 		matcher.match(mb, ma, matches);
 		const int n_matches = matches.size();
@@ -693,7 +693,8 @@ void vBlobTracker::trackBlobs( const vector<vBlob>& newBlobs )
 			int q_id = match.queryIdx;
 			float dist = match.distance;
 
-			if (dist < 500 && dist < dist_of_a[t_id])
+			//TODO: 200 -> param
+			if (dist < 200 && dist < dist_of_a[t_id])
 			{
 				dist_of_a[t_id] = dist;
 				nn_of_a[t_id] = q_id;
@@ -817,7 +818,7 @@ void vBackGrayDiff::update(cv::Mat image, int mode/* = 0*/)
 	else if (mode == DETECT_DARK)
 	{
 		fore = bg - frame;
- 		vThresh(fore, threshes[1]);
+		vThresh(fore, threshes[1]);
 	}
 	else if (mode == DETECT_BRIGHT)
 	{
@@ -842,57 +843,57 @@ void vBackColorDiff::init(cv::Mat initial, void* param/* = NULL*/)
 void vBackColorDiff::update(cv::Mat image, int mode/* = 0*/)
 {
 	//	vGrayScale(image, Frame);
-// 	cvCopy(image, frame);
-// 	if (mode == DETECT_BOTH)
-// 	{
-// 		if (nChannels == 1)
-// 		{
-// 			// BwImage frame(Frame);
-// 			// BwImage bg(Bg);
-// 			// BwImage fore(Fore);
-// 
-// 			fore = CV_RGB(0,0,0);
-// 			for (int y=0;y<image.rows;y++)
-// 				for (int x=0;x<image.cols;x++)
-// 				{
-// 					int delta = frame.at<uchar>(y, x) - bg.at<uchar>(y, x);
-// 					if (delta >= threshes[0] || delta <= -threshes[1])
-// 						fore.at<uchar>(y, x) = 255;
-// 				}
-// 		}
-// 		else
-// 		{
-// 			int min_t = 255-threshes[0];
-// 			int max_t = 255-threshes[1];
-// 			fore = CV_RGB(0,0,0);
-// 			for (int y=0;y<image.rows;y++)
-// 				for (int x=0;x<image.cols;x++)
-// 				{
-// 					int r = frame.at<uchar>(y, x).r - bg.at<uchar>(y, x).r;
-// 					int g = frame.at<uchar>(y, x).g - bg.at<uchar>(y, x).g;
-// 					int b = frame.at<uchar>(y, x).b - bg.at<uchar>(y, x).b;
-// #if 1
-// 					if ((r >= threshes[0] || r <= -threshes[1])
-// 						&& (g >= threshes[0] || g <= -threshes[1])
-// 						&& (b >= threshes[0] || b <= -threshes[1]))
-// #else
-// 					int delta = r*r+g*g+b*b;
-// 					if (delta >= min_t*min_t && delta <= max_t*max_t)
-// #endif
-// 						fore.at<uchar>(y, x) = 255;
-// 				}
-// 		}
-// 	}
-// 	else if (mode == DETECT_DARK)
-// 	{
-// 		fore = bg - frame;
-// 		vThresh(fore, threshes[1]);
-// 	}
-// 	else if (mode == DETECT_BRIGHT)
-// 	{
-// 		fore = frame - bg;
-// 		vThresh(fore, threshes[0]);
-// 	}
+	// 	cvCopy(image, frame);
+	// 	if (mode == DETECT_BOTH)
+	// 	{
+	// 		if (nChannels == 1)
+	// 		{
+	// 			// BwImage frame(Frame);
+	// 			// BwImage bg(Bg);
+	// 			// BwImage fore(Fore);
+	// 
+	// 			fore = CV_RGB(0,0,0);
+	// 			for (int y=0;y<image.rows;y++)
+	// 				for (int x=0;x<image.cols;x++)
+	// 				{
+	// 					int delta = frame.at<uchar>(y, x) - bg.at<uchar>(y, x);
+	// 					if (delta >= threshes[0] || delta <= -threshes[1])
+	// 						fore.at<uchar>(y, x) = 255;
+	// 				}
+	// 		}
+	// 		else
+	// 		{
+	// 			int min_t = 255-threshes[0];
+	// 			int max_t = 255-threshes[1];
+	// 			fore = CV_RGB(0,0,0);
+	// 			for (int y=0;y<image.rows;y++)
+	// 				for (int x=0;x<image.cols;x++)
+	// 				{
+	// 					int r = frame.at<uchar>(y, x).r - bg.at<uchar>(y, x).r;
+	// 					int g = frame.at<uchar>(y, x).g - bg.at<uchar>(y, x).g;
+	// 					int b = frame.at<uchar>(y, x).b - bg.at<uchar>(y, x).b;
+	// #if 1
+	// 					if ((r >= threshes[0] || r <= -threshes[1])
+	// 						&& (g >= threshes[0] || g <= -threshes[1])
+	// 						&& (b >= threshes[0] || b <= -threshes[1]))
+	// #else
+	// 					int delta = r*r+g*g+b*b;
+	// 					if (delta >= min_t*min_t && delta <= max_t*max_t)
+	// #endif
+	// 						fore.at<uchar>(y, x) = 255;
+	// 				}
+	// 		}
+	// 	}
+	// 	else if (mode == DETECT_DARK)
+	// 	{
+	// 		fore = bg - frame;
+	// 		vThresh(fore, threshes[1]);
+	// 	}
+	// 	else if (mode == DETECT_BRIGHT)
+	// 	{
+	// 		fore = frame - bg;
+	// 		vThresh(fore, threshes[0]);
+	// 	}
 }
 
 void vThreeFrameDiff::init(cv::Mat initial, void* param/* = NULL*/)
@@ -925,9 +926,9 @@ void vThreeFrameDiff::update(cv::Mat image, int mode/* = 0*/)
 		}
 	}
 
-// 	show_mat<uchar>(gray1);
-// 	show_mat<uchar>(gray2);
-// 	show_mat<uchar>(gray3);
+	// 	show_mat<uchar>(gray1);
+	// 	show_mat<uchar>(gray2);
+	// 	show_mat<uchar>(gray3);
 
 	grays[1].copyTo(grays[0]);
 	grays[2].copyTo(grays[1]);
