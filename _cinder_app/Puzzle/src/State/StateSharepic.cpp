@@ -16,11 +16,18 @@ namespace
 	const int ICON_H = 128;
 	Vec2i poses[2]={Vec2i(140,100), Vec2i(140,300)}; 
 	shared_ptr<Sprite> icons[2];
+	gl::Texture tex_bg;
+	Anim<float> alpha;
 }
 
 void StateSharepic::enter()
 {
+	if (_app._img_sharing)
+		tex_bg = _app._img_sharing;
+	else
+		tex_bg = _app._tex_selected;
 	resetTimer();
+	timeline().apply(&alpha, 1.0f, 0.0f, 4);
 	pos.set(_app.getWindowSize()/2);
 	for (int i=0;i<2;i++)
 	{
@@ -39,8 +46,8 @@ void StateSharepic::update()
 void StateSharepic::draw()
 {
 	gl::color(1,1,1);
-	gl::draw(_app._tex_selected, _app.getWindowBounds());
-	gl::drawStringCentered(welcome, pos, clr, _app.fnt_big);
+	gl::draw(tex_bg, _app.getWindowBounds());
+	gl::drawStringCentered(welcome, pos, ColorA(1,1,1,alpha), _app.fnt_big);
 
 	for (int i=0;i<2;i++)
 	{		

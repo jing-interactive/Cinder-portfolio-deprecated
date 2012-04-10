@@ -25,8 +25,8 @@ void PuzzleApp::setup()
 	for (int i=0;i<N_HANDS;i++)
 	{
 		_hands[i] = shared_ptr<Hand>(new Hand(hand_clrs[i]));
-		_hands[LEFT]->pos.set(ci::randInt(getWindowWidth()), ci::randInt(getWindowHeight()));
 	}
+	_hands[LEFT]->pos.set(200,200);
 
 	hideCursor();
 

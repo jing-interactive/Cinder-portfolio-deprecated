@@ -42,8 +42,8 @@
 		#if _MSC_VER >= 1600 // VC10 or greater
 			#define _STDINT_H
 		#endif
-//		#include <QTML.h>
-//		#include <Movies.h>
+		#include <QTML.h>
+		#include <Movies.h>
 	#pragma pop_macro( "_STDINT_H" )
 	#pragma pop_macro( "__STDC_CONSTANT_MACROS" )
 #endif

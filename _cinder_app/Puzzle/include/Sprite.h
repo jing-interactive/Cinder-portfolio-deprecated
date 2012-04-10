@@ -29,7 +29,7 @@ struct Sprite
 
 	State _state;
 	gl::Texture _tex;
-	Vec2f _scale;
+	float _scale;
 	Anim<float> _degree;
 	Anim<Vec2f> _center;
 	Vec2f _pivot;

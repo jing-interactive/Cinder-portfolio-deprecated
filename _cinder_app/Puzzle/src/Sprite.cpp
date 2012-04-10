@@ -37,7 +37,7 @@ void Sprite::draw()
 	{
 		gl::translate(_center);
 		gl::rotate(_degree);
-		gl::scale(_scale);
+		gl::scale(_scale, _scale);
 		gl::translate(_size*-0.5);
 		gl::draw(_tex);
 	}
@@ -59,7 +59,7 @@ void Sprite::drawBox(const Color8u& clr, int k)
 	{
 		gl::translate(_center);
 		gl::rotate(_degree);
-		gl::scale(_scale);
+		gl::scale(_scale, _scale);
 		gl::translate(_size*-0.5);
 		gl::color(clr);
 		gl::drawStrokedRoundedRect(Rectf(k,k,_size.x-k, _size.y-k), 5);
@@ -75,7 +75,7 @@ Sprite* Sprite::createTile( const Surface8u& img, int x, int y, int tile_w, int 
 	spr->_size.set(tile_w, tile_h);
 	spr->_z = 0;
 	spr->_tex = tile;
-	spr->_scale.set(1.0f, 1.0f);;
+	spr->_scale = 1.0f;
 	//spr->_scale.set(target_w/(float)img.getWidth(), target_h/(float)img.getHeight());
 	spr->_degree = 0;
 	spr->_orig_center = spr->_center = Vec2f((x+0.5)*tile_w, (y+0.5)*tile_h);
@@ -148,7 +148,7 @@ Sprite* Sprite::createFromImage( const Surface8u& img, int x, int y, int target_
 	spr->_size.set(img.getWidth(), img.getHeight());
 	spr->_z = 0;
 	spr->_tex = img;
-	spr->_scale.set(target_w/(float)img.getWidth(), target_h/(float)img.getHeight());
+	spr->_scale = target_w/(float)img.getWidth();
 	spr->_degree = 0;
 	
 	return spr;

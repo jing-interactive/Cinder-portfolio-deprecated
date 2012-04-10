@@ -23,8 +23,7 @@ A source bitmap includes 224 characters starting from ascii char 32 (i.e. space)
  !"#$%&'()*+,-./0123456789:;<=>?
 @ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_
 `abcdefghijklmnopqrstuvwxyz{|}~
-€亗儎厗噲墛媽崕彁憭摂晼棙櫄洔潪?
-牎ⅲぅΗī氨渤吹斗腹夯冀究
+€亗儎厗噲墛媽崕彁憭摂晼棙櫄洔潪?牎ⅲぅΗī氨渤吹斗腹夯冀究
 懒旅呐魄壬仕掏蜗醒矣哉肿刭谯茌捱
 噌忏溴骁栝觌祉铒瘃蝮趱鲼?
 
