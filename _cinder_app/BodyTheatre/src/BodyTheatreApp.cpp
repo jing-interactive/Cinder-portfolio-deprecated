@@ -5,12 +5,12 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-class BodyTheatreAppApp : public AppBasic {
-  public:
+struct BodyTheatreAppApp : public AppBasic {
 	void setup();
 	void mouseDown( MouseEvent event );	
 	void update();
 	void draw();
+	void oscEvent();
 };
 
 void BodyTheatreAppApp::setup()
