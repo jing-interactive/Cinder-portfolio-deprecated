@@ -5,7 +5,6 @@
 *.obj
 *.ncb
 *.suo
-*.exe
 *.idb
 *.dep
 *.manifest.res
@@ -17,7 +16,6 @@
 *.cache
 *.aps
 cinder_0.8.3_vc2008/docs
-_common/SDAR
 
 /arPlusApp/Debug
 /arPlusApp/Release
@@ -50,3 +48,4 @@ _common/SDAR
 /cinder_0.8.3_vc2008/lib/cinder.lib
 /cinder_0.8.3_vc2008/lib/cinder_d.lib
 /_cinder_app/LedMatrix/vc9/config.xml
+/cinder_0.8.3_vc2008/include/macosx
