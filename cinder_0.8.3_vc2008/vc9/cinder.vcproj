@@ -262,6 +262,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\cinder\Json.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\cinder\Matrix.cpp"
 				>
 			</File>
@@ -705,6 +709,30 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="json"
+				>
+				<File
+					RelativePath="..\src\jsoncpp\json_batchallocator.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\jsoncpp\json_reader.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\jsoncpp\json_tool.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\jsoncpp\json_value.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\jsoncpp\json_writer.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -833,6 +861,10 @@
 			</File>
 			<File
 				RelativePath="..\include\cinder\ImageTargetFileWic.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\cinder\Json.h"
 				>
 			</File>
 			<File
@@ -1232,6 +1264,42 @@
 				</File>
 				<File
 					RelativePath="..\include\rapidxml\rapidxml_print.hpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="json"
+				>
+				<File
+					RelativePath="..\include\json\autolink.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\json\config.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\json\features.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\json\forwards.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\json\json.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\json\reader.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\json\value.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\json\writer.h"
 					>
 				</File>
 			</Filter>
