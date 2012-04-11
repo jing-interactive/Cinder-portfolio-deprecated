@@ -136,6 +136,11 @@ inline cv::Mat toOcvRef( Surface32f &surface )
 	return cv::Mat( surface.getHeight(), surface.getWidth(), CV_MAKETYPE( CV_32F, surface.hasAlpha()?4:3), surface.getData(), surface.getRowBytes() );
 }
 
+inline ImageSourceRef fromOcv(const cv::Mat &mat )
+{
+	return ImageSourceRef( new ImageSourceCvMat( mat ) );
+}
+
 inline ImageSourceRef fromOcv( cv::Mat &mat )
 {
 	return ImageSourceRef( new ImageSourceCvMat( mat ) );

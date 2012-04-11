@@ -41,8 +41,8 @@
 #include "cinder/Surface.h"
 #include "cinder/Thread.h"
 #include <map>
-#include "ole2.h"
-#include "NuiApi.h"
+#include <ole2.h>
+#include <NuiApi.h>
 #include <vector>
 
 // Kinect NUI wrapper for Cinder
@@ -57,6 +57,11 @@ namespace KinectSdk
 	typedef NUI_SKELETON_POSITION_INDEX JointName;
 	typedef std::map<JointName, ci::Vec3f> Skeleton;
 
+	using ci::int32_t;
+	using ci::uint32_t;
+	using ci::uint8_t;
+	using ci::uint16_t;
+
 	// Kinect sensor interface
 	class Kinect
 	{
@@ -70,15 +75,15 @@ namespace KinectSdk
 		~Kinect();
 
 		// Limits
-		static const int32_t MAXIMUM_DEVICE_COUNT = 8;
-		static const int32_t MAXIMUM_TILT_ANGLE = 28;
+		static const int MAXIMUM_DEVICE_COUNT = 8;
+		static const int MAXIMUM_TILT_ANGLE = 28;
 
 		static int32_t getDeviceCount();
 		static ci::Colorf getUserColor( uint32_t id );
 
 		// Start/stop capturing
-		void start( int32_t deviceIndex = 0, const ImageResolution & videoResolution = ImageResolution::NUI_IMAGE_RESOLUTION_640x480, 
-			const ImageResolution & depthResolution = ImageResolution::NUI_IMAGE_RESOLUTION_320x240, bool nearMode = false );
+		void start( int32_t deviceIndex = 0, const ImageResolution & videoResolution = NUI_IMAGE_RESOLUTION_640x480, 
+			const ImageResolution & depthResolution = NUI_IMAGE_RESOLUTION_320x240, bool nearMode = false );
 		void stop();
 
 		// Flags to enable each feature
@@ -108,8 +113,8 @@ namespace KinectSdk
 
 		// Setters
 		void setCameraAngle( int32_t degrees = 0 );
-		void setDepthResolution( const ImageResolution & depthResolution = ImageResolution::NUI_IMAGE_RESOLUTION_320x240 );
-		void setVideoResolution( const ImageResolution & videoResolution = ImageResolution::NUI_IMAGE_RESOLUTION_640x480 );
+		void setDepthResolution( const ImageResolution & depthResolution = NUI_IMAGE_RESOLUTION_320x240 );
+		void setVideoResolution( const ImageResolution & videoResolution = NUI_IMAGE_RESOLUTION_640x480 );
 		void setDeviceIndex( int32_t deviceIndex = 0 );
 		
 	private:

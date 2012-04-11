@@ -42,6 +42,8 @@
 #include "cinder/app/App.h"
 #include "cinder/Utilities.h"
 
+#pragma comment(lib, "Kinect10.lib")
+
 // Kinect SDK namespace
 namespace KinectSdk
 {
@@ -156,7 +158,7 @@ namespace KinectSdk
 	// Enable or disable depth tracking
 	void Kinect::enableDepth( bool enable )
 	{
-		
+
 		// Set user count to 0 if disabled
 		if ( !enable ) {
 			deactivateUsers();
@@ -323,7 +325,7 @@ namespace KinectSdk
 		mBinary = false;
 		mCapture = false;
 		mDepthHeight = 240;
-		mDepthResolution = ImageResolution::NUI_IMAGE_RESOLUTION_INVALID;
+		mDepthResolution = NUI_IMAGE_RESOLUTION_INVALID;
 		mDepthStreamHandle = 0;
 		mDepthWidth = 320;
 		mDeviceIndex = 0;
@@ -350,7 +352,7 @@ namespace KinectSdk
 		mTiltRequestTime = 0.0;
 		mUserCount = 0;
 		mVideoHeight = 480;
-		mVideoResolution = ImageResolution::NUI_IMAGE_RESOLUTION_INVALID;
+		mVideoResolution = NUI_IMAGE_RESOLUTION_INVALID;
 		mVideoStreamHandle = 0;
 		mVideoWidth = 640;
 
@@ -368,7 +370,7 @@ namespace KinectSdk
 	bool Kinect::openDepthStream()
 	{
 		if (mSensor != 0) {
-			if ( FAILED( mSensor->NuiImageStreamOpen( mDepthResolution != ImageResolution::NUI_IMAGE_RESOLUTION_640x480 && HasSkeletalEngine( mSensor ) ? NUI_IMAGE_TYPE_DEPTH_AND_PLAYER_INDEX : NUI_IMAGE_TYPE_DEPTH, mDepthResolution, 0, 2, 0, & mDepthStreamHandle ) ) ) {
+			if ( FAILED( mSensor->NuiImageStreamOpen( mDepthResolution != NUI_IMAGE_RESOLUTION_640x480 && HasSkeletalEngine( mSensor ) ? NUI_IMAGE_TYPE_DEPTH_AND_PLAYER_INDEX : NUI_IMAGE_TYPE_DEPTH, mDepthResolution, 0, 2, 0, & mDepthStreamHandle ) ) ) {
 				trace( "Unable to open depth image stream" );
 				stop();
 				return false;
@@ -639,15 +641,15 @@ namespace KinectSdk
 		// Set resolution
 		mDepthResolution = depthResolution;
 		switch ( mDepthResolution ) {
-		case ImageResolution::NUI_IMAGE_RESOLUTION_640x480:
+		case NUI_IMAGE_RESOLUTION_640x480:
 			mDepthWidth = 640;
 			mDepthHeight = 480;
 			break;
-		case ImageResolution::NUI_IMAGE_RESOLUTION_320x240:
+		case NUI_IMAGE_RESOLUTION_320x240:
 			mDepthWidth = 320;
 			mDepthHeight = 240;
 			break;
-		case ImageResolution::NUI_IMAGE_RESOLUTION_80x60:
+		case NUI_IMAGE_RESOLUTION_80x60:
 			mDepthWidth = 80;
 			mDepthHeight = 60;
 			break;
@@ -696,15 +698,15 @@ namespace KinectSdk
 		// Set resolution
 		mVideoResolution = videoResolution;
 		switch ( mVideoResolution ) {
-		case ImageResolution::NUI_IMAGE_RESOLUTION_1280x960:
+		case NUI_IMAGE_RESOLUTION_1280x960:
 			mVideoWidth = 1280;
 			mVideoHeight = 960;
 			break;
-		case ImageResolution::NUI_IMAGE_RESOLUTION_640x480:
+		case NUI_IMAGE_RESOLUTION_640x480:
 			mVideoWidth = 640;
 			mVideoHeight = 480;
 			break;
-		case ImageResolution::NUI_IMAGE_RESOLUTION_320x240:
+		case NUI_IMAGE_RESOLUTION_320x240:
 			mVideoWidth = 320;
 			mVideoHeight = 240;
 			break;
@@ -851,7 +853,7 @@ namespace KinectSdk
 
 			// Initialize device
 			unsigned long flags = NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX | NUI_INITIALIZE_FLAG_USES_SKELETON |  NUI_INITIALIZE_FLAG_USES_COLOR;
-			if ( mDepthResolution == ImageResolution::NUI_IMAGE_RESOLUTION_640x480 || FAILED( mSensor->NuiInitialize( flags ) ) ) {
+			if ( mDepthResolution == NUI_IMAGE_RESOLUTION_640x480 || FAILED( mSensor->NuiInitialize( flags ) ) ) {
 				flags = NUI_INITIALIZE_FLAG_USES_DEPTH |  NUI_INITIALIZE_FLAG_USES_COLOR;
 				if ( FAILED(mSensor->NuiInitialize( flags ) ) ) {
 					trace( "Unable to initialize device " + toString( mDeviceIndex ) );
@@ -895,7 +897,7 @@ namespace KinectSdk
 			// Start thread
 			mCapture = true;
 			mThread = std::shared_ptr<boost::thread>( new boost::thread( boost::bind( &Kinect::run, this ) ) );
-		
+
 		}
 
 	}
