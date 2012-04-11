@@ -1,5 +1,5 @@
 #include "BodyTheatreApp.h"
-#include "cinder/Perlin.h"
+#include "Player.h"
 
 void BodyTheatreApp::mouseDown( MouseEvent event )
 {
@@ -7,23 +7,13 @@ void BodyTheatreApp::mouseDown( MouseEvent event )
 
 void BodyTheatreApp::onOscMessage( const osc::Message* msg )
 {
-	console() << msg->getAddress() <<endl;
-
-	if (msg->getAddress() == "/start")
-	{
-	}
-	else if (msg->getAddress() == "/contour")
+	if (msg->getAddress() == "/contour")
 	{
 		int id = msg->getArgAsInt32(0);
-		if (players.find(id) == players.end())
-		{
-			Player ply;
 
-			ply.setup(msg);
-
-			lock_guard<mutex> lock(_mtx_player);
-			players[id] = ply;
-		}
+		console() << id << endl;
+		lock_guard<mutex> lock(_mtx_player);
+		players[id].setup(msg);
 	}
 	else if (msg->getAddress() == "/kinect")
 	{

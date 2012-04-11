@@ -6,13 +6,12 @@
 #include "cinder/Shape2d.h"
 #include "cinder/Thread.h"
 #include "cinder/delaunay/delaunay.h"
-#include "Player.h"
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-typedef map<int, Player> PlayerMap;
+#define N_PLAYERS 8
 
 struct BodyTheatreApp : public AppBasic {
 	void setup();
@@ -26,7 +25,7 @@ struct BodyTheatreApp : public AppBasic {
 
 	shared_ptr<osc::Listener> _listener;
 
-	PlayerMap players;
+	struct Player* players;
 
 	mutex _mtx_player;
 };
