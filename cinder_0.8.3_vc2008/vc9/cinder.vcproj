@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="Ws2_32.lib wldap32.lib libpng.lib shlwapi.lib OpenGL32.lib zlib.lib pixman-1.lib wmvcore.lib Strmiids.lib Msimg32.lib"
+				AdditionalDependencies="Ws2_32.lib wldap32.lib libpng.lib shlwapi.lib OpenGL32.lib zlib.lib pixman-1.lib wmvcore.lib Strmiids.lib Msimg32.lib osc_d.lib"
 				OutputFile="..\lib\cinder_d.lib"
 				AdditionalLibraryDirectories="..\lib\msw;..\lib\OpenCV"
 				IgnoreAllDefaultLibraries="true"
@@ -135,7 +135,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="Ws2_32.lib wldap32.lib libpng.lib shlwapi.lib OpenGL32.lib zlib.lib pixman-1.lib wmvcore.lib Strmiids.lib Msimg32.lib"
+				AdditionalDependencies="Ws2_32.lib wldap32.lib libpng.lib shlwapi.lib OpenGL32.lib zlib.lib pixman-1.lib wmvcore.lib Strmiids.lib Msimg32.lib osc.lib"
 				OutputFile="..\lib\cinder.lib"
 				AdditionalLibraryDirectories="..\lib\msw;..\lib\OpenCV"
 				IgnoreAllDefaultLibraries="true"
@@ -762,6 +762,34 @@
 				</File>
 				<File
 					RelativePath="..\src\cinder\osc\OscSender.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="delaunay"
+				>
+				<File
+					RelativePath="..\src\cinder\delaunay\triangle\del_impl.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\cinder\delaunay\triangle\del_interface.hpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\cinder\delaunay\delaunay.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\cinder\delaunay\triangle\dpoint.hpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\cinder\delaunay\triangle\triangle.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\cinder\delaunay\triangle\triangle_impl.hpp"
 					>
 				</File>
 			</Filter>
