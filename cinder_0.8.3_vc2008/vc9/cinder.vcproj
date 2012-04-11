@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="Ws2_32.lib wldap32.lib libpng.lib shlwapi.lib OpenGL32.lib zlib.lib pixman-1.lib wmvcore.lib Strmiids.lib Msimg32.lib"
+				AdditionalDependencies="Ws2_32.lib wldap32.lib libpng.lib shlwapi.lib OpenGL32.lib zlib.lib pixman-1.lib wmvcore.lib Strmiids.lib Msimg32.lib osc_d.lib"
 				OutputFile="..\lib\cinder_d.lib"
 				AdditionalLibraryDirectories="..\lib\msw;..\lib\OpenCV"
 				IgnoreAllDefaultLibraries="true"
@@ -135,7 +135,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="Ws2_32.lib wldap32.lib libpng.lib shlwapi.lib OpenGL32.lib zlib.lib pixman-1.lib wmvcore.lib Strmiids.lib Msimg32.lib"
+				AdditionalDependencies="Ws2_32.lib wldap32.lib libpng.lib shlwapi.lib OpenGL32.lib zlib.lib pixman-1.lib wmvcore.lib Strmiids.lib Msimg32.lib osc.lib"
 				OutputFile="..\lib\cinder.lib"
 				AdditionalLibraryDirectories="..\lib\msw;..\lib\OpenCV"
 				IgnoreAllDefaultLibraries="true"
@@ -733,6 +733,66 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="msaFluid"
+				>
+				<File
+					RelativePath="..\src\cinder\msaFluid\ciMsaFluidDrawerGl.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\cinder\msaFluid\ciMsaFluidSolver.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="osc"
+				>
+				<File
+					RelativePath="..\src\cinder\osc\OscBundle.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\cinder\osc\OscListener.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\cinder\osc\OscMessage.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\cinder\osc\OscSender.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="delaunay"
+				>
+				<File
+					RelativePath="..\src\cinder\delaunay\triangle\del_impl.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\cinder\delaunay\triangle\del_interface.hpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\cinder\delaunay\delaunay.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\cinder\delaunay\triangle\dpoint.hpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\cinder\delaunay\triangle\triangle.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\cinder\delaunay\triangle\triangle_impl.hpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -777,10 +837,6 @@
 			</File>
 			<File
 				RelativePath="..\include\cinder\Capture.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\cinder\CaptureCocoa.h"
 				>
 			</File>
 			<File
@@ -1300,6 +1356,102 @@
 				</File>
 				<File
 					RelativePath="..\include\json\writer.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="msaFluid"
+				>
+				<File
+					RelativePath="..\include\cinder\msaFluid\ciMsaFluid.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\msaFluid\ciMsaFluidDrawerGl.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\msaFluid\ciMsaFluidParticleUpdater.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\msaFluid\ciMsaFluidSolver.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="osc"
+				>
+				<File
+					RelativePath="..\include\cinder\osc\ip\IpEndpointName.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\osc\osc\MessageMappingOscPacketListener.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\osc\ip\NetworkingUtils.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\osc\OscArg.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\osc\OscBundle.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\osc\osc\OscException.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\osc\osc\OscHostEndianness.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\osc\OscListener.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\osc\OscMessage.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\osc\osc\OscOutboundPacketStream.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\osc\osc\OscPacketListener.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\osc\osc\OscPrintReceivedElements.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\osc\osc\OscReceivedElements.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\osc\OscSender.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\osc\osc\OscTypes.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\osc\ip\PacketListener.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\osc\ip\TimerListener.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\osc\ip\UdpSocket.h"
 					>
 				</File>
 			</Filter>

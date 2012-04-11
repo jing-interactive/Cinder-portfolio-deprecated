@@ -1,34 +1,16 @@
-#include "cinder/app/AppBasic.h"
-#include "cinder/gl/gl.h"
+#include "BodyTheatreApp.h"
 
-using namespace ci;
-using namespace ci::app;
-using namespace std;
-
-struct BodyTheatreAppApp : public AppBasic {
-	void setup();
-	void mouseDown( MouseEvent event );	
-	void update();
-	void draw();
-	void oscEvent();
-};
-
-void BodyTheatreAppApp::setup()
+void BodyTheatreApp::setup()
 {
+	_listener = shared_ptr<osc::Listener>(new osc::Listener);
+	_listener->setup(7777);
+	_listener->registerMessageReceived(this, &BodyTheatreApp::onOscMessage);
+} 
+
+void BodyTheatreApp::shutdown()
+{
+	_listener->shutdown();
 }
 
-void BodyTheatreAppApp::mouseDown( MouseEvent event )
-{
-}
 
-void BodyTheatreAppApp::update()
-{
-}
-
-void BodyTheatreAppApp::draw()
-{
-	// clear out the window with black
-	gl::clear( Color( 0, 0, 0 ) ); 
-}
-
-CINDER_APP_BASIC( BodyTheatreAppApp, RendererGl )
+CINDER_APP_BASIC( BodyTheatreApp, RendererGl )
