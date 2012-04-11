@@ -49,7 +49,9 @@ class Triangle
 public:
 
 	// Triangulate a shape
-	static std::vector<Triangle> triangulate( const std::vector<ci::Vec2f> & points, uint32_t resolution = 0 );
+	static std::vector<Triangle> triangulate( const std::vector<ci::Vec2f> & points);
+
+	static std::vector<Triangle> triangulate( const std::vector<ci::Vec2f> & points, const std::vector<ci::Vec2f> & contour);
 
 	// Calculate area between three points
 	static float		calcArea( const ci::Vec2f & a, const ci::Vec2f & b, const ci::Vec2f & c );
@@ -108,6 +110,8 @@ public:
 	void				setId( int32_t id );
 	void				setOrigin( const ci::Vec2f & origin );
 	void				setPosition( const ci::Vec2f & position );
+
+	int					mIndex[3];
 
 private:
 
