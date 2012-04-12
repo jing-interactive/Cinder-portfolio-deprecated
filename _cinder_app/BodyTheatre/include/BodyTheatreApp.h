@@ -5,11 +5,12 @@
 #include "cinder/osc/OscListener.h"
 #include "cinder/Shape2d.h"
 #include "cinder/Thread.h"
-#include "Box2D.h"
+#include <opencv2/opencv.hpp>
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
+using namespace cv;
 
 #define N_PLAYERS 8
 
@@ -28,7 +29,4 @@ struct BodyTheatreApp : public AppBasic {
 	struct Player* players;
 
 	mutex _mtx_player;
-
-	//box2d
-	shared_ptr<b2World> _world;
 };

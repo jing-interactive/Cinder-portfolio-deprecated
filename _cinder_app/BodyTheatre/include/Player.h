@@ -3,8 +3,7 @@
 #include "cinder/Vector.h"
 #include "cinder/osc/OscListener.h"
 #include "cinder/Shape2d.h"
-#include "cinder/TriMesh.h"
-#include "Box2D.h"
+#include "cinder/TriMesh.h" 
 
 using namespace ci;
 using namespace std;
@@ -16,7 +15,6 @@ struct Player
 	void draw();
 private:
 	int id;
-	TriMesh2d mesh;
 	int lastUpdateTime;
-	Shape2d shape;
+	vector<Path2d> shapes;
 };
