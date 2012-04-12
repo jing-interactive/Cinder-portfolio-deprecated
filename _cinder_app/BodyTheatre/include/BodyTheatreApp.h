@@ -5,7 +5,7 @@
 #include "cinder/osc/OscListener.h"
 #include "cinder/Shape2d.h"
 #include "cinder/Thread.h"
-#include "cinder/delaunay/delaunay.h"
+#include "Box2D.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -28,4 +28,7 @@ struct BodyTheatreApp : public AppBasic {
 	struct Player* players;
 
 	mutex _mtx_player;
+
+	//box2d
+	shared_ptr<b2World> _world;
 };

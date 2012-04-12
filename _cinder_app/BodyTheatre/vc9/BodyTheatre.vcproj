@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\include;..\..\..\cinder_0.8.3_vc2008\include;..\..\..\cinder_0.8.3_vc2008\boost;blocks\osc\include\"
+				AdditionalIncludeDirectories="..\include;..\..\..\cinder_0.8.3_vc2008\include;..\..\..\cinder_0.8.3_vc2008\boost;..\..\..\cinder_0.8.3_vc2008\blocks\box2d;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -118,7 +118,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\include;..\..\..\cinder_0.8.3_vc2008\include;..\..\..\cinder_0.8.3_vc2008\boost;blocks\osc\include\"
+				AdditionalIncludeDirectories="..\include;..\..\..\cinder_0.8.3_vc2008\include;..\..\..\cinder_0.8.3_vc2008\boost;..\..\..\cinder_0.8.3_vc2008\blocks\box2d;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -196,17 +196,204 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\Player.cpp"
+				RelativePath="..\include\BodyTheatreApp.h"
 				>
 			</File>
 		</Filter>
 		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
+			Name="box2d_h"
+			Filter="h"
 			>
 			<File
-				RelativePath="..\include\BodyTheatreApp.h"
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Common\b2BlockAllocator.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\b2Body.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Collision\b2BroadPhase.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Contacts\b2ChainAndCircleContact.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Contacts\b2ChainAndPolygonContact.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Collision\Shapes\b2ChainShape.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Contacts\b2CircleContact.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Collision\Shapes\b2CircleShape.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Collision\b2Collision.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Contacts\b2Contact.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\b2ContactManager.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Contacts\b2ContactSolver.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Collision\b2Distance.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Joints\b2DistanceJoint.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Common\b2Draw.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Collision\b2DynamicTree.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Contacts\b2EdgeAndCircleContact.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Contacts\b2EdgeAndPolygonContact.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Collision\Shapes\b2EdgeShape.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\b2Fixture.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Joints\b2FrictionJoint.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Joints\b2GearJoint.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Common\b2GrowableStack.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\b2Island.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Joints\b2Joint.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Common\b2Math.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Joints\b2MouseJoint.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Contacts\b2PolygonAndCircleContact.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Contacts\b2PolygonContact.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Collision\Shapes\b2PolygonShape.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Joints\b2PrismaticJoint.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Joints\b2PulleyJoint.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Joints\b2RevoluteJoint.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Rope\b2Rope.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Joints\b2RopeJoint.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Common\b2Settings.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Collision\Shapes\b2Shape.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Common\b2StackAllocator.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Collision\b2TimeOfImpact.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Common\b2Timer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\b2TimeStep.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Joints\b2WeldJoint.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\Joints\b2WheelJoint.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\b2World.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D\Dynamics\b2WorldCallbacks.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\cinder_0.8.3_vc2008\blocks\box2d\Box2D.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Player"
+			>
+			<File
+				RelativePath="..\src\Player.cpp"
 				>
 			</File>
 			<File
@@ -215,16 +402,14 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
+			Name="box2d_render"
 			>
 			<File
-				RelativePath="..\include\Resources.h"
+				RelativePath="..\src\Box2dRender.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Resources.rc"
+				RelativePath="..\src\Box2dRender.h"
 				>
 			</File>
 		</Filter>
