@@ -765,34 +765,6 @@
 					>
 				</File>
 			</Filter>
-			<Filter
-				Name="delaunay"
-				>
-				<File
-					RelativePath="..\src\cinder\delaunay\triangle\del_impl.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\cinder\delaunay\triangle\del_interface.hpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\cinder\delaunay\delaunay.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\cinder\delaunay\triangle\dpoint.hpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\cinder\delaunay\triangle\triangle.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\cinder\delaunay\triangle\triangle_impl.hpp"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"

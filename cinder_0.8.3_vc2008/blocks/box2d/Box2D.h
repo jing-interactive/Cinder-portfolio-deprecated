@@ -19,6 +19,11 @@
 #ifndef BOX2D_H
 #define BOX2D_H
 
+#ifdef _DEBUG
+#pragma comment(lib, "box2d_d.lib")
+#else
+#pragma comment(lib, "box2d.lib")
+#endif
 /**
 \mainpage Box2D API Documentation
 
