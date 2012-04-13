@@ -1,4 +1,3 @@
-#include "Player.h"
 #include "cinder/app/App.h"
 #include "cinder/Perlin.h"
 #include "cinder/Triangulate.h"
@@ -7,6 +6,7 @@
 #include "CinderOpenCV.h"
 #include "OpenCV.h"
 #include "BlobTracker.h"
+#include "Player.h"
 
 using namespace ci::app;
 
@@ -19,7 +19,7 @@ namespace
 
 Player::Player()
 {
-	visible = false;
+	alive = false;
 	lastUpdateTime = 0;
 	birthTime = 0;
 	state = T_INVAILD;
@@ -29,9 +29,9 @@ void Player::setup(const osc::Message* msg)
 {
 	lastUpdateTime = getElapsedSeconds();
 
-	if (!visible)
+	if (!alive)
 	{
-		visible = true;
+		alive = true;
 		birthTime = getElapsedSeconds();
 		state = T_ENTER;
 		whole_alpha = 0.6f;
@@ -62,7 +62,7 @@ void Player::setup(const osc::Message* msg)
 
 void Player::draw()
 {
-	if (!visible)
+	if (!alive)
 		return;
 	
 	switch (state)
@@ -74,13 +74,17 @@ void Player::draw()
 			BOOST_FOREACH(PathNode& p, nodes)
 			{
 				ci::Vec2f diff = p._pos.value() - center;
-				p.moveTo(p._pos.value() + diff*Rand::randFloat(-0.5f, 1.3f), Rand::randFloat(2,4));
+				ci::Vec2f target = p._pos.value() + diff*Rand::randFloat(-0.5f, 1.3f);
+				const int Spacing = 10;
+				target.x = constrain<float>(target.x, Spacing, getWindowWidth()-Spacing);
+				target.y = constrain<float>(target.y, Spacing, getWindowHeight()-Spacing);
+				p.moveTo(target, Rand::randFloat(2,4));
 			}
 			state = T_SPLITTING;
 		}
 		if (getElapsedSeconds() - lastUpdateTime > TIME_INVISIBLE)
 		{//i am dying in the sun
-			visible = false;
+			alive = false;
 		}
 		gl::color(ColorA(1,1,1,whole_alpha));
 		gl::drawSolid(whole);
@@ -211,6 +215,6 @@ void PathNode::setup( const Path2d& pathW )
 
 void PathNode::moveTo( const Vec2f& target, float duration)
 {
-	timeline().apply(&_pos, target, duration, EaseInQuad());
-	timeline().apply(&_rot, Rand::randFloat(-180, 180), duration, EaseOutExpo());
+	timeline().apply(&_pos, target, duration, EaseInOutQuad());
+	timeline().apply(&_rot, Rand::randFloat(-180, 180), duration, EaseOutBack());
 }

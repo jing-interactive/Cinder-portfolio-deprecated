@@ -180,6 +180,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath="..\src\App.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\App.draw.cpp"
 				>
 			</File>
@@ -188,15 +192,11 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\App.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\App.update.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\BodyTheatreApp.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\include\BodyTheatreApp.h"
 				>
 			</File>
 		</Filter>
@@ -233,6 +233,26 @@
 			</File>
 			<File
 				RelativePath="..\..\..\_common\vOpenCV\OpenCV.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="KinectRoutine"
+			>
+			<File
+				RelativePath="..\src\Hand.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\Hand.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\KinectRoutine.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\KinectRoutine.h"
 				>
 			</File>
 		</Filter>

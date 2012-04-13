@@ -1,5 +1,6 @@
-#include "BodyTheatreApp.h"
+#include "App.h"
 #include "Player.h"
+#include "KinectRoutine.h"
 
 void BodyTheatreApp::setup()
 {
@@ -8,6 +9,9 @@ void BodyTheatreApp::setup()
 	_listener->registerMessageReceived(this, &BodyTheatreApp::onOscMessage);
 
 	players = new Player[N_PLAYERS];
+	_activeIdx = INVALID_IDX;
+
+	_routine = shared_ptr<KinectRoutine>(new KinectRoutine);
 } 
 
 void BodyTheatreApp::shutdown()
@@ -16,5 +20,9 @@ void BodyTheatreApp::shutdown()
 	delete[] players;
 }
 
+void BodyTheatreApp::prepareSettings( Settings *settings )
+{
+	settings->setBorderless(true);
+}
 
 CINDER_APP_BASIC( BodyTheatreApp, RendererGl )

@@ -42,9 +42,13 @@ struct Player
 	void setup(const osc::Message* msg);
 	void draw();
 	void split(int n_splits);
+	bool isAlive() const
+	{
+		return alive;
+	}
 private:
 	int state;
-	bool visible;
+	bool alive;
 	int id;
 	float lastUpdateTime;
 	float birthTime;//for spit usage

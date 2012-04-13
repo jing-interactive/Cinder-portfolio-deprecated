@@ -1,6 +1,7 @@
-#include "BodyTheatreApp.h"
+#include "App.h"
 #include <boost/foreach.hpp>
 #include "Player.h"
+#include "KinectRoutine.h"
 
 void BodyTheatreApp::draw()
 {
@@ -12,5 +13,6 @@ void BodyTheatreApp::draw()
 		{
 			players[i].draw();
 		}
-	}	
+	}
+	_routine->draw();
 }

@@ -13,11 +13,21 @@ using namespace std;
 using namespace cv;
 
 #define N_PLAYERS 8
+#define INVALID_IDX -1
 
 struct BodyTheatreApp : public AppBasic {
 	void setup();
+	void prepareSettings( Settings *settings );
+
+	void mouseWheel( MouseEvent event );
+
 	void mouseDown( MouseEvent event );	
+	void mouseDrag( MouseEvent event );
+	void mouseUp( MouseEvent event );	
+	void mouseMove( MouseEvent event );
+
 	void keyDown( KeyEvent event );
+
 	void update();
 	void draw();
 	void onOscMessage( const osc::Message* msg );
@@ -28,5 +38,9 @@ struct BodyTheatreApp : public AppBasic {
 
 	struct Player* players;
 
+	int _activeIdx;
+
 	mutex _mtx_player;
+
+	shared_ptr<struct KinectRoutine> _routine;
 };
