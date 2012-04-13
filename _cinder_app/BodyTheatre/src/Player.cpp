@@ -74,7 +74,7 @@ void Player::draw()
 			BOOST_FOREACH(PathNode& p, nodes)
 			{
 				ci::Vec2f diff = p._pos.value() - center;
-				p.moveTo(p._pos.value() + diff*Rand::randFloat(-0.3f, 0.7f), Rand::randFloat(2,4));
+				p.moveTo(p._pos.value() + diff*Rand::randFloat(-0.5f, 1.3f), Rand::randFloat(2,4));
 			}
 			state = T_SPLITTING;
 		}
@@ -89,7 +89,6 @@ void Player::draw()
 		state = T_SPLITTED;
 		break;
 	case T_SPLITTED:
-		gl::color(ColorA(1,1,1,0.6f));
 		BOOST_FOREACH(PathNode& s, nodes)
 		{
 			s.draw();
@@ -173,11 +172,12 @@ PathNode::PathNode( const Path2d& pathW )
 
 void PathNode::draw()
 {
+	gl::color(_clr);
 	gl::pushModelView();
 	gl::translate(_pos);
 	gl::rotate(_rot);
 //	gl::translate(_size*-0.5);
-	gl::drawSolid(_path);
+	gl::draw(_mesh);
 	gl::popModelView();
 }
 
@@ -188,24 +188,29 @@ void PathNode::setup( const Path2d& pathW )
 
 	Vec2f centerW = box.getCenter();
 
-	_path.clear();
+	Path2d path;
 	int n_pts = pathW.getNumPoints();
 	for (int i=0;i<n_pts;i++)
 	{
 		const Vec2f& ptW = pathW.getPoint(i);
 		Vec2f ptL = ptW - centerW;
 		if (i==0)
-			_path.moveTo(ptL);
+			path.moveTo(ptL);
 		else
-			_path.lineTo(ptL);
+			path.lineTo(ptL);
 	}
-	_path.close();
+	path.close();
 
+	//build mesh
+	TriMesh tri = Triangulator(path).calcMesh();
+	_mesh = gl::VboMesh(tri); 
 	_pos = centerW;
+
+	_clr = ColorA(Rand::randFloat(), Rand::randFloat(), Rand::randFloat(), 0.7f);
 }
 
 void PathNode::moveTo( const Vec2f& target, float duration)
 {
-	timeline().apply(&_pos, target, duration, EaseOutInSine());
+	timeline().apply(&_pos, target, duration, EaseInQuad());
 	timeline().apply(&_rot, Rand::randFloat(-180, 180), duration, EaseOutExpo());
 }

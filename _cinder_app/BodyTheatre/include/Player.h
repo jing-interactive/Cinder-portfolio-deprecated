@@ -6,6 +6,7 @@
 #include "cinder/TriMesh.h" 
 #include "opencv2/opencv.hpp"
 #include "cinder/Timeline.h"
+#include "cinder/gl/Vbo.h"
 
 using namespace ci;
 using namespace std;
@@ -18,12 +19,13 @@ struct PathNode
 	//from a worldPath, and convert to local path
 	void setup(const Path2d& pathW);
 	void moveTo(const ci::Vec2f& target, float duration);
-	Path2d _path;
+	VboMesh _mesh;
 	Anim<ci::Vec2f> _pos;
 	ci::Vec2f _size;
 	Anim<float> _rot;
 	int _z;
 	void draw();
+	ColorA _clr;
 };
 
 struct Player
