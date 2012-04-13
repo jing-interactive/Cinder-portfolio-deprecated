@@ -5,7 +5,7 @@
 void BodyTheatreApp::draw()
 {
 	gl::enableAlphaBlending();
-	gl::clear( Color( 0.3f, 0.3f, 0.3f ) );
+	gl::clear( Color( 0.9f, 0.9f, 0.9f ) );
 	{
 		lock_guard<mutex> lock(_mtx_player); 
 		for (int i=0;i<N_PLAYERS;i++)
