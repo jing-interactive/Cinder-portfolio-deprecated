@@ -12,9 +12,17 @@ void Hand::draw()
 {
 	if (state != NORMAL)
 	{
-		gl::color(255,255,255);
-		gl::drawSolidCircle(pos, 20);
+		gl::color(1,1,1, 0.8f);
+		gl::drawSolidCircle(pos, 25);
+		gl::color(0,0,0, 0.8f);
+		glLineWidth(2);
+		gl::drawStrokedCircle(pos, 20);
+		gl::color(clr);
+		gl::drawSolidCircle(pos, 15);
 	}
-	gl::color(clr);
-	gl::drawSolidCircle(pos, 15);
+	else
+	{
+		gl::color(clr);
+		gl::drawSolidCircle(pos, 12);
+	}
 }

@@ -15,6 +15,15 @@ namespace
 		else return N_HANDS;
 	}
 
+	int toDragHandId(const MouseEvent& event)
+	{
+		if (event.isLeftDown())
+			return LEFT;
+		else if (event.isRightDown())
+			return RIGHT;
+		else return N_HANDS;
+	}
+
 	bool isIdValid(int id)
 	{
 		return id == LEFT || id == RIGHT;
@@ -46,7 +55,7 @@ void KinectRoutine::mouseDrag( MouseEvent event )
 {
 	if (verbose) 
 		console() << "drag" <<endl;
-	int id = toHandId(event);
+	int id = toDragHandId(event);
 	if (isIdValid(id))
 	{
 		_hands[id]->state = Hand::DRAG;
@@ -84,9 +93,9 @@ void KinectRoutine::mouseWheel( MouseEvent event )
 	_rotate = event.getWheelIncrement();//{-1, 1}
 }
 
-void KinectRoutine::onOscMessage( const osc::Message* msg )
+void KinectRoutine::onOscMessage( const osc::Message* msg, int* filter_id)
 {
-	if (msg->getNumArgs() != 3)
+	if (msg->getNumArgs() != 5)
 		return;
 	string addr = msg->getAddress();
 	string action = msg->getArgAsString(0);
@@ -94,6 +103,13 @@ void KinectRoutine::onOscMessage( const osc::Message* msg )
 		console()<<addr<<action<<endl;
 	int x = static_cast<int>(getWindowWidth()*msg->getArgAsFloat(1));
 	int y = static_cast<int>(getWindowHeight()*msg->getArgAsFloat(2));
+	int dev = msg->getArgAsInt32(3);
+	int plyIdx = msg->getArgAsInt32(4);
+
+	if (filter_id && plyIdx != *filter_id)//skip unmatched msg
+		return;
+
+	console()<<plyIdx<<endl;
 
 	int id = (addr == "/left") ? LEFT : RIGHT;
 	_hands[id]->pos.set(x,y);

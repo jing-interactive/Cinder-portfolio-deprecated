@@ -34,8 +34,7 @@ void PuzzleApp::mouseDown( MouseEvent event )
 
 void PuzzleApp::mouseUp( MouseEvent event )
 {
-	if (verbose)
-		_hands[RIGHT]->state = Hand::NORMAL;
+	_hands[RIGHT]->state = Hand::NORMAL;
 }
 
 void PuzzleApp::mouseWheel( MouseEvent event )

@@ -15,6 +15,7 @@ namespace
 	Perlin perlin;
 	const int TIME_SPLIT = 2;
 	const int TIME_INVISIBLE = 2;
+	const int N_SPLITS = 25;
 }
 
 Player::Player()
@@ -64,7 +65,12 @@ void Player::draw()
 {
 	if (!alive)
 		return;
-	
+
+	if (getElapsedSeconds() - lastUpdateTime > TIME_INVISIBLE)
+	{//i am dying in the sun
+		alive = false;
+	}
+
 	switch (state)
 	{
 	case T_ENTER:
@@ -81,10 +87,6 @@ void Player::draw()
 				p.moveTo(target, Rand::randFloat(2,4));
 			}
 			state = T_SPLITTING;
-		}
-		if (getElapsedSeconds() - lastUpdateTime > TIME_INVISIBLE)
-		{//i am dying in the sun
-			alive = false;
 		}
 		gl::color(ColorA(1,1,1,whole_alpha));
 		gl::drawSolid(whole);
@@ -119,7 +121,7 @@ void Player::split( int n_splits )
 	const cv::Point* pts = &points[0];
 	cv::fillPoly(frame, &pts, &count, 1, cv::Scalar(255));
 	float radius = box.getHeight()*2;
-	for (int i=0;i<20;i++)
+	for (int i=0;i<N_SPLITS;i++)
 	{
 		Vec2f shuffle = Rand::randVec2f()*(box.getWidth()+box.getHeight())/4;
 		Vec2i ct(box.getCenter() + shuffle);

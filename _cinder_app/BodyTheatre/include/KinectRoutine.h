@@ -26,7 +26,8 @@ struct KinectRoutine {
 	void update();
 	void draw();
 
-	void onOscMessage(const osc::Message* msg);
+	//if filter_id is assigned, only msg containing (*filter_id) is valid
+	void onOscMessage(const osc::Message* msg, int* filter_id = NULL);
   
 	shared_ptr<struct Hand> _hands[N_HANDS];
 

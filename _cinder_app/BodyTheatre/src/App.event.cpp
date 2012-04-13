@@ -39,7 +39,7 @@ void BodyTheatreApp::onOscMessage( const osc::Message* msg )
 		}
 		if (id == _activeIdx)
 		{//only update active player
-			console() << id << endl;
+		//	console() << id << endl;
 			lock_guard<mutex> lock(_mtx_player);
 			players[id].setup(msg);
 		}
