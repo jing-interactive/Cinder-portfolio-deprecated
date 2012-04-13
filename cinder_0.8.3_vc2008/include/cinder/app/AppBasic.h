@@ -250,13 +250,3 @@ class AppBasic : public App {
 		return 0;																					\
 	}
 #endif
-
-#define CINDER_APP_CONSOLE( APP, RENDERER )														\
-	int main() {	\
-	cinder::app::AppBasic::prepareLaunch();														\
-	cinder::app::AppBasic *app = new APP;														\
-	cinder::app::Renderer *ren = new RENDERER;													\
-	cinder::app::AppBasic::executeLaunch( app, ren, #APP );										\
-	cinder::app::AppBasic::cleanupLaunch();														\
-	return 0;																					\
-}

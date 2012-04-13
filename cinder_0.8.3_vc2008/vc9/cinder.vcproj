@@ -350,6 +350,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\cinder\Unicode.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\cinder\Url.cpp"
 				>
 			</File>
@@ -765,6 +769,34 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="svg"
+				>
+				<File
+					RelativePath="..\src\linebreak\linebreak.c"
+					>
+				</File>
+				<File
+					RelativePath="..\src\linebreak\linebreak.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\linebreak\linebreakdata.c"
+					>
+				</File>
+				<File
+					RelativePath="..\src\linebreak\linebreakdef.c"
+					>
+				</File>
+				<File
+					RelativePath="..\src\linebreak\linebreakdef.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\cinder\svg\Svg.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -1013,6 +1045,10 @@
 			</File>
 			<File
 				RelativePath="..\include\cinder\Tween.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\cinder\Unicode.h"
 				>
 			</File>
 			<File
@@ -1424,6 +1460,18 @@
 				</File>
 				<File
 					RelativePath="..\include\cinder\osc\ip\UdpSocket.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="svg"
+				>
+				<File
+					RelativePath="..\include\cinder\svg\Svg.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\svg\SvgGl.h"
 					>
 				</File>
 			</Filter>
