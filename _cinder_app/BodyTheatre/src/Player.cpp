@@ -202,7 +202,7 @@ void PathNode::setup( const Path2d& pathW )
 	path.close();
 
 	//build mesh
-	TriMesh tri = Triangulator(path).calcMesh();
+	TriMesh2d tri = Triangulator(path).calcMesh();
 	_mesh = gl::VboMesh(tri); 
 	_pos = centerW;
 

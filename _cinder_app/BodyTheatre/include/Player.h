@@ -19,7 +19,7 @@ struct PathNode
 	//from a worldPath, and convert to local path
 	void setup(const Path2d& pathW);
 	void moveTo(const ci::Vec2f& target, float duration);
-	VboMesh _mesh;
+	gl::VboMesh _mesh;
 	Anim<ci::Vec2f> _pos;
 	ci::Vec2f _size;
 	Anim<float> _rot;
