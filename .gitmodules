@@ -1,3 +1,6 @@
 [submodule "assimp"]
 	path = _common/assimp
 	url = https://github.com/assimp/assimp.git
+[submodule "_common/vOpenCV"]
+	path = _common/vOpenCV
+	url = https://vinjn@github.com/vinjn/vOpenCV.git
