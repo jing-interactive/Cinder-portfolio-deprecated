@@ -13,7 +13,7 @@ void TrackedNode::moveTo( const Vec2f& target )
 
 namespace
 {
-	const float NEAR_DIST = 40;
+	const float NEAR_DIST = 50;
 }
 
 void BodyTheatreApp::update()
@@ -31,6 +31,15 @@ void BodyTheatreApp::update()
 			ci::Vec3f posW = screenToWorld(right.pos);
 			//select nodes
 
+			//rotation is of highest priority
+			if (!activeNodes.empty() && _routine->_rotate != 0)
+			{
+				float rot = _routine->_rotate*5;
+				_routine->_rotate = 0;
+				BOOST_FOREACH(TrackedNode& n, activeNodes)
+					n._ref->_rot.value() += rot;
+			}
+			else
 			if (right.state == Hand::CLICK)
 			{//select
 				activeNodes.clear();
@@ -70,12 +79,6 @@ void BodyTheatreApp::update()
 			else
 			{//de-select
 				activeNodes.clear();
-			}
-
-			//rotation
-			if (right.state != Hand:NORMAL)
-			{
-
 			}
 		}
 	}

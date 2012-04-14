@@ -1,6 +1,7 @@
 #include "App.h"
 #include "Player.h"
 #include "KinectRoutine.h"
+#include "cinder/Rand.h"
 
 void BodyTheatreApp::prepareSettings( Settings *settings )
 {
@@ -11,6 +12,8 @@ void BodyTheatreApp::prepareSettings( Settings *settings )
 
 void BodyTheatreApp::setup()
 {
+	Rand::randomize();
+
 	hideCursor();
 
 	_listener = shared_ptr<osc::Listener>(new osc::Listener);

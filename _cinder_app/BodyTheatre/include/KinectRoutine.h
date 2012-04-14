@@ -17,6 +17,8 @@ enum T_HAND{
 struct KinectRoutine {
 	KinectRoutine();
 
+	bool isPlayerIdValid(int id);
+
 	void mouseWheel( MouseEvent event );
 
 	void mouseMove( MouseEvent event );

@@ -4,7 +4,7 @@
 
 void BodyTheatreApp::mouseWheel( MouseEvent event )
 {
-
+	_routine->mouseWheel(event);
 }
 
 void BodyTheatreApp::mouseUp( MouseEvent event )
@@ -33,11 +33,13 @@ void BodyTheatreApp::onOscMessage( const osc::Message* msg )
 	if (msg->getAddress() == "/contour")
 	{
 		int id = msg->getArgAsInt32(0);
+		if (!_routine->isPlayerIdValid(id))
+			return;
 		if (_activeIdx == INVALID_IDX)
 		{//any index is welcome to me
 			_activeIdx = id;
 		}
-		if (id == _activeIdx)
+	//	if (id == _activeIdx)
 		{//only update active player
 		//	console() << id << endl;
 			lock_guard<mutex> lock(_mtx_player);

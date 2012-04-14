@@ -7,15 +7,21 @@
 #include "OpenCV.h"
 #include "BlobTracker.h"
 #include "Player.h"
+#include "cinder/Font.h"
+#include "cinder/Utilities.h"
 
 using namespace ci::app;
 
 namespace
 {
 	Perlin perlin;
-	const int TIME_SPLIT = 2;
-	const int TIME_INVISIBLE = 2;
-	const int N_SPLITS = 20;
+	const int TIME_BEFORE_SPLIT = 2;
+	const int TIME_BEFORE_WEIBO = 10;
+
+	const int TIME_TURN_INVISIBLE = 2;
+	const int N_SPLITS = 15;
+	Font fnt_big;
+	Font fnt_small;
 }
 
 Player::Player()
@@ -28,6 +34,11 @@ Player::Player()
 
 void Player::setup(const osc::Message* msg)
 {
+	if (!fnt_small)
+	{
+		fnt_big = Font("STHupo", 64);
+		fnt_small = Font("YouYuan", 32);
+	}
 	lastUpdateTime = getElapsedSeconds();
 
 	if (!alive)
@@ -36,7 +47,7 @@ void Player::setup(const osc::Message* msg)
 		birthTime = getElapsedSeconds();
 		state = T_ENTER;
 		whole_alpha = 0.6f;
-		nodes.clear();
+//		nodes.clear();
 	}
 
 	//1. build from osc
@@ -67,21 +78,23 @@ void Player::draw()
 	if (!alive)
 		return;
 
-	if (getElapsedSeconds() - lastUpdateTime > TIME_INVISIBLE)
+	if (getElapsedSeconds() - lastUpdateTime > TIME_TURN_INVISIBLE)
 	{//i am dying in the sun
 		alive = false;
 	}
 
+	int life = getElapsedSeconds() - birthTime;
+
 	switch (state)
 	{
 	case T_ENTER:
-		if (getElapsedSeconds() - birthTime > TIME_SPLIT)
+		if (life > TIME_BEFORE_SPLIT)
 		{//how old am I
 			split(20);
 			BOOST_FOREACH(PathNode& p, nodes)
 			{
 				ci::Vec2f diff = p._pos.value() - center;
-				ci::Vec2f target = p._pos.value() + diff*Rand::randFloat(-0.5f, 1.3f);
+				ci::Vec2f target = p._pos.value() + diff*Rand::randFloat(-0.1f, 1.3f);
 				const int Spacing = 10;
 				target.x = constrain<float>(target.x, Spacing, getWindowWidth()-Spacing);
 				target.y = constrain<float>(target.y, Spacing, getWindowHeight()-Spacing);
@@ -89,16 +102,28 @@ void Player::draw()
 			}
 			state = T_SPLITTING;
 		}
-		gl::color(ColorA(1,1,1,whole_alpha));
-		gl::drawSolid(whole);
+		else
+		{
+			drawTiming(TIME_BEFORE_SPLIT - life, toUtf8(L"先摆个姿势 "));
+			gl::color(ColorA(1,1,1,whole_alpha));
+			gl::drawSolid(whole);
+		}
 		break;
 	case T_SPLITTING:
 		state = T_SPLITTED;
 		break;
 	case T_SPLITTED:
-		BOOST_FOREACH(PathNode& s, nodes)
+		if (life > TIME_BEFORE_WEIBO)
 		{
-			s.draw();
+			state = T_CAPTURE;
+		}
+		else
+		{
+			drawTiming(TIME_BEFORE_WEIBO - life, toUtf8(L"搭建倒计时 "));
+			BOOST_FOREACH(PathNode& s, nodes)
+			{
+				s.draw();
+			}
 		}
 		break;
 	case T_CAPTURE:
@@ -126,7 +151,11 @@ void Player::split( int n_splits )
 	{
 		Vec2f shuffle = Rand::randVec2f()*(box.getWidth()+box.getHeight())/4;
 		Vec2i ct(box.getCenter() + shuffle);
-		float theta(Rand::randFloat(3.14f));
+		float theta;
+		if (Rand::randBool())
+			theta = Rand::randPosNegFloat(-0.3f, 0.3f);
+		else
+			theta = M_PI/2 + Rand::randPosNegFloat(-0.3f, 0.3f);
 		Vec2i p1(radius*cos(theta), radius*sin(theta));
 		Vec2i p2(-radius*cos(theta), -radius*sin(theta));
 
@@ -136,7 +165,7 @@ void Player::split( int n_splits )
 
 	//2. cinder
 	vector<vBlob> blobs;
-	vFindBlobs(frame, blobs, 10);
+	vFindBlobs(frame, blobs, 30);
 
 	//TODO: optimize
 	BOOST_FOREACH(vBlob b, blobs)
@@ -168,4 +197,22 @@ void Player::update()
 {
 	BOOST_FOREACH(PathNode& p, nodes)
 		p.update();
+}
+
+void Player::drawOutline()
+{
+	if (getElapsedSeconds() - lastUpdateTime > TIME_TURN_INVISIBLE)
+	{//i am dying in the sun
+		alive = false;
+	}
+
+	if (alive)
+		gl::drawSolid(whole);
+}
+
+void Player::drawTiming( int secRemaining, std::string info )
+{
+	char buf[100];
+	sprintf(buf, "%s%d", info.c_str(), secRemaining); 
+	gl::drawString(buf, Vec2f(40,40), ColorA::black(), fnt_small);
 }

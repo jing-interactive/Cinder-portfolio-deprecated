@@ -31,7 +31,10 @@ namespace
 
 KinectRoutine::KinectRoutine()
 {
-	ColorA hand_clrs[N_HANDS]={ColorA(1,0.5f,0.5f, 0.4f),ColorA(0.5f,0,1.0f,0.4f)};
+	_scale = 1;
+	_rotate = 0;
+
+	ColorA hand_clrs[N_HANDS]={ColorA(1,0.5f,0.5f, 0.8f),ColorA(0.5f,0,1.0f,0.8f)};
 	for (int i=0;i<N_HANDS;i++)
 	{
 		_hands[i].clr = hand_clrs[i];
@@ -134,30 +137,35 @@ void KinectRoutine::draw()
 
 void KinectRoutine::update()
 {
-#if 0
-	if (_hands[LEFT]->state != Hand::NORMAL && _hands[RIGHT]->state != Hand::NORMAL)
+#if 1
+	if (_hands[LEFT].state != Hand::NORMAL && _hands[RIGHT].state != Hand::NORMAL)
 	{
-		Vec2f diff = _hands[RIGHT]->pos - _hands[LEFT]->pos;
+		Vec2f diff = _hands[RIGHT].pos - _hands[LEFT].pos;
 		Vec2f polar = toPolar(diff);
 		console()<<polar.x<<" "<<polar.y<<endl;
 		float theta = polar.y;//[0, PI_two) clockwise
 		float sign = 0.0f;
-		if (theta > Pi)
-			theta -= Pi;
-		if (theta < Pi_half)
+		if (theta > M_PI)
+			theta -= M_PI;
+		if (theta < M_PI/2)
 		{
 			sign = theta*0.5f;
 		}
-		else if (theta > Pi_half)
+		else if (theta > M_PI/2)
 		{
-			theta = Pi - theta;
+			theta = M_PI - theta;
 			sign = -theta*0.5f;
 		}
 		_rotate = sign;
-		float loBound = 150;
-		float hiBound = getWindowWidth();
-		_scale = lmap(polar.x, loBound, hiBound, minScale, maxScale);
-		_scale = constrain(_scale, minScale, maxScale);
+// 		float loBound = 150;
+// 		float hiBound = getWindowWidth();
+// 		_scale = lmap(polar.x, loBound, hiBound, minScale, maxScale);
+// 		_scale = constrain(_scale, minScale, maxScale);
 	}
 #endif
+}
+
+bool KinectRoutine::isPlayerIdValid( int id )
+{
+	return id >= 0 && id <= 5;
 }

@@ -13,8 +13,8 @@ using namespace ci::app;
 namespace
 {
 	Perlin perlin;
-	const int TIME_SPLIT = 2;
-	const int TIME_INVISIBLE = 2;
+	const int TIME_BEFORE_SPLIT = 2;
+	const int TIME_TURN_INVISIBLE = 2;
 	const int N_SPLITS = 25;
 }
 
@@ -70,8 +70,8 @@ void PathNode::setup( const Path2d& pathW )
 
 void PathNode::moveTo( const Vec2f& target, float duration)
 {
-	timeline().apply(&_pos, target, duration, EaseInOutQuad());
-	timeline().apply(&_rot, Rand::randFloat(-180, 180), duration, EaseOutBack());
+	timeline().apply(&_pos, target, duration, EaseOutSine());
+	timeline().apply(&_rot, Rand::randFloat(-90, 90), duration, EaseInOutQuad());
 }
 
 void PathNode::update()

@@ -192,10 +192,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\include\App.h"
-				>
-			</File>
-			<File
 				RelativePath="..\src\App.update.cpp"
 				>
 			</File>
@@ -276,6 +272,10 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath="..\include\App.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

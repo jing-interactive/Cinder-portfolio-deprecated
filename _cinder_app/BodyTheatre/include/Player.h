@@ -27,11 +27,13 @@ struct Player
 	void setup(const osc::Message* msg);
 	void update();
 	void draw();
+	void drawOutline();
 	void split(int n_splits);
 	bool isAlive() const
 	{
 		return alive;
 	}
+	void drawTiming( int secRemaining, std::string info );
 	vector<PathNode> nodes;
 	int state;
 
