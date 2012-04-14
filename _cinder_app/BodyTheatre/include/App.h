@@ -9,11 +9,17 @@
 
 using namespace ci;
 using namespace ci::app;
-using namespace std;
-using namespace cv;
+using namespace std; 
 
 #define N_PLAYERS 8
 #define INVALID_IDX -1
+
+struct TrackedNode
+{
+	struct PathNode* _ref;
+	Vec2f _offset;
+	void moveTo(const Vec2f& target);
+};
 
 struct BodyTheatreApp : public AppBasic {
 	void setup();
@@ -37,6 +43,7 @@ struct BodyTheatreApp : public AppBasic {
 	shared_ptr<osc::Listener> _listener;
 
 	struct Player* players;
+	vector<TrackedNode> activeNodes;
 
 	int _activeIdx;
 

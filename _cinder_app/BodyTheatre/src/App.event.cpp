@@ -29,7 +29,7 @@ void BodyTheatreApp::mouseMove( MouseEvent event )
 
 void BodyTheatreApp::onOscMessage( const osc::Message* msg )
 {
-	String addr = msg->getAddress();
+	string addr = msg->getAddress();
 	if (msg->getAddress() == "/contour")
 	{
 		int id = msg->getArgAsInt32(0);

@@ -2,6 +2,7 @@
 
 #include "cinder/app/AppBasic.h"
 #include "cinder/osc/OscMessage.h"
+#include "Hand.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -29,7 +30,7 @@ struct KinectRoutine {
 	//if filter_id is assigned, only msg containing (*filter_id) is valid
 	void onOscMessage(const osc::Message* msg, int* filter_id = NULL);
   
-	shared_ptr<struct Hand> _hands[N_HANDS];
+	Hand _hands[N_HANDS];
 
 	float _scale;
 	float _rotate;

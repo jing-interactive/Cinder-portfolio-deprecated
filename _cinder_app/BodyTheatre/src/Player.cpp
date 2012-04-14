@@ -15,7 +15,7 @@ namespace
 	Perlin perlin;
 	const int TIME_SPLIT = 2;
 	const int TIME_INVISIBLE = 2;
-	const int N_SPLITS = 25;
+	const int N_SPLITS = 20;
 }
 
 Player::Player()
@@ -36,6 +36,7 @@ void Player::setup(const osc::Message* msg)
 		birthTime = getElapsedSeconds();
 		state = T_ENTER;
 		whole_alpha = 0.6f;
+		nodes.clear();
 	}
 
 	//1. build from osc
@@ -163,60 +164,8 @@ void Player::split( int n_splits )
 	/*	mesh = Triangulator(shape).calcMesh(Triangulator::WINDING_NONZERO);*/
 }
 
-PathNode::PathNode()
+void Player::update()
 {
-	_rot = 0;
-	_z = 0;
-}
-
-PathNode::PathNode( const Path2d& pathW )
-{
-	_rot = 0;
-	_z = 0;
-	setup(pathW);
-}
-
-void PathNode::draw()
-{
-	gl::color(_clr);
-	gl::pushModelView();
-	gl::translate(_pos);
-	gl::rotate(_rot);
-//	gl::translate(_size*-0.5);
-	gl::draw(_mesh);
-	gl::popModelView();
-}
-
-void PathNode::setup( const Path2d& pathW )
-{
-	Rectf box = pathW.calcBoundingBox();
-	_size.set(box.getWidth(), box.getHeight());
-
-	Vec2f centerW = box.getCenter();
-
-	Path2d path;
-	int n_pts = pathW.getNumPoints();
-	for (int i=0;i<n_pts;i++)
-	{
-		const Vec2f& ptW = pathW.getPoint(i);
-		Vec2f ptL = ptW - centerW;
-		if (i==0)
-			path.moveTo(ptL);
-		else
-			path.lineTo(ptL);
-	}
-	path.close();
-
-	//build mesh
-	TriMesh2d tri = Triangulator(path).calcMesh();
-	_mesh = gl::VboMesh(tri); 
-	_pos = centerW;
-
-	_clr = ColorA(Rand::randFloat(), Rand::randFloat(), Rand::randFloat(), 0.7f);
-}
-
-void PathNode::moveTo( const Vec2f& target, float duration)
-{
-	timeline().apply(&_pos, target, duration, EaseInOutQuad());
-	timeline().apply(&_rot, Rand::randFloat(-180, 180), duration, EaseOutBack());
+	BOOST_FOREACH(PathNode& p, nodes)
+		p.update();
 }

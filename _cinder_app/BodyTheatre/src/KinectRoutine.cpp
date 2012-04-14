@@ -1,4 +1,3 @@
-#include "Hand.h"
 #include "KinectRoutine.h"
 #include "cinder/gl/gl.h"
 #include "cinder/Rand.h"
@@ -32,11 +31,11 @@ namespace
 
 KinectRoutine::KinectRoutine()
 {
-	ColorA hand_clrs[N_HANDS]={ColorA(1,0.5f,0.5f, 0.7f),ColorA(0.5f,0,1.0f,0.7f)};
+	ColorA hand_clrs[N_HANDS]={ColorA(1,0.5f,0.5f, 0.4f),ColorA(0.5f,0,1.0f,0.4f)};
 	for (int i=0;i<N_HANDS;i++)
 	{
-		_hands[i] = shared_ptr<Hand>(new Hand(hand_clrs[i]));
-		_hands[i]->pos.set(Rand::randInt(getWindowWidth()), Rand::randInt(getWindowHeight()));
+		_hands[i].clr = hand_clrs[i];
+		_hands[i].pos.set(Rand::randInt(getWindowWidth()), Rand::randInt(getWindowHeight()));
 	}
 }
 
@@ -46,8 +45,8 @@ void KinectRoutine::mouseMove( MouseEvent event )
 		console() << "move" <<endl;
 	int id = RIGHT;
 	{
-		_hands[id]->pos.set(event.getPos());
-		_hands[id]->state = Hand::NORMAL;
+		_hands[id].pos.set(event.getPos());
+		_hands[id].state = Hand::NORMAL;
 	}
 }
 
@@ -58,8 +57,8 @@ void KinectRoutine::mouseDrag( MouseEvent event )
 	int id = toDragHandId(event);
 	if (isIdValid(id))
 	{
-		_hands[id]->state = Hand::DRAG;
-		_hands[id]->pos.set(event.getPos());
+		_hands[id].state = Hand::DRAG;
+		_hands[id].pos.set(event.getPos());
 	}
 }
 
@@ -70,8 +69,8 @@ void KinectRoutine::mouseDown( MouseEvent event )
 	int id = toHandId(event);
 	if (isIdValid(id))
 	{
-		_hands[id]->pos = event.getPos();
-		_hands[id]->state = Hand::CLICK;
+		_hands[id].pos = event.getPos();
+		_hands[id].state = Hand::CLICK;
 	}
 }
 
@@ -82,7 +81,7 @@ void KinectRoutine::mouseUp( MouseEvent event )
 	int id = toHandId(event);
 	if (isIdValid(id))
 	{
-		_hands[id]->state = Hand::NORMAL;
+		_hands[id].state = Hand::NORMAL;
 	}
 }
 
@@ -112,16 +111,16 @@ void KinectRoutine::onOscMessage( const osc::Message* msg, int* filter_id)
 	console()<<plyIdx<<endl;
 
 	int id = (addr == "/left") ? LEFT : RIGHT;
-	_hands[id]->pos.set(x,y);
+	_hands[id].pos.set(x,y);
 	if (action == "push" || action == "close")
 	{
-		if (_hands[id]->state == Hand::NORMAL)
-			_hands[id]->state = Hand::CLICK;
+		if (_hands[id].state == Hand::NORMAL)
+			_hands[id].state = Hand::CLICK;
 		else//already clicked
-			_hands[id]->state = Hand::DRAG;
+			_hands[id].state = Hand::DRAG;
 	}
 	else if (action == "pull" || action == "open")
-		_hands[id]->state = Hand::NORMAL;
+		_hands[id].state = Hand::NORMAL;
 }
 
 void KinectRoutine::draw()
@@ -129,7 +128,7 @@ void KinectRoutine::draw()
 	gl::enableAlphaBlending();
 	for (int i=0;i<N_HANDS;i++)
 	{
-		_hands[i]->draw();
+		_hands[i].draw();
 	}
 }
 

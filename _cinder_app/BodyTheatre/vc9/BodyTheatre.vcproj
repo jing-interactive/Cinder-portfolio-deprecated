@@ -204,6 +204,14 @@
 			Name="Player"
 			>
 			<File
+				RelativePath="..\src\PathNode.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\PathNode.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\Player.cpp"
 				>
 			</File>
@@ -253,6 +261,18 @@
 			</File>
 			<File
 				RelativePath="..\include\KinectRoutine.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Ci"
+			>
+			<File
+				RelativePath="..\src\CiTool.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\CiTool.h"
 				>
 			</File>
 		</Filter>

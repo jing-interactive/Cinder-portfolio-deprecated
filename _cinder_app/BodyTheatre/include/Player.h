@@ -7,26 +7,11 @@
 #include "opencv2/opencv.hpp"
 #include "cinder/Timeline.h"
 #include "cinder/gl/Vbo.h"
+#include "cinder/Matrix.h"
+#include "PathNode.h"
 
 using namespace ci;
 using namespace std;
-
-struct PathNode
-{
-	PathNode();
-
-	PathNode(const Path2d& pathW);
-	//from a worldPath, and convert to local path
-	void setup(const Path2d& pathW);
-	void moveTo(const ci::Vec2f& target, float duration);
-	gl::VboMesh _mesh;
-	Anim<ci::Vec2f> _pos;
-	ci::Vec2f _size;
-	Anim<float> _rot;
-	int _z;
-	void draw();
-	ColorA _clr;
-};
 
 struct Player
 {
@@ -40,14 +25,17 @@ struct Player
 	};
 	Player();
 	void setup(const osc::Message* msg);
+	void update();
 	void draw();
 	void split(int n_splits);
 	bool isAlive() const
 	{
 		return alive;
 	}
-private:
+	vector<PathNode> nodes;
 	int state;
+
+private:
 	bool alive;
 	int id;
 	float lastUpdateTime;
@@ -56,6 +44,6 @@ private:
 	float whole_alpha;//[0,1)
 	ci::Vec2f center;
 	Path2d whole;
-	vector<PathNode> nodes;
+	
 	std::vector<cv::Point> points;
 };
