@@ -16,10 +16,8 @@ using namespace std;
 struct Player
 {
 	enum{//state
-		T_ENTER,
-		T_SPLITTING,
+		T_ENTER, 
 		T_SPLITTED,
-		T_CAPTURE,
 		T_SHARE,
 		T_INVAILD,
 	};
@@ -33,7 +31,7 @@ struct Player
 	{
 		return alive;
 	}
-	void drawTiming( int secRemaining, std::string info );
+	void drawTiming( float elpased, std::string info );
 	vector<PathNode> nodes;
 	int state;
 
@@ -46,6 +44,9 @@ private:
 	float whole_alpha;//[0,1)
 	ci::Vec2f center;
 	Path2d whole;
+	float prevLife;
+
+	std::vector<Surface8u> captures;
 	
 	std::vector<cv::Point> points;
 };

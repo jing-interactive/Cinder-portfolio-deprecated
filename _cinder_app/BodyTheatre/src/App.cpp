@@ -2,17 +2,21 @@
 #include "Player.h"
 #include "KinectRoutine.h"
 #include "cinder/Rand.h"
+#include "CiTool.h"
+#include "Config.h"
 
 void BodyTheatreApp::prepareSettings( Settings *settings )
 {
 	settings->setBorderless(true);
-	settings->setWindowSize(800, 600);
+	settings->setWindowSize(APP_WIDTH, APP_HEIGHT);
 	settings->setWindowPos(0, 0);
 }
 
 void BodyTheatreApp::setup()
 {
 	Rand::randomize();
+
+	loadConfig("BodyTheatre.xml");
 
 	hideCursor();
 
@@ -28,8 +32,10 @@ void BodyTheatreApp::setup()
 
 void BodyTheatreApp::shutdown()
 {
+	saveConfig("BodyTheatre.xml");
 	_listener->shutdown();
 	delete[] players;
 }
 
-CINDER_APP_BASIC( BodyTheatreApp, RendererGl )
+//#pragma comment(linker, "/SUBSYSTEM:CONSOLE /entry:main")
+CINDER_APP_CONSOLE( BodyTheatreApp, RendererGl )

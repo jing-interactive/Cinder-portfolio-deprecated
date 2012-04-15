@@ -1,6 +1,13 @@
 #include "CiTool.h"
 #include "cinder/Area.h"
 #include "cinder/gl/gl.h"
+#include "boost/foreach.hpp"
+#include "cinder/ImageIo.h"
+#include "cinder/Utilities.h"
+#include "cinder/app/App.h"
+#include "CinderOpenCV.h"
+#include "cinder/ip/Resize.h"
+#include <shellapi.h>
 
 namespace cinder{
 
@@ -54,5 +61,47 @@ namespace cinder{
 		result.z = out.z * out.w;
 
 		return result;
+	}
+
+	void writeImages( std::vector<Surface8u>& images, fs::path& familyName)
+	{
+		app::console() << familyName << std::endl;
+		int i = 0;
+		char name[100];
+		Surface8u small(app::getWindowWidth()/2, app::getWindowHeight()/2, false);
+		BOOST_FOREACH(Surface8u& img, images)
+		{
+			sprintf(name, "%02d.jpg", i++);
+			ip::resize<uint8_t>(img, &small);
+/*			cv::Mat frame = toOcv(img);*/
+			writeImage(familyName/std::string(name), small);
+		}
+	}
+
+	void postImageToWeibo( std::string& fileName, std::string& text )
+	{
+
+	}
+
+	void execute( string exeFile, string param )
+	{
+		char command[256];
+		sprintf(command, "%s %s", exeFile.c_str(), param.c_str());
+
+		STARTUPINFOA startupinfo;
+		GetStartupInfoA (&startupinfo);
+
+		PROCESS_INFORMATION pro2info; 
+
+		CreateProcessA(exeFile.c_str(), (LPSTR)param.c_str(), NULL, NULL, false, CREATE_DEFAULT_ERROR_MODE, NULL,
+			NULL, &startupinfo, &pro2info);
+
+		WaitForSingleObject (pro2info.hProcess, INFINITE);
+
+
+//		::ShellExecuteA( NULL, "open", exeFile.c_str(), NULL, NULL, SW_SHOWNORMAL );
+// 		char command[256];
+// 		sprintf(command, "%s %s", exeFile.c_str(), param.c_str());
+// 		::system(command);
 	}
 }

@@ -12,9 +12,7 @@ using namespace ci::app;
 
 namespace
 {
-	Perlin perlin;
-	const int TIME_BEFORE_SPLIT = 2;
-	const int TIME_TURN_INVISIBLE = 2;
+	Perlin perlin; 
 	const int N_SPLITS = 25;
 }
 

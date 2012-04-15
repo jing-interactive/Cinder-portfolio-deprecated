@@ -66,7 +66,7 @@
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\cinder_0.8.3_vc2008\lib;..\..\..\cinder_0.8.3_vc2008\lib\msw"
 				GenerateDebugInformation="true"
-				SubSystem="2"
+				SubSystem="1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 				TargetMachine="1"
@@ -141,7 +141,7 @@
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\cinder_0.8.3_vc2008\lib;..\..\..\cinder_0.8.3_vc2008\lib\msw"
 				GenerateDebugInformation="true"
-				SubSystem="2"
+				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				RandomizedBaseAddress="1"
@@ -193,6 +193,14 @@
 			</File>
 			<File
 				RelativePath="..\src\App.update.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Config.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\include\Config_def.h"
 				>
 			</File>
 		</Filter>

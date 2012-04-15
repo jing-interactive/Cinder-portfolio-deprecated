@@ -9,19 +9,22 @@
 #include "Player.h"
 #include "cinder/Font.h"
 #include "cinder/Utilities.h"
+#include "cinder/BSpline.h"
+#include "cinder/gl/Texture.h"
+#include "CiTool.h"
+#include "Config.h"
 
 using namespace ci::app;
 
 namespace
 {
 	Perlin perlin;
-	const int TIME_BEFORE_SPLIT = 2;
-	const int TIME_BEFORE_WEIBO = 10;
 
-	const int TIME_TURN_INVISIBLE = 2;
-	const int N_SPLITS = 15;
+	//UI related
 	Font fnt_big;
 	Font fnt_small;
+	Surface8u icons[2];
+	Surface8u profile;
 }
 
 Player::Player()
@@ -38,6 +41,12 @@ void Player::setup(const osc::Message* msg)
 	{
 		fnt_big = Font("STHupo", 64);
 		fnt_small = Font("YouYuan", 32);
+		string icon_files[] = {"PHOTO.png", "sina-weibo.png", };
+		for (int i=0;i<2;i++)
+		{
+			icons[i] = loadImage(loadAsset(icon_files[i]));
+		}
+		profile = loadImage(loadAsset("profile.png"));
 	}
 	lastUpdateTime = getElapsedSeconds();
 
@@ -47,6 +56,7 @@ void Player::setup(const osc::Message* msg)
 		birthTime = getElapsedSeconds();
 		state = T_ENTER;
 		whole_alpha = 0.6f;
+		captures.clear();
 //		nodes.clear();
 	}
 
@@ -55,20 +65,20 @@ void Player::setup(const osc::Message* msg)
 	int n_pts = msg->getArgAsInt32(IDX_NUM_PTS);
 	id = msg->getArgAsInt32(0);
 	points.clear();
-	whole.clear();
+	vector<ci::Vec2f>		mPoints;
+
+	//whole.clear();
 	for (int i=0;i<n_pts;i++)
 	{
 		float x = msg->getArgAsFloat(IDX_NUM_PTS+i*2+1);
 		float y = msg->getArgAsFloat(IDX_NUM_PTS+i*2+2);
 		x *= getWindowWidth();
-		y *= getWindowHeight();
-		if (i == 0)
-			whole.moveTo(x,y);
-		else
-			whole.lineTo(x,y);
+		y *= getWindowHeight(); 
+		mPoints.push_back(ci::Vec2f(x,y));
 		points.push_back(cv::Point(x,y));
-	}
-	whole.close();
+	} 
+
+	whole = Path2d(BSpline2f(mPoints, 3, true, true));
 	
 	center = whole.calcBoundingBox().getCenter();
 }
@@ -83,7 +93,7 @@ void Player::draw()
 		alive = false;
 	}
 
-	int life = getElapsedSeconds() - birthTime;
+	float life = getElapsedSeconds() - birthTime;
 
 	switch (state)
 	{
@@ -98,41 +108,64 @@ void Player::draw()
 				const int Spacing = 10;
 				target.x = constrain<float>(target.x, Spacing, getWindowWidth()-Spacing);
 				target.y = constrain<float>(target.y, Spacing, getWindowHeight()-Spacing);
-				p.moveTo(target, Rand::randFloat(2,4));
+				p.moveTo(target, Rand::randFloat(1,2));
 			}
-			state = T_SPLITTING;
+			state = T_SPLITTED;
 		}
 		else
 		{
-			drawTiming(TIME_BEFORE_SPLIT - life, toUtf8(L"先摆个姿势 "));
 			gl::color(ColorA(1,1,1,whole_alpha));
 			gl::drawSolid(whole);
 		}
 		break;
-	case T_SPLITTING:
-		state = T_SPLITTED;
-		break;
 	case T_SPLITTED:
-		if (life > TIME_BEFORE_WEIBO)
+		if (life - TIME_SPLITTING_PAUSE > TIME_TOTAL)
 		{
-			state = T_CAPTURE;
+			state = T_SHARE;
+			int frm = getElapsedFrames();
+			fs::path folder = getTemporaryDirectory()/toString(frm); 
+			writeImages(captures, folder);
+			char param[256];
+			sprintf(param, "-delay 100 -loop 0 %s/*.jpg anim.gif", folder.string().c_str());
+		//	execute("gen_gif.bat", folder.string());
+			execute("d:/EverBox/APP/ImageMagick-6.7.6-5/conv.exe", param);
+			string weibo = toUtf8(L"#Body Theatre##身体剧场#");
+			sprintf(param, "-u \"%s:%s\" -F \"pic=@%s\" -F \"status=%s\" \"http://api.t.sina.com.cn/statuses/upload.xml?source=3709681010\"", 
+				weibo_usr.c_str(), weibo_pwd.c_str(), "anim.gif", weibo.c_str());
+		//	execute("d:/EverBox/APP/curl-7.25.0-sspi-zlib-static-bin-w32/curl.exe", param);
+			string cmd = string("d:/EverBox/APP/curl-7.25.0-sspi-zlib-static-bin-w32/curl.exe ")+param;
+			::system(cmd.c_str());
 		}
 		else
 		{
-			drawTiming(TIME_BEFORE_WEIBO - life, toUtf8(L"搭建倒计时 "));
 			BOOST_FOREACH(PathNode& s, nodes)
 			{
 				s.draw();
 			}
 		}
 		break;
-	case T_CAPTURE:
-		break;
 	case T_SHARE:
+		if (life - TIME_SPLITTING_PAUSE > TIME_TOTAL+3)
+			alive = false;
+		gl::color(ColorA::white());
+		gl::draw(profile, Vec2f(40,40));
+		gl::drawString(toUtf8(L"刚才的作品将发送至新浪微博，关注我 @vinjn 即可查看:)"), Vec2f(40,400), ColorA::black(), fnt_small);
 		break;
 	default:
 		break;
 	}
+
+	if (state != T_SHARE)
+	{
+		drawTiming(life, toUtf8(L""));
+		if ((int)(life+0.1f) != (int)(prevLife+0.1f))
+		{
+			Surface8u cap = copyWindowSurface();
+			captures.push_back(cap);
+		}
+	}
+
+	prevLife = life;
 }
 
 void Player::split( int n_splits )
@@ -210,9 +243,28 @@ void Player::drawOutline()
 		gl::drawSolid(whole);
 }
 
-void Player::drawTiming( int secRemaining, std::string info )
+float mapped_x(float x)
 {
-	char buf[100];
-	sprintf(buf, "%s%d", info.c_str(), secRemaining); 
-	gl::drawString(buf, Vec2f(40,40), ColorA::black(), fnt_small);
+	return lmap<float>(x, 0, TIME_TOTAL, 80, getWindowWidth()-80);
+}
+
+void Player::drawTiming(float elapsed, std::string info )
+{
+	gl::color(0.3f, 0, 0, 0.3f);
+	gl::drawSolidRoundedRect(Rectf(20,20,mapped_x(TIME_TOTAL),40), 3); 
+
+	if (elapsed > TIME_BEFORE_SPLIT && elapsed < TIME_BEFORE_SPLIT+TIME_SPLITTING_PAUSE)
+		elapsed = TIME_BEFORE_SPLIT;
+	else if (elapsed > TIME_BEFORE_SPLIT+TIME_SPLITTING_PAUSE)
+		elapsed -= TIME_SPLITTING_PAUSE;
+
+	gl::color(0.5f, 0.5f, 0.5f, 0.7f);
+	gl::drawSolidRoundedRect(Rectf(20,20,mapped_x(elapsed),40), 3);
+
+	float icons_x[]={mapped_x(TIME_BEFORE_SPLIT), mapped_x(TIME_TOTAL)};
+	gl::color(ColorA::white());
+	for (int i=0;i<2;i++)
+	{
+		gl::draw(icons[i], Rectf(icons_x[i]-32, 0, icons_x[i]+32,64));
+	}
 }
