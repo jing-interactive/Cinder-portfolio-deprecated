@@ -131,8 +131,8 @@ void Player::draw()
 		if (life - TIME_SPLITTING_PAUSE > TIME_TOTAL)
 		{
 			state = T_SHARE;
+			//TODO: thread
 			postWeibo();
-
 		}
 		else
 		{
@@ -147,7 +147,7 @@ void Player::draw()
 			alive = false;
 		gl::color(ColorA::white());
 		gl::draw(profile, Vec2f(40,40));
-		gl::drawString(toUtf8(L"刚才的作品将发送至新浪微博，关注我 @vinjn 即可查看:)"), Vec2f(40,400), ColorA::black(), fnt_small);
+		gl::drawString(toUtf8(L"刚才的作品已发送至新浪微博，关注我 @vinjn 即可查看:)"), Vec2f(40,400), ColorA::black(), fnt_small);
 		break;
 	default:
 		break;

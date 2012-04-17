@@ -35,6 +35,9 @@ struct BodyTheatreApp : public AppBasic {
 	void keyDown( KeyEvent event );
 
 	void update();
+
+	void doSelectNodes( vector<TrackedNode>& tracked, ci::Vec3f posW, const struct Hand& hand );
+
 	void draw();
 	void onOscMessage( const osc::Message* msg );
 

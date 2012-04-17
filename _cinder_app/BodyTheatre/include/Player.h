@@ -26,6 +26,9 @@ struct Player
 	void setup(const osc::Message* msg);
 	void update();
 	void draw();
+
+	void postWeibo();
+
 	void drawOutline();
 	void split(int n_splits);
 	bool isAlive() const

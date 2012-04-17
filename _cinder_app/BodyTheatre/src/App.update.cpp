@@ -37,37 +37,14 @@ void BodyTheatreApp::update()
 
 				if (hand.state == Hand::CLICK)
 				{//select
-					tracked.clear();
-					vector<PathNode>& nodes = the_player.nodes;
-					//if direct hits
-					BOOST_FOREACH(PathNode& n, nodes)
-					{
-						if (n.isWorldPointInside(posW))
-						{
-							TrackedNode tn;
-							tn._ref = &n;
-							tn._offset = n._pos.value() - hand.pos;
-							tracked.push_back(tn);
-							break;
-						}
-					}
-					//else check distance
-					if (tracked.empty())
-					{
-						BOOST_FOREACH(PathNode& n, nodes)
-						{
-							if (n.distance(hand.pos) < NEAR_DIST)
-							{
-								TrackedNode tn;
-								tn._ref = &n;
-								tn._offset = n._pos.value() - hand.pos;
-								tracked.push_back(tn);
-							}
-						}
-					}
+					doSelectNodes(tracked, posW, hand);
 				}
 				else if (hand.state == Hand::DRAG)
 				{//move selected nodes
+					if (tracked.empty())
+					{
+						doSelectNodes(tracked, posW, hand);
+					}
 					BOOST_FOREACH(TrackedNode& n, tracked)
 					{
 						n.moveTo(hand.pos);
@@ -82,4 +59,37 @@ void BodyTheatreApp::update()
 		}
 	}
 	_routine->update();
+}
+
+
+void BodyTheatreApp::doSelectNodes( vector<TrackedNode>& tracked, ci::Vec3f posW, const Hand& hand ) 
+{
+	tracked.clear();
+	vector<PathNode>& nodes = players[_activeIdx].nodes;
+	//if direct hits
+	BOOST_FOREACH(PathNode& n, nodes)
+	{
+		if (n.isWorldPointInside(posW))
+		{
+			TrackedNode tn;
+			tn._ref = &n;
+			tn._offset = n._pos.value() - hand.pos;
+			tracked.push_back(tn);
+			break;
+		}
+	}
+	//else check distance
+	if (tracked.empty())
+	{
+		BOOST_FOREACH(PathNode& n, nodes)
+		{
+			if (n.distance(hand.pos) < NEAR_DIST)
+			{
+				TrackedNode tn;
+				tn._ref = &n;
+				tn._offset = n._pos.value() - hand.pos;
+				tracked.push_back(tn);
+			}
+		}
+	}
 }
