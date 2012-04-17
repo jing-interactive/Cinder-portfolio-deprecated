@@ -68,7 +68,7 @@ namespace cinder{
 		app::console() << familyName << std::endl;
 		int i = 0;
 		char name[100];
-		Surface8u small(app::getWindowWidth()/2, app::getWindowHeight()/2, false);
+		Surface8u small(320, 240, false);
 		BOOST_FOREACH(Surface8u& img, images)
 		{
 			sprintf(name, "%02d.jpg", i++);

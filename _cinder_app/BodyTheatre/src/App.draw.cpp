@@ -8,7 +8,7 @@
 void BodyTheatreApp::draw()
 {
 	gl::enableAlphaBlending();
-	gl::clear( Color( 0.3f, 0.4f, 0.6f ) );
+	gl::clear(Color::hex(0xfff1c3));
 	{
 		lock_guard<mutex> lock(_mtx_player);
 		gl::color(0.7f, 0.7f, 0.7f, 0.1f);

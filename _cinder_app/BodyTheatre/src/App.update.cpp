@@ -12,11 +12,6 @@ void TrackedNode::moveTo( const Vec2f& target )
 	_ref->_pos.value() = lerp(_ref->_pos.value(), myTarget, 0.2f);
 }
 
-namespace
-{
-	const float NEAR_DIST = 50;
-}
-
 void BodyTheatreApp::update()
 {
 	if (_activeIdx != INVALID_IDX)
@@ -83,7 +78,7 @@ void BodyTheatreApp::doSelectNodes( vector<TrackedNode>& tracked, ci::Vec3f posW
 	{
 		BOOST_FOREACH(PathNode& n, nodes)
 		{
-			if (n.distance(hand.pos) < NEAR_DIST)
+			if (n.distance(hand.pos) < HIT_NEAR_RADIUS)
 			{
 				TrackedNode tn;
 				tn._ref = &n;

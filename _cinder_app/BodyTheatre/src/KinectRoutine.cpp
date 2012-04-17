@@ -34,7 +34,7 @@ KinectRoutine::KinectRoutine()
 	_scale = 1;
 	_rotate = 0;
 
-	ColorA hand_clrs[N_HANDS]={ColorA(1,0.5f,0.5f, 0.8f),ColorA(0.5f,0,1.0f,0.8f)};
+	ColorA hand_clrs[N_HANDS]={ColorA8u(0,14,60, 200),ColorA(0.5f,0,1.0f,0.8f)};
 	for (int i=0;i<N_HANDS;i++)
 	{
 		_hands[i].clr = hand_clrs[i];

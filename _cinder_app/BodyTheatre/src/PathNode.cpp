@@ -62,13 +62,19 @@ void PathNode::setup( const Path2d& pathW )
 	_mesh = gl::VboMesh(tri); 
 	_pos = centerW;
 
-	_clr = ColorA(Rand::randFloat(), Rand::randFloat(), Rand::randFloat(), 0.7f);
+	static uint32_t hexColors[]={
+		0xFF0F3B,0xFF5B0F,0xFFD30F,0xB3FF0F,0xFF0FB3,0xFF4D6D,0xFF8A9F,0x3BFF0F,0xD30FFF,0x8AFFE9,0x4DFFDE,0x0FFF5B,
+		0x5B0FFF,0x0F3BFF,0x0FB3FF,0x0FFFD3
+	};
+
+	_clr = ColorA::hex(hexColors[rand()%_countof(hexColors)]);
+	_clr.a = 0.8f;
 }
 
 void PathNode::moveTo( const Vec2f& target, float duration)
 {
-	timeline().apply(&_pos, target, duration, EaseInQuart());
-	timeline().apply(&_rot, Rand::randFloat(-90, 90), duration, EaseOutQuad());
+	timeline().apply(&_pos, target, duration, EaseOutAtan());
+	timeline().apply(&_rot, Rand::randFloat(-90, 90), duration, EaseOutExpo());
 }
 
 void PathNode::update()

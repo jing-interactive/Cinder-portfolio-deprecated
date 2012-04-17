@@ -13,6 +13,7 @@
 #include "cinder/gl/Texture.h"
 #include "CiTool.h"
 #include "Config.h"
+#include "cinder/Thread.h"
 
 using namespace ci::app;
 
@@ -28,6 +29,8 @@ namespace
 	vector<string> weibos;
 
 	const int N_WEIBOS = 3;
+
+	shared_ptr<thread> thread_weibo;
 }
 
 Player::Player()
@@ -114,7 +117,7 @@ void Player::draw()
 				const int Spacing = 10;
 				target.x = constrain<float>(target.x, Spacing, getWindowWidth()-Spacing);
 				target.y = constrain<float>(target.y, Spacing, getWindowHeight()-Spacing);
-				p.moveTo(target, Rand::randFloat(1,TIME_SPLITTING_PAUSE));
+				p.moveTo(target, Rand::randFloat(TIME_SPLITTING_PAUSE*0.7f,TIME_SPLITTING_PAUSE));
 			}
 			state = T_SPLITTING;
 		}
@@ -132,7 +135,7 @@ void Player::draw()
 		{
 			state = T_SHARE;
 			//TODO: thread
-			postWeibo();
+			thread_weibo = shared_ptr<thread>( new thread( &Player::postWeibo, this ) );
 		}
 		else
 		{
@@ -143,11 +146,10 @@ void Player::draw()
 		}
 		break;
 	case T_SHARE:
-		if (life - TIME_SPLITTING_PAUSE > TIME_TOTAL+3)
-			alive = false;
 		gl::color(ColorA::white());
 		gl::draw(profile, Vec2f(40,40));
-		gl::drawString(toUtf8(L"刚才的作品已发送至新浪微博，关注我 @vinjn 即可查看:)"), Vec2f(40,400), ColorA::black(), fnt_small);
+		gl::drawString(toUtf8(L"作品正发送至新浪微博，关注我 @vinjn 即可查看:)"), Vec2f(40,400), ColorA::black(), fnt_small);
+		//TODO: add Event
 		break;
 	default:
 		break;
@@ -200,7 +202,7 @@ void Player::split( int n_splits )
 
 	//2. cinder
 	vector<vBlob> blobs;
-	vFindBlobs(frame, blobs, 30);
+	vFindBlobs(frame, blobs, MIN_BLOB_SIZE);
 
 	//TODO: optimize
 	BOOST_FOREACH(vBlob b, blobs)
@@ -245,15 +247,17 @@ void Player::drawOutline()
 		gl::drawSolid(whole);
 }
 
+#define K  20
+
 float mapped_x(float x)
 {
-	return lmap<float>(x, 0, TIME_TOTAL, 80, getWindowWidth()-80);
+	return lmap<float>(x, 0, TIME_TOTAL, K, getWindowWidth()-K);
 }
 
 void Player::drawTiming(float elapsed, std::string info )
 {
-	gl::color(0.3f, 0, 0, 0.3f);
-	gl::drawSolidRoundedRect(Rectf(20,20,mapped_x(TIME_TOTAL),40), 3); 
+	gl::color(0.3f, 0, 0, 0.2f);
+	gl::drawSolidRoundedRect(Rectf(K,K,mapped_x(TIME_TOTAL),K*2), K/2); 
 
 	if (elapsed > TIME_BEFORE_SPLIT && elapsed < TIME_BEFORE_SPLIT+TIME_SPLITTING_PAUSE)
 		elapsed = TIME_BEFORE_SPLIT;
@@ -261,9 +265,9 @@ void Player::drawTiming(float elapsed, std::string info )
 		elapsed -= TIME_SPLITTING_PAUSE;
 
 	gl::color(0.5f, 0.5f, 0.5f, 0.7f);
-	gl::drawSolidRoundedRect(Rectf(20,20,mapped_x(elapsed),40), 3);
+	gl::drawSolidRoundedRect(Rectf(K,K,mapped_x(elapsed),K*2), K/2);
 
-	float icons_x[]={mapped_x(TIME_BEFORE_SPLIT), mapped_x(TIME_TOTAL)};
+	float icons_x[]={mapped_x(TIME_BEFORE_SPLIT)+K, mapped_x(TIME_TOTAL)-K};
 	gl::color(ColorA::white());
 	for (int i=0;i<2;i++)
 	{
