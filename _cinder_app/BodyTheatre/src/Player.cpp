@@ -25,6 +25,9 @@ namespace
 	Font fnt_small;
 	Surface8u icons[2];
 	Surface8u profile;
+	vector<string> weibos;
+
+	const int N_WEIBOS = 3;
 }
 
 Player::Player()
@@ -47,6 +50,9 @@ void Player::setup(const osc::Message* msg)
 			icons[i] = loadImage(loadAsset(icon_files[i]));
 		}
 		profile = loadImage(loadAsset("profile.png"));
+		weibos.push_back(WEIBO_0);
+		weibos.push_back(WEIBO_1);
+		weibos.push_back(WEIBO_2);
 	}
 	lastUpdateTime = getElapsedSeconds();
 
@@ -72,8 +78,8 @@ void Player::setup(const osc::Message* msg)
 	{
 		float x = msg->getArgAsFloat(IDX_NUM_PTS+i*2+1);
 		float y = msg->getArgAsFloat(IDX_NUM_PTS+i*2+2);
-		x *= getWindowWidth();
-		y *= getWindowHeight(); 
+		x *= (getWindowWidth()*BLOB_SCALE);
+		y *= (getWindowHeight()*BLOB_SCALE); 
 		mPoints.push_back(ci::Vec2f(x,y));
 		points.push_back(cv::Point(x,y));
 	} 
@@ -100,7 +106,7 @@ void Player::draw()
 	case T_ENTER:
 		if (life > TIME_BEFORE_SPLIT)
 		{//how old am I
-			split(20);
+			split(N_SPLITS);
 			BOOST_FOREACH(PathNode& p, nodes)
 			{
 				ci::Vec2f diff = p._pos.value() - center;
@@ -108,9 +114,9 @@ void Player::draw()
 				const int Spacing = 10;
 				target.x = constrain<float>(target.x, Spacing, getWindowWidth()-Spacing);
 				target.y = constrain<float>(target.y, Spacing, getWindowHeight()-Spacing);
-				p.moveTo(target, Rand::randFloat(1,2));
+				p.moveTo(target, Rand::randFloat(1,TIME_SPLITTING_PAUSE));
 			}
-			state = T_SPLITTED;
+			state = T_SPLITTING;
 		}
 		else
 		{
@@ -118,23 +124,15 @@ void Player::draw()
 			gl::drawSolid(whole);
 		}
 		break;
+	case T_SPLITTING:
 	case T_SPLITTED:
+		if (life - TIME_SPLITTING_PAUSE > TIME_BEFORE_SPLIT)
+			state = T_SPLITTED;
 		if (life - TIME_SPLITTING_PAUSE > TIME_TOTAL)
 		{
 			state = T_SHARE;
-			int frm = getElapsedFrames();
-			fs::path folder = getTemporaryDirectory()/toString(frm); 
-			writeImages(captures, folder);
-			char param[256];
-			sprintf(param, "-delay 100 -loop 0 %s/*.jpg anim.gif", folder.string().c_str());
-		//	execute("gen_gif.bat", folder.string());
-			execute("d:/EverBox/APP/ImageMagick-6.7.6-5/conv.exe", param);
-			string weibo = toUtf8(L"#Body Theatre##ÉíÌå¾ç³¡#");
-			sprintf(param, "-u \"%s:%s\" -F \"pic=@%s\" -F \"status=%s\" \"http://api.t.sina.com.cn/statuses/upload.xml?source=3709681010\"", 
-				weibo_usr.c_str(), weibo_pwd.c_str(), "anim.gif", weibo.c_str());
-		//	execute("d:/EverBox/APP/curl-7.25.0-sspi-zlib-static-bin-w32/curl.exe", param);
-			string cmd = string("d:/EverBox/APP/curl-7.25.0-sspi-zlib-static-bin-w32/curl.exe ")+param;
-			::system(cmd.c_str());
+			postWeibo();
+
 		}
 		else
 		{
@@ -157,8 +155,12 @@ void Player::draw()
 
 	if (state != T_SHARE)
 	{
+		float sec_per_frame = SEC_PER_FRAME_1;
+		if (state == T_SPLITTED)
+			sec_per_frame = SEC_PER_FRAME_2;
+
 		drawTiming(life, toUtf8(L""));
-		if ((int)(life+0.1f) != (int)(prevLife+0.1f))
+		if ((int)(life/sec_per_frame+0.1f) != (int)(prevLife/sec_per_frame+0.1f))
 		{
 			Surface8u cap = copyWindowSurface();
 			captures.push_back(cap);
@@ -180,7 +182,7 @@ void Player::split( int n_splits )
 	const cv::Point* pts = &points[0];
 	cv::fillPoly(frame, &pts, &count, 1, cv::Scalar(255));
 	float radius = box.getHeight()*2;
-	for (int i=0;i<N_SPLITS;i++)
+	for (int i=0;i<n_splits;i++)
 	{
 		Vec2f shuffle = Rand::randVec2f()*(box.getWidth()+box.getHeight())/4;
 		Vec2i ct(box.getCenter() + shuffle);
@@ -267,4 +269,23 @@ void Player::drawTiming(float elapsed, std::string info )
 	{
 		gl::draw(icons[i], Rectf(icons_x[i]-32, 0, icons_x[i]+32,64));
 	}
+}
+
+void Player::postWeibo()
+{
+	int frm = getElapsedFrames();
+	fs::path folder = getTemporaryDirectory()/toString(frm); 
+	writeImages(captures, folder);
+	char param[512];
+	sprintf(param, "-delay 200 -loop 0 %s/*.jpg anim.gif", folder.string().c_str());
+	//	execute("gen_gif.bat", folder.string());
+	execute("d:/EverBox/APP/ImageMagick-6.7.6-5/conv.exe", param);
+	string weibo = weibos[rand()%N_WEIBOS];
+	weibo += string("##");
+	weibo += toString(frm);
+	sprintf(param, "-u \"%s:%s\" -F \"pic=@%s\" -F \"status=%s\" \"http://api.t.sina.com.cn/statuses/upload.xml?source=3709681010\"", 
+		weibo_usr.c_str(), weibo_pwd.c_str(), "anim.gif", weibo.c_str());
+	//	execute("d:/EverBox/APP/curl-7.25.0-sspi-zlib-static-bin-w32/curl.exe", param);
+	string cmd = string("d:/EverBox/APP/curl-7.25.0-sspi-zlib-static-bin-w32/curl.exe ")+param;
+	::system(cmd.c_str());
 }

@@ -8,7 +8,7 @@
 void BodyTheatreApp::draw()
 {
 	gl::enableAlphaBlending();
-	gl::clear( Color( 0.2f, 0.3f, 0.4f ) );
+	gl::clear( Color( 0.3f, 0.4f, 0.6f ) );
 	{
 		lock_guard<mutex> lock(_mtx_player);
 		gl::color(0.7f, 0.7f, 0.7f, 0.1f);
@@ -28,13 +28,14 @@ void BodyTheatreApp::draw()
 		{
 			glLineWidth(2);
 			gl::color(ColorA(0,0,0,0.5f));
-			BOOST_FOREACH(TrackedNode& n, activeNodes)
-				n._ref->drawOutline();
+			for (int i=0;i<2;i++)
+			{
+				BOOST_FOREACH(TrackedNode& n, activeNodes[i])
+					n._ref->drawOutline();
+			}
+			_routine->draw();
 		}
 #endif
 		}
 	}
-
-
-	_routine->draw();
 }

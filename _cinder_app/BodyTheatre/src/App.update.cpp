@@ -4,6 +4,7 @@
 #include "Player.h"
 #include "boost/foreach.hpp"
 #include "CiTool.h"
+#include "Config.h"
 
 void TrackedNode::moveTo( const Vec2f& target )
 {
@@ -27,59 +28,57 @@ void BodyTheatreApp::update()
 
 		if (the_player.state == Player::T_SPLITTED)
 		{
-			const Hand& right = _routine->_hands[RIGHT];
-			ci::Vec3f posW = screenToWorld(right.pos);
-			//select nodes
-
-			//rotation is of highest priority
-			if (!activeNodes.empty() && _routine->_rotate != 0)
+			for (int i=0;i<2;i++)
 			{
-				float rot = _routine->_rotate*5;
-				_routine->_rotate = 0;
-				BOOST_FOREACH(TrackedNode& n, activeNodes)
-					n._ref->_rot.value() += rot;
-			}
-			else
-			if (right.state == Hand::CLICK)
-			{//select
-				activeNodes.clear();
-				vector<PathNode>& nodes = the_player.nodes;
-				BOOST_FOREACH(PathNode& n, nodes)
-				{
-					if (n.isWorldPointInside(posW))
-					{
-						TrackedNode tn;
-						tn._ref = &n;
-						tn._offset = n._pos.value() - right.pos;
-						activeNodes.push_back(tn);
-						break;
-					}
-				}
-				if (activeNodes.empty())
-				{
+				const Hand& hand = _routine->_hands[i];
+				vector<TrackedNode>& tracked = activeNodes[i];
+				ci::Vec3f posW = screenToWorld(hand.pos);
+				//select nodes
+
+				if (hand.state == Hand::CLICK)
+				{//select
+					tracked.clear();
+					vector<PathNode>& nodes = the_player.nodes;
+					//if direct hits
 					BOOST_FOREACH(PathNode& n, nodes)
 					{
-						if (n.distance(right.pos) < NEAR_DIST)
+						if (n.isWorldPointInside(posW))
 						{
 							TrackedNode tn;
 							tn._ref = &n;
-							tn._offset = n._pos.value() - right.pos;
-							activeNodes.push_back(tn);
+							tn._offset = n._pos.value() - hand.pos;
+							tracked.push_back(tn);
+							break;
+						}
+					}
+					//else check distance
+					if (tracked.empty())
+					{
+						BOOST_FOREACH(PathNode& n, nodes)
+						{
+							if (n.distance(hand.pos) < NEAR_DIST)
+							{
+								TrackedNode tn;
+								tn._ref = &n;
+								tn._offset = n._pos.value() - hand.pos;
+								tracked.push_back(tn);
+							}
 						}
 					}
 				}
-			}
-			else if (right.state == Hand::DRAG)
-			{//move selected nodes
-				BOOST_FOREACH(TrackedNode& n, activeNodes)
-				{
-					n.moveTo(right.pos);
+				else if (hand.state == Hand::DRAG)
+				{//move selected nodes
+					BOOST_FOREACH(TrackedNode& n, tracked)
+					{
+						n.moveTo(hand.pos);
+					}
+				}
+				else
+				{//de-select
+					tracked.clear();
 				}
 			}
-			else
-			{//de-select
-				activeNodes.clear();
-			}
+
 		}
 	}
 	_routine->update();

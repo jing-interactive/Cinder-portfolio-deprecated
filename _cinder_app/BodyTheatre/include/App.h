@@ -43,7 +43,7 @@ struct BodyTheatreApp : public AppBasic {
 	shared_ptr<osc::Listener> _listener;
 
 	struct Player* players;
-	vector<TrackedNode> activeNodes;
+	vector<TrackedNode> activeNodes[2];
 
 	int _activeIdx;
 

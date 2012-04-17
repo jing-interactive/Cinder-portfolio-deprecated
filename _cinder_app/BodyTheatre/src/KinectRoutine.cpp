@@ -137,7 +137,6 @@ void KinectRoutine::draw()
 
 void KinectRoutine::update()
 {
-#if 1
 	if (_hands[LEFT].state != Hand::NORMAL && _hands[RIGHT].state != Hand::NORMAL)
 	{
 		Vec2f diff = _hands[RIGHT].pos - _hands[LEFT].pos;
@@ -162,7 +161,6 @@ void KinectRoutine::update()
 // 		_scale = lmap(polar.x, loBound, hiBound, minScale, maxScale);
 // 		_scale = constrain(_scale, minScale, maxScale);
 	}
-#endif
 }
 
 bool KinectRoutine::isPlayerIdValid( int id )

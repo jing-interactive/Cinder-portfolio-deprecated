@@ -1,8 +1,8 @@
-#include "Config.h"
 #include <cinder/xml.h>
 #include <cinder/app/App.h>
 #include <cinder/Utilities.h>
 #include <string>
+#include "Config.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -26,10 +26,10 @@ bool loadConfig(const char* config)
 #undef CONFIG_ITEM
 	}
 	catch( ... ) {
-		printf("No file from from %s\n", config);
+		printf("Error happens while loading %s\n", config);
 		return false;
 	}
-	printf("load from %s\n", config);
+	printf("Loaded from %s\n", config);
 	return true;
 }
 
@@ -45,8 +45,9 @@ bool saveConfig(const char* config)
 		tree.write( writeFile(config));
 	}
 	catch( ... ) {
-		console() << "[ERROR] Failed to save to " << config<<std::endl;
+		printf("Error happens while saving %s\n", config);
 		return false;
 	}
+	printf("Saved to %s\n", config);
 	return true;
 }

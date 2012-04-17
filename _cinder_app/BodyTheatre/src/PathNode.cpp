@@ -12,8 +12,7 @@ using namespace ci::app;
 
 namespace
 {
-	Perlin perlin; 
-	const int N_SPLITS = 25;
+	Perlin perlin;
 }
 
 PathNode::PathNode()
@@ -45,18 +44,18 @@ void PathNode::setup( const Path2d& pathW )
 
 	Vec2f centerW = box.getCenter();
 
-	_path.clear();
+	vector<Vec2f> points;
+//	_path.clear();
 	int n_pts = pathW.getNumPoints();
 	for (int i=0;i<n_pts;i++)
 	{
 		const Vec2f& ptW = pathW.getPoint(i);
 		Vec2f ptL = ptW - centerW;
-		if (i==0)
-			_path.moveTo(ptL);
-		else
-			_path.lineTo(ptL);
+		points.push_back(ptL);
 	}
-	_path.close();
+//	_path.close();
+
+	_path = Path2d(BSpline2f(points, 3, true, true));
 
 	//build mesh
 	TriMesh2d tri = Triangulator(_path).calcMesh();
@@ -68,8 +67,8 @@ void PathNode::setup( const Path2d& pathW )
 
 void PathNode::moveTo( const Vec2f& target, float duration)
 {
-	timeline().apply(&_pos, target, duration, EaseOutSine());
-	timeline().apply(&_rot, Rand::randFloat(-90, 90), duration, EaseInOutQuad());
+	timeline().apply(&_pos, target, duration, EaseInQuart());
+	timeline().apply(&_rot, Rand::randFloat(-90, 90), duration, EaseOutQuad());
 }
 
 void PathNode::update()

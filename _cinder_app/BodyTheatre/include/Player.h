@@ -17,6 +17,7 @@ struct Player
 {
 	enum{//state
 		T_ENTER, 
+		T_SPLITTING,
 		T_SPLITTED,
 		T_SHARE,
 		T_INVAILD,
