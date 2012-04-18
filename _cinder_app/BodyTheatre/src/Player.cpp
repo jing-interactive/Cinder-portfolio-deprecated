@@ -69,27 +69,30 @@ void Player::setup(const osc::Message* msg)
 //		nodes.clear();
 	}
 
-	//1. build from osc
-	const int IDX_NUM_PTS = 7;
-	int n_pts = msg->getArgAsInt32(IDX_NUM_PTS);
-	id = msg->getArgAsInt32(0);
-	points.clear();
-	vector<ci::Vec2f>		mPoints;
-
-	//whole.clear();
-	for (int i=0;i<n_pts;i++)
+	if (state == T_ENTER)
 	{
-		float x = msg->getArgAsFloat(IDX_NUM_PTS+i*2+1);
-		float y = msg->getArgAsFloat(IDX_NUM_PTS+i*2+2);
-		x *= (getWindowWidth()*BLOB_SCALE);
-		y *= (getWindowHeight()*BLOB_SCALE); 
-		mPoints.push_back(ci::Vec2f(x,y));
-		points.push_back(cv::Point(x,y));
-	} 
+		//1. build from osc
+		const int IDX_NUM_PTS = 7;
+		int n_pts = msg->getArgAsInt32(IDX_NUM_PTS);
+		id = msg->getArgAsInt32(0);
+		points.clear();
+		vector<ci::Vec2f>		mPoints;
 
-	whole = Path2d(BSpline2f(mPoints, 3, true, true));
-	
-	center = whole.calcBoundingBox().getCenter();
+		//whole.clear();
+		for (int i=0;i<n_pts;i++)
+		{
+			float x = msg->getArgAsFloat(IDX_NUM_PTS+i*2+1);
+			float y = msg->getArgAsFloat(IDX_NUM_PTS+i*2+2);
+			x *= (getWindowWidth()*BLOB_SCALE);
+			y *= (getWindowHeight()*BLOB_SCALE); 
+			mPoints.push_back(ci::Vec2f(x,y));
+			points.push_back(cv::Point(x,y));
+		} 
+
+		whole = Path2d(BSpline2f(mPoints, 3, true, true));
+
+		center = whole.calcBoundingBox().getCenter();
+	}
 }
 
 void Player::draw()
@@ -97,12 +100,16 @@ void Player::draw()
 	if (!alive)
 		return;
 
-	if (getElapsedSeconds() - lastUpdateTime > TIME_TURN_INVISIBLE)
+	float life = getElapsedSeconds() - birthTime;
+
+	if (state != T_SHARE && getElapsedSeconds() - lastUpdateTime > TIME_TURN_INVISIBLE)
 	{//i am dying in the sun
-		alive = false;
+		if (life > TIME_TOTAL*0.7f)//enough time
+			state = T_SHARE;
+		else
+			alive = false;
 	}
 
-	float life = getElapsedSeconds() - birthTime;
 
 	switch (state)
 	{
@@ -123,18 +130,17 @@ void Player::draw()
 		}
 		else
 		{
-			gl::color(ColorA(1,1,1,whole_alpha));
+			gl::color(ColorA(0.3,0.7,0.7,whole_alpha));
 			gl::drawSolid(whole);
 		}
 		break;
 	case T_SPLITTING:
 	case T_SPLITTED:
-		if (life - TIME_SPLITTING_PAUSE > TIME_BEFORE_SPLIT)
+		if (life - TIME_SPLITTING_PAUSE > TIME_BEFORE_SPLIT*0.7f)
 			state = T_SPLITTED;
 		if (life - TIME_SPLITTING_PAUSE > TIME_TOTAL)
 		{
 			state = T_SHARE;
-			//TODO: thread
 			thread_weibo = shared_ptr<thread>( new thread( &Player::postWeibo, this ) );
 		}
 		else
@@ -149,7 +155,6 @@ void Player::draw()
 		gl::color(ColorA::white());
 		gl::draw(profile, Vec2f(40,40));
 		gl::drawString(toUtf8(L"作品正发送至新浪微博，关注我 @vinjn 即可查看:)"), Vec2f(40,400), ColorA::black(), fnt_small);
-		//TODO: add Event
 		break;
 	default:
 		break;
@@ -281,7 +286,7 @@ void Player::postWeibo()
 	fs::path folder = getTemporaryDirectory()/toString(frm); 
 	writeImages(captures, folder);
 	char param[512];
-	sprintf(param, "-delay 200 -loop 0 %s/*.jpg anim.gif", folder.string().c_str());
+	sprintf(param, "-delay 500 -loop 0 -type Palette %s/*.jpg anim.gif", folder.string().c_str());
 	//	execute("gen_gif.bat", folder.string());
 	execute("d:/EverBox/APP/ImageMagick-6.7.6-5/conv.exe", param);
 	string weibo = weibos[rand()%N_WEIBOS];
@@ -292,4 +297,6 @@ void Player::postWeibo()
 	//	execute("d:/EverBox/APP/curl-7.25.0-sspi-zlib-static-bin-w32/curl.exe", param);
 	string cmd = string("d:/EverBox/APP/curl-7.25.0-sspi-zlib-static-bin-w32/curl.exe ")+param;
 	::system(cmd.c_str());
+
+	alive = false;
 }

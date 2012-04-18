@@ -16,7 +16,8 @@ void BodyTheatreApp::setup()
 {
 	Rand::randomize();
 
-	loadConfig("BodyTheatre.xml");
+	if (!loadConfig("BodyTheatre.xml"))
+		saveConfig("BodyTheatre.xml");
 
 	hideCursor();
 
@@ -32,7 +33,6 @@ void BodyTheatreApp::setup()
 
 void BodyTheatreApp::shutdown()
 {
-	saveConfig("BodyTheatre.xml");
 	_listener->shutdown();
 	delete[] players;
 }
