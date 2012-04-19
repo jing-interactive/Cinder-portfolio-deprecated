@@ -21,20 +21,21 @@ void BodyTheatreApp::draw()
 #endif
 		if (_activeIdx != INVALID_IDX)
 		{
+			_routine->draw();
+
 			players[_activeIdx].draw();
 
 #ifdef DRAW_NODES_OUTLINE
-		if (players[_activeIdx].state == Player::T_SPLITTED)
-		{
-			glLineWidth(2);
-			gl::color(ColorA(0,0,0,0.5f));
-			for (int i=0;i<2;i++)
+			if (players[_activeIdx].state == Player::T_SPLITTED)
 			{
-				BOOST_FOREACH(TrackedNode& n, activeNodes[i])
-					n._ref->drawOutline();
+				glLineWidth(2);
+				gl::color(ColorA(0,0,0,0.5f));
+				for (int i=0;i<2;i++)
+				{
+					BOOST_FOREACH(TrackedNode& n, activeNodes[i])
+						n._ref->drawOutline();
+				}
 			}
-			_routine->draw();
-		}
 #endif
 		}
 	}
