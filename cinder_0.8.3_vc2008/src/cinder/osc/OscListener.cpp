@@ -142,7 +142,10 @@ void OscListener::ProcessMessage( const ::osc::ReceivedMessage &m, const IpEndpo
 	if( mMessageReceivedCbs.empty() )
 		mMessages.push_back( message );
 	else
+	{
 		mMessageReceivedCbs.call( message );
+		delete message;
+	}
 }
 
 bool OscListener::hasWaitingMessages() const
