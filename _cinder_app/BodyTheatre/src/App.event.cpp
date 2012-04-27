@@ -1,6 +1,7 @@
 #include "App.h"
 #include "Player.h"
 #include "KinectRoutine.h"
+#include "Config.h"
 
 void BodyTheatreApp::mouseWheel( MouseEvent event )
 {
@@ -57,6 +58,11 @@ void BodyTheatreApp::keyDown( KeyEvent event )
 		{
 			quit();
 		}break;
+	case KeyEvent::KEY_RETURN:
+		{
+			loadConfig("BodyTheatre.xml");
+		}
+		break;
 	case  KeyEvent::KEY_f:
 		{
 			setFullScreen(!isFullScreen());

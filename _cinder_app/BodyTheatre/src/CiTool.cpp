@@ -68,7 +68,7 @@ namespace cinder{
 		app::console() << familyName << std::endl;
 		int i = 0;
 		char name[100];
-		Surface8u small(320, 240, false);
+		Surface8u small(240, 180, false);
 		BOOST_FOREACH(Surface8u& img, images)
 		{
 			sprintf(name, "%02d.jpg", i++);
@@ -104,4 +104,14 @@ namespace cinder{
 // 		sprintf(command, "%s %s", exeFile.c_str(), param.c_str());
 // 		::system(command);
 	}
+}
+
+void enableMemleakCheck(int breakpt/* = 0*/)
+{
+#if defined _DEBUG && defined _MSC_VER
+#include <crtdbg.h>
+	if (breakpt > 0)
+		_CrtSetBreakAlloc(breakpt);
+	_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_LEAK_CHECK_DF);
+#endif
 }

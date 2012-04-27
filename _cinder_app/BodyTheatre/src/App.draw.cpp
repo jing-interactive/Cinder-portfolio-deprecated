@@ -21,8 +21,6 @@ void BodyTheatreApp::draw()
 #endif
 		if (_activeIdx != INVALID_IDX)
 		{
-			_routine->draw();
-
 			players[_activeIdx].draw();
 
 #ifdef DRAW_NODES_OUTLINE
@@ -37,6 +35,8 @@ void BodyTheatreApp::draw()
 				}
 			}
 #endif
+			if (players[_activeIdx].state != Player::T_ENTER)
+				_routine->draw();
 		}
 	}
 }

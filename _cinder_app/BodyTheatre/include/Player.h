@@ -31,6 +31,10 @@ struct Player
 
 	void drawOutline();
 	void split(int n_splits);
+	void setAlive(bool is)
+	{
+		alive = is;
+	}
 	bool isAlive() const
 	{
 		return alive;

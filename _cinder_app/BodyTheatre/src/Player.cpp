@@ -166,7 +166,7 @@ void Player::draw()
 		if (state == T_SPLITTED)
 			sec_per_frame = SEC_PER_FRAME_2;
 
-		drawTiming(life, toUtf8(L""));
+		drawTiming(life, "");
 		if ((int)(life/sec_per_frame+0.1f) != (int)(prevLife/sec_per_frame+0.1f))
 		{
 			Surface8u cap = copyWindowSurface();
@@ -215,6 +215,10 @@ void Player::split( int n_splits )
 		Path2d path;
 
 		int blob_pts = b.pts.size();
+
+		if (blob_pts < 4)
+			continue;
+
 		for (int i=0;i<blob_pts;i++)
 		{
 			ci::Vec2f p = fromOcv(b.pts[i]);

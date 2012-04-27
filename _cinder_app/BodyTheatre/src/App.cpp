@@ -4,6 +4,7 @@
 #include "cinder/Rand.h"
 #include "CiTool.h"
 #include "Config.h"
+#include "cinder/Utilities.h"
 
 void BodyTheatreApp::prepareSettings( Settings *settings )
 {
@@ -14,6 +15,14 @@ void BodyTheatreApp::prepareSettings( Settings *settings )
 
 void BodyTheatreApp::setup()
 {
+#ifdef _DEBUG
+	int breakPoint = 0;
+	if (getArgs().size() == 2)
+	{
+		breakPoint = fromString<int>(getArgs()[1]);
+	}
+	enableMemleakCheck(breakPoint);
+#endif
 	Rand::randomize();
 
 	if (!loadConfig("BodyTheatre.xml"))

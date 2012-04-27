@@ -110,8 +110,8 @@ void KinectRoutine::onOscMessage( const osc::Message* msg, int* filter_id)
 
 	if (filter_id && plyIdx != *filter_id)//skip unmatched msg
 		return;
-
-	console()<<plyIdx<<endl;
+	if (verbose)
+		console()<<plyIdx<<endl;
 
 	int id = (addr == "/left") ? LEFT : RIGHT;
 	_hands[id].pos.set(x,y);
