@@ -19,7 +19,10 @@ void BodyTheatreApp::update()
 		struct Player& the_player = players[_activeIdx];
 		the_player.update();
 		if (!the_player.isAlive())
+		{
+			the_player.nodes.clear();
 			_activeIdx = INVALID_IDX;
+		}
 
 		if (the_player.state == Player::T_SPLITTED)
 		{

@@ -47,7 +47,7 @@ void BodyTheatreApp::onOscMessage( const osc::Message* msg )
 			players[id].setup(msg);
 		}
 	}
-	else _routine->onOscMessage(msg);
+	else _routine->onOscMessage(msg, &_activeIdx);
 }
 
 void BodyTheatreApp::keyDown( KeyEvent event )

@@ -107,9 +107,12 @@ void Player::draw()
 		if (life > TIME_TOTAL*0.7f)//enough time
 			state = T_SHARE;
 		else
+		{
+			state = T_ENTER;
 			alive = false;
+			nodes.clear();
+		}
 	}
-
 
 	switch (state)
 	{
