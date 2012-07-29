@@ -10,8 +10,8 @@ int main(int argc, char** argv )
 	{
 		while (true)
 		{
-			IplImage* _raw = input.get_frame(); 
-			if (!_raw)
+			Mat raw = input.get_frame(); 
+			if (raw.empty())
 				break;
 			Mat raw = _raw;
 			show_mat(raw);
