@@ -738,18 +738,6 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="msaFluid"
-				>
-				<File
-					RelativePath="..\src\cinder\msaFluid\ciMsaFluidDrawerGl.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\cinder\msaFluid\ciMsaFluidSolver.cpp"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="osc"
 				>
 				<File
@@ -1364,26 +1352,6 @@
 				</File>
 				<File
 					RelativePath="..\include\json\writer.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="msaFluid"
-				>
-				<File
-					RelativePath="..\include\cinder\msaFluid\ciMsaFluid.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\cinder\msaFluid\ciMsaFluidDrawerGl.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\cinder\msaFluid\ciMsaFluidParticleUpdater.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\cinder\msaFluid\ciMsaFluidSolver.h"
 					>
 				</File>
 			</Filter>
