@@ -1,4 +1,5 @@
 #include "dx9.h"
+#include "ManagedObject.h"
 
 #pragma comment( lib, "dxerr.lib" )
 #pragma comment( lib, "dxguid.lib" )
@@ -135,4 +136,13 @@ void disableAlphaTest()
 	g_device->SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
 }
 
+void onLostDevice()
+{
+    getManagedPool().OnLostDevice();
+}
+
+void onResetDevice()
+{
+    getManagedPool().OnResetDevice();
+}
 } } // namespace cinder::dx9

@@ -42,7 +42,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\..\..\..\include;..\..\..\..\..\boost;..\..\..\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;D3D_DEBUG_INFO"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -183,6 +183,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\include\dx9.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\ManagedObject.h"
 				>
 			</File>
 			<File

@@ -70,6 +70,10 @@ IDirect3DDevice9* getDevice();
 //! Clears the DX9 color buffer using \a color and optionally clears the depth buffer when \a clearDepthBuffer
 void clear( const ColorA &color = ColorA::black(), bool clearDepthBuffer = true, float clearZValue = 1.0f);
 
+void onLostDevice();
+
+void onResetDevice();
+
 //! Enables or disables wait for vertical sync
 void enableVerticalSync( bool enable = true );
 //! Disables wait for vertical sync

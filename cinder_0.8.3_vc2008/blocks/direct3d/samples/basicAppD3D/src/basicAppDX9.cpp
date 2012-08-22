@@ -2,6 +2,7 @@
 #include "cinder/Camera.h"
 #include "RendererDx9.h"
 #include "dx9.h"
+#include "ManagedObject.h"
 #include <boost/intrusive_ptr.hpp>
 
 using namespace ci;
@@ -15,10 +16,8 @@ class BasicApp : public AppBasic {
 public:
     void setup()
     {
-        dev = dx9::getDevice();
-
         ID3DXMesh* tempMesh = NULL;
-        V(D3DXCreateTeapot(dev, &tempMesh, NULL));
+        V(D3DXCreateTeapot(dx9::getDevice(), &tempMesh, NULL));
         teapot = boost::intrusive_ptr<ID3DXMesh>(tempMesh, false);
     }
 
@@ -47,7 +46,6 @@ private:
     CameraPersp	mCam;
 
     boost::intrusive_ptr<ID3DXMesh> teapot;
-    IDirect3DDevice9* dev;
 };
 
 CINDER_APP_BASIC( BasicApp, RendererDX9)

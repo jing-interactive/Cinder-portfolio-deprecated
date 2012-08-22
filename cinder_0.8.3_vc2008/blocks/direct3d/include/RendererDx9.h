@@ -34,8 +34,7 @@ class App;
 
 class RendererDX9 : public Renderer {
  public:
-	RendererDX9();
-	RendererDX9( int aAntiAliasing );
+	RendererDX9(int aAntiAliasing = 0);
 	~RendererDX9();
   
 	virtual void	setup( App *aApp, HWND wnd, HDC dc );
@@ -56,13 +55,13 @@ class RendererDX9 : public Renderer {
 	
  protected:
 
-     bool isDeviceLost();
-     void onLostDevice();
+    bool isDeviceLost();
+    void onLostDevice();
+    void onResetDevice();
 
-     void onResetDevice();
 	int			mAntiAliasing;
-    IDirect3D9  *md3dObject;
     IDirect3DDevice9* mDevice;
+    IDirect3DDevice9* mPrevDevice;
 	HWND        mWnd;
     D3DDEVTYPE mDevType;
     D3DPRESENT_PARAMETERS md3dPP;
