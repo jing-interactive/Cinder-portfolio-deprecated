@@ -22,7 +22,7 @@
 
 #include "cinder/app/Renderer.h"
 #include "cinder/app/App.h"
-
+#include "cinder/Utilities.h"
 #include "cinder/app/AppImplMsw.h"
 #include "RendererDx9.h"
 #include "dx9.h"
@@ -31,6 +31,7 @@
 
 namespace{
     HRESULT hr = S_OK;
+    IDirect3D9* md3dObject = NULL;
 }
 
 namespace cinder { namespace dx9 {
@@ -42,16 +43,12 @@ namespace cinder { namespace app {
 const int RendererDX9::sAntiAliasingSamples[] = { 0, 2, 4, 6, 8, 16, 32 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// RendererDX9
-RendererDX9::RendererDX9()
-	: Renderer()
-{
-	mAntiAliasing = AA_MSAA_16;
-}
 
 RendererDX9::RendererDX9( int aAntiAliasing )
 	: Renderer(), mAntiAliasing( aAntiAliasing )
-{}
+{
+    mDevice = NULL;
+}
 
 void RendererDX9::setAntiAliasing( int aAntiAliasing )
 {
@@ -72,20 +69,22 @@ void RendererDX9::setup( App *aApp, HWND wnd, HDC dc )
 
 	// Step 1: Create the IDirect3D9 object.
 
-    md3dObject = Direct3DCreate9(D3D_SDK_VERSION);
-	if( !md3dObject )
-	{
-		MessageBox(0, L"Direct3DCreate9 FAILED", 0, 0);
-		PostQuitMessage(0);
-	}
-
+    if (!md3dObject)
+    {
+        md3dObject = Direct3DCreate9(D3D_SDK_VERSION);
+	    if( !md3dObject )
+	    {
+		    MessageBox(0, L"Direct3DCreate9 FAILED", 0, 0);
+		    PostQuitMessage(0);
+	    }
+    }
 
 	// Step 2: Verify hardware support for specified formats in windowed and full screen modes.
 	
 	D3DDISPLAYMODE mode;
 	md3dObject->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &mode);
-	V(md3dObject->CheckDeviceType(D3DADAPTER_DEFAULT, mDevType, mode.Format, mode.Format, true));
-	V(md3dObject->CheckDeviceType(D3DADAPTER_DEFAULT, mDevType, D3DFMT_X8R8G8B8, D3DFMT_X8R8G8B8, false));
+	V(md3dObject->CheckDeviceType(D3DADAPTER_DEFAULT, mDevType, mode.Format, mode.Format, TRUE));
+	V(md3dObject->CheckDeviceType(D3DADAPTER_DEFAULT, mDevType, D3DFMT_X8R8G8B8, D3DFMT_X8R8G8B8, FALSE));
 
 	// Step 3: Check for requested vertex processing and pure device.
 
@@ -122,6 +121,7 @@ void RendererDX9::setup( App *aApp, HWND wnd, HDC dc )
 
 
 	// Step 5: Create the device.
+    SAFE_RELEASE(mDevice);
 
 	V(md3dObject->CreateDevice(
 		D3DADAPTER_DEFAULT, // primary adapter
@@ -150,7 +150,7 @@ bool RendererDX9::isDeviceLost()
 	// message loop cycle.
 	if( hr == D3DERR_DEVICELOST )
 	{
-		Sleep(20);
+		sleep(20);
 		return true;
 	}
 	// Driver error, exit.
@@ -234,8 +234,8 @@ void RendererDX9::finishToggleFullScreen()
 
 void RendererDX9::startDraw()
 {
-    if (!isDeviceLost())
-        V(mDevice->BeginScene());
+    isDeviceLost();
+    V(mDevice->BeginScene());
 }
 
 void RendererDX9::finishDraw()
