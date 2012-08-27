@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="basicApp"
+	Name="basicAppDX9"
 	ProjectGUID="{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}"
 	RootNamespace="basicApp"
 	Keyword="Win32Proj"
@@ -42,7 +42,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\..\..\..\include;..\..\..\..\..\boost;..\..\..\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;D3D_DEBUG_INFO"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -178,24 +178,28 @@
 			Name="D3d"
 			>
 			<File
-				RelativePath="..\..\..\src\AppImplMswRendererD3d.cpp"
+				RelativePath="..\..\..\src\dx9.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\include\AppImplMswRendererD3d.h"
+				RelativePath="..\..\..\include\dx9.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\RendererD3d.cpp"
+				RelativePath="..\..\..\include\ManagedObject.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\include\RendererD3d.h"
+				RelativePath="..\..\..\src\RendererDX9.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\RendererDX9.h"
 				>
 			</File>
 		</Filter>
 		<File
-			RelativePath="..\src\basicAppD3d.cpp"
+			RelativePath="..\src\basicAppDX9.cpp"
 			>
 		</File>
 	</Files>
