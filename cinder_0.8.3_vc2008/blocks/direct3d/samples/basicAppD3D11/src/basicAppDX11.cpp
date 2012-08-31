@@ -1,9 +1,8 @@
 #include "cinder/app/AppBasic.h"
 #include "cinder/Camera.h"
 #include "cinder/Rand.h"
-#include "dx9/RendererDx9.h"
-#include "dx9/dx9.h"
-#include "dx9/ManagedObject.h"
+#include "dx11/RendererDx11.h"
+#include "dx11/dx11.h"
 #include <boost/intrusive_ptr.hpp>
 
 using namespace ci;
@@ -17,21 +16,21 @@ class BasicApp : public AppBasic {
 public:
     void setup()
     {
-        createDX9Scene();
+        createScene();
     }
 
     void destroy()
     {
-        destroyDX9Scene();
+        destroyScene();
     }
 
     void keyDown( KeyEvent event )
     {
         if( event.getChar() == 'f' )
         {
-            destroyDX9Scene();
+            destroyScene();
             setFullScreen( ! isFullScreen() );
-            createDX9Scene();
+            createScene();
         }
         if (event.getCode() == KeyEvent::KEY_ESCAPE)
             quit();
@@ -39,34 +38,34 @@ public:
 
     void draw()
     {
-        dx9::clear(ColorA(0.5f, 0.5f, 0.5f));
-        V(teapot->DrawSubset(0));
+        dx11::clear(ColorA(0.5f, 0.5f, 0.5f));
+        //V(teapot->DrawSubset(0));
     }
 
     void resize( ResizeEvent event )
     {
         mCam.lookAt( Vec3f( 0.0f, 0.0f, 10.0f ), Vec3f::zero() );
         mCam.setPerspective( 60, getWindowAspectRatio(), 1, 5000 );
-        dx9::setMatrices( mCam);
+        dx11::setMatrices( mCam);
     }
 
 private:
-    void destroyDX9Scene()
+    void destroyScene()
     {
 
     }
 
-    void createDX9Scene()
+    void createScene()
     {
-        ID3DXMesh* tempMesh = NULL;
-        V(D3DXCreateTeapot(dx9::getDevice(), &tempMesh, NULL));
-        teapot = boost::intrusive_ptr<ID3DXMesh>(tempMesh, false);
+        //ID3DXMesh* tempMesh = NULL;
+        //V(D3DXCreateTeapot(::getDevice(), &tempMesh, NULL));
+        //teapot = boost::intrusive_ptr<ID3DXMesh>(tempMesh, false);
     }
 
 private: 
     CameraPersp	mCam;
 
-    boost::intrusive_ptr<ID3DXMesh> teapot;
+    //boost::intrusive_ptr<ID3DXMesh> teapot;
 };
 
-CINDER_APP_BASIC( BasicApp, RendererDX9)
+CINDER_APP_BASIC( BasicApp, RendererDX11)

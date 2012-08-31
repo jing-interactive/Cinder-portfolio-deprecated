@@ -1,5 +1,5 @@
-#include "dx9.h"
-#include "ManagedObject.h"
+#include "dx9/dx9.h"
+#include "dx9/ManagedObject.h"
 
 #pragma comment( lib, "dxerr.lib" )
 #pragma comment( lib, "dxguid.lib" )

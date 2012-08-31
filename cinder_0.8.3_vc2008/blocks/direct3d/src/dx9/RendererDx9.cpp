@@ -24,8 +24,8 @@
 #include "cinder/app/App.h"
 #include "cinder/Utilities.h"
 #include "cinder/app/AppImplMsw.h"
-#include "RendererDx9.h"
-#include "dx9.h"
+#include "dx9/RendererDx9.h"
+#include "dx9/dx9.h"
 
 //#include "cinder/ip/Flip.h"
 

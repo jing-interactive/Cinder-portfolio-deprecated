@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="basicAppDX9"
+	Name="basicAppDX11"
 	ProjectGUID="{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}"
 	RootNamespace="basicApp"
 	Keyword="Win32Proj"
@@ -175,39 +175,27 @@
 	</References>
 	<Files>
 		<Filter
-			Name="dx9"
+			Name="dx11"
 			>
 			<File
-				RelativePath="..\..\..\src\dx9\dx9.cpp"
+				RelativePath="..\..\..\src\dx11\dx11.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\include\dx9\dx9.h"
+				RelativePath="..\..\..\include\dx11\dx11.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\dx9\Light.cpp"
+				RelativePath="..\..\..\src\dx11\RendererDx11.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\include\dx9\Light.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\include\dx9\ManagedObject.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\dx9\RendererDx9.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\include\dx9\RendererDx9.h"
+				RelativePath="..\..\..\include\dx11\RendererDx11.h"
 				>
 			</File>
 		</Filter>
 		<File
-			RelativePath="..\src\basicAppDX9.cpp"
+			RelativePath="..\src\basicAppDX11.cpp"
 			>
 		</File>
 	</Files>
