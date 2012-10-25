@@ -1,3 +1,6 @@
 [submodule "cinder_0.8.3_vc2008/blocks/Cinder-DirectX"]
 	path = cinder_0.8.3_vc2008/blocks/Cinder-DirectX
 	url = git@github.com:vinjn/Cinder-DirectX.git
+[submodule "cinder_0.8.3_vc2008/blocks/Cinder-MeshHelper"]
+	path = cinder_0.8.3_vc2008/blocks/Cinder-MeshHelper
+	url = git@github.com:vinjn/Cinder-MeshHelper.git
