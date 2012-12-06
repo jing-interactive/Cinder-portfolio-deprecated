@@ -363,14 +363,14 @@ int ofxDirList::listDir(std::string directory){
 	struct dirent *entry;
 
     //open the directory
-    printf("ofxDirList - attempting to open %s", directory.c_str());
+    printf("ofxDirList - attempting to open %s\n", directory.c_str());
     dir = opendir(directory.c_str());
 
 	if(dir == NULL){
-		printf("ofxDirList - error opening directory");
+		printf("ofxDirList - error opening directory\n");
 		return 0;
 	}else{
-		printf("ofxDirList - success opening directory");
+		printf("ofxDirList - success opening directory\n");
 	}
 
     std::string entry_name = "";
@@ -424,11 +424,11 @@ int ofxDirList::listDir(std::string directory){
         pathArray.push_back(directory + entry_name);
         nameArray.push_back(entry_name);
 
-		printf("ofxDirList - listing %s ", nameArray.back().c_str());
+		printf("ofxDirList - listing %s\n", nameArray.back().c_str());
 	}
 	if(dir != NULL) closedir(dir);
 
-	printf("ofxDirList - listed %i files in %s", nameArray.size(), directory.c_str());
+	printf("ofxDirList - listed %i files in %s\n", nameArray.size(), directory.c_str());
 	return nameArray.size();
 }
 

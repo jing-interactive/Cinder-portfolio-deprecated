@@ -4,3 +4,9 @@
 [submodule "cinder_0.8.3_vc2008/blocks/Cinder-MeshHelper"]
 	path = cinder_0.8.3_vc2008/blocks/Cinder-MeshHelper
 	url = https://github.com/BanTheRewind/Cinder-MeshHelper.git
+[submodule "cinder_0.8.3_vc2008/Cinder-Samples"]
+	path = cinder_0.8.3_vc2008/Cinder-Samples
+	url = https://github.com/paulhoux/Cinder-Samples.git
+[submodule "_common/vOpenCV"]
+    path = _common/vOpenCV
+    url = https://github.com/vinjn/vOpenCV.git 

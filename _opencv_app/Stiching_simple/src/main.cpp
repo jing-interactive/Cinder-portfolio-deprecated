@@ -3,15 +3,15 @@
 #include "../../../_common/ofxDirList.h"
 
 #if defined _DEBUG
-#pragma comment(lib,"opencv_core232d.lib")
-#pragma comment(lib,"opencv_imgproc232d.lib")
-#pragma comment(lib,"opencv_highgui232d.lib")
-#pragma comment(lib,"opencv_stitching232d.lib")
+#pragma comment(lib,"opencv_core243d.lib")
+#pragma comment(lib,"opencv_imgproc243d.lib")
+#pragma comment(lib,"opencv_highgui243d.lib")
+#pragma comment(lib,"opencv_stitching243d.lib")
 #else
-#pragma comment(lib,"opencv_core232.lib")
-#pragma comment(lib,"opencv_imgproc232.lib")
-#pragma comment(lib,"opencv_highgui232.lib")
-#pragma comment(lib,"opencv_stitching232.lib")
+#pragma comment(lib,"opencv_core243.lib")
+#pragma comment(lib,"opencv_imgproc243.lib")
+#pragma comment(lib,"opencv_highgui243.lib")
+#pragma comment(lib,"opencv_stitching243.lib")
 #endif
 
 using namespace std;
@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 {
 	if (argc < 2)
 	{
-		printf("usage: %s folder_contains_images the_output_image=\"result.png\" \n", argv[0]);
+		printf("usage: %s path/folder/contains/images the_output_image=\"result.png\" \n", argv[0]);
 		return -1;
 	}
 

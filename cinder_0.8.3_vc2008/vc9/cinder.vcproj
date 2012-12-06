@@ -785,6 +785,22 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="qtime"
+				>
+				<File
+					RelativePath="..\src\cinder\qtime\MovieWriter.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\cinder\qtime\QuickTime.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\cinder\qtime\QuickTimeUtils.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -1440,6 +1456,22 @@
 				</File>
 				<File
 					RelativePath="..\include\cinder\svg\SvgGl.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="qtime"
+				>
+				<File
+					RelativePath="..\include\cinder\qtime\MovieWriter.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\qtime\QuickTime.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\qtime\QuickTimeUtils.h"
 					>
 				</File>
 			</Filter>
