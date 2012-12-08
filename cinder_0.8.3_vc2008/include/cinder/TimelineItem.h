@@ -62,7 +62,7 @@ class TimelineItem : public std::enable_shared_from_this<TimelineItem>
 	void			setPingPong( bool pingPong = true ) { mPingPong = pingPong; }
 
 	//! Returns whether the item ever is marked as complete
-	bool			getInfinite() const { return mLoop; }
+	bool			getInfinite() const { return mInfinite; }
 	//! Sets whether the item ever is marked as complete
 	void			setInfinite( bool infinite = true ) { mInfinite = infinite; }
 

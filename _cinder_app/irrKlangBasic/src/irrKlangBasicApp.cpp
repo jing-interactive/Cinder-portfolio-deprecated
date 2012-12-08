@@ -2,6 +2,7 @@
 #include "cinder/audio/Output.h"
 #include "cinder/audio/Io.h"
 #include "cinder/audio/SourceFileWindowsMedia.h"
+#include "cinder/Timeline.h"
 
 #include "Resources.h"
 
@@ -15,9 +16,26 @@ using namespace ci::app;
 
 class irrKlangBasicApp : public AppBasic {
 public:
-	void setup();
-	void mouseDown( MouseEvent );
-	void draw();
+	void setup()
+	{
+		//loadAudio( "getout.ogg" );
+		loadAudio( "ophelia.mp3" );
+		mAudioTracks.push_back( audio::Output::addTrack( mAudioSources.front() ) );
+		mVolume = 0.0f;
+		timeline().apply( &mVolume, 1.0f, 4.0f, easeInOutQuad ).pingPong().loop();
+	}
+
+	void update()
+	{
+		console() << mVolume << std::endl;
+		mAudioTracks.front()->setVolume( mVolume );
+	}
+
+	void draw()
+	{
+		gl::clear();
+		gl::drawSolidCircle( Vec2f( getWindowWidth() / 2, mVolume * getWindowHeight() ), 10 );
+	}
 
 private:
 	void loadAudio(const std::string& filename)
@@ -32,23 +50,8 @@ private:
 		CATCH_EXCEPTION( audio::IoException )
 	}
 	std::vector<audio::SourceRef> mAudioSources;
+	std::vector<audio::TrackRef> mAudioTracks;
+	Anim<float> mVolume;
 };
-
-void irrKlangBasicApp::setup()
-{
-	//loadAudio( "getout.ogg" );
-	loadAudio( "ophelia.mp3" );
-}
-
-void irrKlangBasicApp::mouseDown( MouseEvent event )
-{
-	audio::Output::play( mAudioSources.front() );
-}
-
-void irrKlangBasicApp::draw()
-{
-	glClearColor( 0.1f, 0.1f, 0.1f, 1.0f );
-	glClear( GL_COLOR_BUFFER_BIT );
-}
 
 CINDER_APP_BASIC( irrKlangBasicApp, RendererGl )

@@ -113,6 +113,7 @@ OutputImplXAudio::Track::Track( SourceRef source, OutputImplXAudio * output )
 OutputImplXAudio::Track::~Track()
 {
 	stop();
+	mSourceVoice->DestroyVoice();
 	delete [] mDecodedBuffers;
 	CloseHandle( mBufferEndEvent );
 }
@@ -122,7 +123,7 @@ void OutputImplXAudio::Track::play()
 	//mLoader->start();
 	//fillBufferCallback();
 	mIsPlaying = true;
-	mQueueThread = std::shared_ptr<boost::thread>( new boost::thread( boost::bind( &OutputImplXAudio::Track::fillBuffer, this ) ) );
+	mQueueThread = std::shared_ptr<std::thread>( new std::thread( &OutputImplXAudio::Track::fillBuffer, this ) );
 
 	::HRESULT hr = mSourceVoice->Start( 0, XAUDIO2_COMMIT_NOW );
 	if( FAILED( hr ) ) {
@@ -283,7 +284,7 @@ void OutputImplXAudio::removeTrack( TrackId trackId )
 		//TODO: throw OutputInvalidTrackExc();
 		return;
 	}
-	
+
 	mTracks.erase( trackId );
 }
 

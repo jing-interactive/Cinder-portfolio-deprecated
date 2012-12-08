@@ -40,6 +40,7 @@ namespace std {
 	using boost::lock_guard;
 	using boost::unique_lock;
 	using boost::condition_variable;
+	namespace this_thread = boost::this_thread;
 }
 
 namespace cinder {
