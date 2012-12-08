@@ -14,7 +14,21 @@ class AudioPlaybackApp : public AppBasic {
 	void draw();
 
 private:
-	void loadAudio(const std::string& filename)
+	void loadAudio( int mswID, const std::string &mswType )
+	{
+		try
+		{
+			audio::SourceRef src = audio::load( loadResource( mswID, mswType ) );
+			if ( src )
+				mAudioSources.push_back( src );
+		}
+		catch ( Exception& e )
+		{
+			console() << e.what() << std::endl;
+		}
+	}
+
+	void loadAudio( const std::string& filename )
 	{
 		try
 		{
@@ -32,8 +46,9 @@ private:
 
 void AudioPlaybackApp::setup()
 {
-	loadAudio( "getout.ogg" );
 	loadAudio( "ophelia.mp3" );
+	loadAudio( RES_BOOYAH );
+	loadAudio( RES_BOOYAHWAV );
 }
 
 void AudioPlaybackApp::mouseDown( MouseEvent event )
