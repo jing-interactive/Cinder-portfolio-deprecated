@@ -13,7 +13,6 @@ using namespace std;
 class QuickTimeSampleApp : public AppBasic {
  public:
 	void setup();
-
 	void keyDown( KeyEvent event );
 	void fileDrop( FileDropEvent event );
 
@@ -101,4 +100,4 @@ void QuickTimeSampleApp::draw()
 	}
 }
 
-CINDER_APP_BASIC( QuickTimeSampleApp, RendererGl );
+CINDER_APP_BASIC( QuickTimeSampleApp, RendererGl(RendererGl::AA_NONE) );
