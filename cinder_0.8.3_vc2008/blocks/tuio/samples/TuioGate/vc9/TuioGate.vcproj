@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="MultiTouch"
+	Name="TuioGate"
 	ProjectGUID="{9DA00FEA-5218-413E-B762-35D91045B3B4}"
-	RootNamespace="MultiTouch"
+	RootNamespace="TuioGate"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
 	>
@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\include;..\..\..\..\..\include;..\..\..\..\..\boost;..\..\..\include;..\..\..\..\osc\include"
+				AdditionalIncludeDirectories="..\..\..\..\..\blocks\osc\include\ip;..\..\..\..\..\blocks\osc\include\osc;..\..\..\..\..\blocks\osc\include;..\..\..\..\..\blocks\tuio\include;..\include;..\..\..\..\..\include;..\..\..\..\..\boost"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;NOMINMAX"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -55,6 +55,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="..\..\..\..\..\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -63,7 +64,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="cinder_d.lib osc_d.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\..\..\..\..\lib;..\..\..\..\osc\lib\vc9;..\..\..\..\..\lib\msw"
+				AdditionalLibraryDirectories="..\..\..\..\..\blocks\osc\lib\vc9;..\..\..\..\..\lib;..\..\..\..\..\lib\msw"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				RandomizedBaseAddress="1"
@@ -117,7 +118,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\include;..\..\..\..\..\include;..\..\..\..\..\boost;..\..\..\include;..\..\..\..\osc\include"
+				AdditionalIncludeDirectories="..\..\..\..\..\blocks\osc\include\ip;..\..\..\..\..\blocks\osc\include\osc;..\..\..\..\..\blocks\osc\include;..\..\..\..\..\blocks\tuio\include;..\include;..\..\..\..\..\include;..\..\..\..\..\boost"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;NOMINMAX"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -129,6 +130,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="..\..\..\..\..\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -137,7 +139,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="cinder.lib osc.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\..\..\..\..\lib;..\..\..\..\osc\lib\vc9;..\..\..\..\..\lib\msw"
+				AdditionalLibraryDirectories="..\..\..\..\..\blocks\osc\lib\vc9;..\..\..\..\..\lib;..\..\..\..\..\lib\msw"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -190,7 +192,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\MultiTouchApp.cpp"
+				RelativePath="..\src\TuioGateApp.cpp"
 				>
 			</File>
 		</Filter>
@@ -199,12 +201,20 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath="..\include\Resources.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+			<File
+				RelativePath=".\Resources.rc"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Blocks"
@@ -267,6 +277,66 @@
 						RelativePath="..\..\..\..\osc\include\OscSender.h"
 						>
 					</File>
+					<Filter
+						Name="ip"
+						>
+						<File
+							RelativePath="..\..\..\..\osc\include\ip\IpEndpointName.h"
+							>
+						</File>
+						<File
+							RelativePath="..\..\..\..\osc\include\ip\NetworkingUtils.h"
+							>
+						</File>
+						<File
+							RelativePath="..\..\..\..\osc\include\ip\PacketListener.h"
+							>
+						</File>
+						<File
+							RelativePath="..\..\..\..\osc\include\ip\TimerListener.h"
+							>
+						</File>
+						<File
+							RelativePath="..\..\..\..\osc\include\ip\UdpSocket.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="osc"
+						>
+						<File
+							RelativePath="..\..\..\..\osc\include\osc\MessageMappingOscPacketListener.h"
+							>
+						</File>
+						<File
+							RelativePath="..\..\..\..\osc\include\osc\OscException.h"
+							>
+						</File>
+						<File
+							RelativePath="..\..\..\..\osc\include\osc\OscHostEndianness.h"
+							>
+						</File>
+						<File
+							RelativePath="..\..\..\..\osc\include\osc\OscOutboundPacketStream.h"
+							>
+						</File>
+						<File
+							RelativePath="..\..\..\..\osc\include\osc\OscPacketListener.h"
+							>
+						</File>
+						<File
+							RelativePath="..\..\..\..\osc\include\osc\OscPrintReceivedElements.h"
+							>
+						</File>
+						<File
+							RelativePath="..\..\..\..\osc\include\osc\OscReceivedElements.h"
+							>
+						</File>
+						<File
+							RelativePath="..\..\..\..\osc\include\osc\OscTypes.h"
+							>
+						</File>
+					</Filter>
 				</Filter>
 				<Filter
 					Name="src"

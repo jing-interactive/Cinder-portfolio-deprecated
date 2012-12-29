@@ -43,6 +43,8 @@ class InterfaceGl {
 	void	hide();
 	bool	isVisible() const;
 	
+    void	removeParam( const std::string &name );
+
 	void	addParam( const std::string &name, bool *boolParam, const std::string &optionsStr = "", bool readOnly = false );
 	void	addParam( const std::string &name, float *floatParam, const std::string &optionsStr = "", bool readOnly = false );
 	void	addParam( const std::string &name, int32_t *intParam, const std::string &optionsStr = "", bool readOnly = false );

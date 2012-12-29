@@ -193,19 +193,24 @@ Client::Client()
 	: mHandlerObject( new ProfileHandler<Object>() ),
 	  mHandlerCursor( new ProfileHandler<Cursor>() ),
 	  mHandlerCursor25d( new ProfileHandler<Cursor25d>() ),
-	  mPastFrameThreshold( DEFAULT_PAST_FRAME_THRESHOLD )
+	  mPastFrameThreshold( DEFAULT_PAST_FRAME_THRESHOLD ),
+      mMessageReceivedCallbackId( -1 ),
+      mConnected( false )
 {
 }
 
 void Client::connect( int port )
 {
 	mListener.setup( port );
-	mListener.registerMessageReceived( this, &Client::oscMessageReceived );
+	mMessageReceivedCallbackId = mListener.registerMessageReceived( this, &Client::oscMessageReceived );
 	mConnected = true;
 }
 	
 void Client::disconnect() {
 	lock_guard<mutex> lock( mMutex );
+
+    if (mConnected)
+        mListener.unregisterMessageReceived(mMessageReceivedCallbackId);
 
 	mListener.shutdown();
 	mConnected = false;

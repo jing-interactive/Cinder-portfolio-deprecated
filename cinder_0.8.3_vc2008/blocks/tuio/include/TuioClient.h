@@ -165,6 +165,7 @@ class Client {
 	void oscMessageReceived( const osc::Message *message );
 
 	osc::Listener	mListener;
+    CallbackId      mMessageReceivedCallbackId;
 
 	CallbackMgr<void (const osc::Message*)>	mOscMessageCallbacks;
 	

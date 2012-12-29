@@ -296,4 +296,10 @@ void InterfaceGl::setOptions( const std::string &name, const std::string &option
 	TwDefine( ( target + " " + optionsStr ).c_str() );
 }
 
+void InterfaceGl::removeParam( const std::string &name )
+{
+    TwRemoveVar( mBar.get(), name.c_str() );
+}
+
+
 } } // namespace cinder::params
