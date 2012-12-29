@@ -3,6 +3,7 @@
 #include "cinder/gl/gl.h"
 #include "cinder/System.h"
 #include "cinder/Rand.h"
+#include "cinder/Utilities.h"
 #include "TuioClient.h"
 #include "OscSender.h"
 #include "cinder/params/Params.h"
@@ -44,17 +45,35 @@ struct TouchPoint {
     float			mTimeOfDeath;
 };
 
-// We'll create a new Cinder Application by deriving from the BasicApp class
-class MultiTouchApp : public AppBasic {
+class TuioGateway : public AppBasic {
 public:
     void	prepareSettings( Settings *settings )
     {
         settings->enableMultiTouch();
     }
 
+    void    mouseDown( MouseEvent event )
+    {
+        mouseDrag(event);
+        mPrevCursorPos = mCursorPos;
+    }
+
+    void    mouseUp( MouseEvent event )
+    {
+        mCursorPressed = false;
+    }
+
+    void    mouseDrag( MouseEvent event )
+    {
+        mCursorPressed = true;
+        mCursorPos = event.getPos();
+    }
+
+
     void	touchesBegan( TouchEvent event )
     {
-        console() << "Began: " << event << std::endl;
+        //console() << "Began: " << event << std::endl;
+
         for( vector<TouchEvent::Touch>::const_iterator touchIt = event.getTouches().begin(); touchIt != event.getTouches().end(); ++touchIt ) {
             Color newColor( CM_HSV, Rand::randFloat(), 1, 1 );
             mActivePoints.insert( make_pair( touchIt->getId(), TouchPoint( touchIt->getPos(), newColor ) ) );
@@ -63,14 +82,17 @@ public:
 
     void	touchesMoved( TouchEvent event )
     {
-        console() << "Moved: " << event << std::endl;
+        //console() << "Moved: " << event << std::endl;
+
         for( vector<TouchEvent::Touch>::const_iterator touchIt = event.getTouches().begin(); touchIt != event.getTouches().end(); ++touchIt )
             mActivePoints[touchIt->getId()].addPoint( touchIt->getPos() );
     }
 
     void	touchesEnded( TouchEvent event )
     {
-        console() << "Ended: " << event << std::endl;
+        //console() << "Ended: " << event << std::endl;
+
+        lock_guard<mutex> locker(mMutex);
         for( vector<TouchEvent::Touch>::const_iterator touchIt = event.getTouches().begin(); touchIt != event.getTouches().end(); ++touchIt ) {
             mActivePoints[touchIt->getId()].startDying();
             mDyingPoints.push_back( mActivePoints[touchIt->getId()] );
@@ -84,17 +106,43 @@ public:
     {
         math<int>::clamp(APP_USAGE, USAGE_CLIENT, USAGE_GATEWAY);
 
-        if (APP_USAGE != USAGE_SERVER)
+        mActivePoints.clear();
+        mCursorPressed = false;
+
+        mTuioClient.disconnect();
+        mTuioServer = osc::Sender();
+        mOscServer = osc::Sender();
+
+        char buffer[MAX_PATH] = {0};
+
+        switch (APP_USAGE)
         {
-            mTuioClient.disconnect();
-            mTuioClient.connect(LOCAL_TUIO_PORT);
+        case USAGE_CLIENT:
+            {
+                mTuioClient.connect(LOCAL_TUIO_PORT);
+                sprintf_s(buffer, MAX_PATH, "%s : listening at #%d", 
+                    mEnumTypes[APP_USAGE].c_str(), LOCAL_TUIO_PORT);
+            }break;
+        case USAGE_SERVER:
+            {
+                mTuioServer.setup(REMOTE_IP, REMOTE_TUIO_PORT);
+                mTuioServer.setup(REMOTE_IP, REMOTE_OSC_PORT);
+                sprintf_s(buffer, MAX_PATH , "%s : sending to %s: #%d | #%d", 
+                    mEnumTypes[APP_USAGE].c_str(), REMOTE_IP.c_str(), REMOTE_TUIO_PORT, REMOTE_OSC_PORT);
+                mStatus = buffer;
+            }break;
+        case USAGE_GATEWAY:
+            {
+                mTuioClient.connect(LOCAL_TUIO_PORT);
+                mTuioServer.setup(REMOTE_IP, REMOTE_TUIO_PORT);
+                mOscServer.setup(REMOTE_IP, REMOTE_OSC_PORT);
+                sprintf_s(buffer, MAX_PATH, "%s : listening at %d, sending to %s: #%d | #%d", 
+                    mEnumTypes[APP_USAGE].c_str(), LOCAL_TUIO_PORT, REMOTE_IP.c_str(), REMOTE_TUIO_PORT, REMOTE_OSC_PORT);
+            }break;
+        default:
+            break;
         }
-        if (APP_USAGE != USAGE_CLIENT)
-        {
-            mTuioServer.setup(REMOTE_IP, REMOTE_TUIO_PORT);
-            mOscServer.setup(REMOTE_IP, REMOTE_OSC_PORT);
-        }
-        mStatus = mEnumTypes[APP_USAGE] +" Mode is running.";
+        mStatus = buffer;
     }
 
     void	setup()
@@ -102,7 +150,7 @@ public:
         readConfig();
         mStatus = "idle..press CONNECT button";
 
-        mParams = params::InterfaceGl("param", Vec2i(250, 190));
+        mParams = params::InterfaceGl("param", Vec2i(270, 240));
         {
             mEnumTypes.clear();
             mEnumTypes.push_back("Client");
@@ -110,6 +158,7 @@ public:
             mEnumTypes.push_back("Router");
 
             // MAGIC!
+            int lines = 0;
 #define ITEM_DEF(type, var, default) mParams.addParam(#var, &var);
 #include "item.def"
 #undef ITEM_DEF
@@ -119,7 +168,7 @@ public:
             mParams.addSeparator();
             mParams.addParam("APP_USAGE", mEnumTypes, &APP_USAGE);
             mParams.addSeparator();
-            mParams.addButton("CONNECT", std::bind(&MultiTouchApp::onConnect, this));
+            mParams.addButton("CONNECT", std::bind(&TuioGateway::onConnect, this));
             mParams.addButton("SAVE", writeConfig);
 
             onConnect();
@@ -129,7 +178,7 @@ public:
 
         console() << "MT: " << System::hasMultiTouch() << " Max points: " << System::getMaxMultiTouchPoints() << std::endl;
 
-        mFont = Font("YouYuan", 32);
+        mFont = Font("YouYuan", 24);
     }
 
     void	draw()
@@ -138,8 +187,11 @@ public:
         gl::clear( Color( 0.1f, 0.1f, 0.1f ) );
         gl::setMatricesWindow( getWindowWidth(), getWindowHeight() );
 
-        for( map<uint32_t,TouchPoint>::const_iterator activeIt = mActivePoints.begin(); activeIt != mActivePoints.end(); ++activeIt ) {
-            activeIt->second.draw();
+        {
+            lock_guard<mutex> locker(mMutex);
+            for( map<uint32_t,TouchPoint>::const_iterator activeIt = mActivePoints.begin(); activeIt != mActivePoints.end(); ++activeIt ) {
+                activeIt->second.draw();
+            }
         }
 
         for( list<TouchPoint>::iterator dyingIt = mDyingPoints.begin(); dyingIt != mDyingPoints.end(); ) {
@@ -153,6 +205,13 @@ public:
         // draw yellow circles at the active touch points
         gl::color( Color( 1, 1, 0 ) );
         vector<TouchEvent::Touch> activeTouches( mTuioClient.getActiveTouches() );
+
+        if (mCursorPressed)
+        {
+            activeTouches.push_back(TouchEvent::Touch(mCursorPos, mPrevCursorPos, -1, getElapsedSeconds(), NULL));
+            mPrevCursorPos = mCursorPos;
+        }
+
         for( vector<TouchEvent::Touch>::const_iterator touchIt = activeTouches.begin(); touchIt != activeTouches.end(); ++touchIt )
             gl::drawStrokedCircle( touchIt->getPos(), 20.0f );
 
@@ -189,7 +248,11 @@ private:
     vector<string>              mEnumTypes;
     string                      mStatus;
     Font                        mFont;
+
+    mutex                       mMutex;
+    bool                        mCursorPressed;
+    Vec2f                       mCursorPos, mPrevCursorPos;
 };
 
-CINDER_APP_BASIC( MultiTouchApp, RendererGl )
+CINDER_APP_BASIC( TuioGateway, RendererGl )
 

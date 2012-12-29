@@ -210,7 +210,12 @@ void Client::disconnect() {
 	lock_guard<mutex> lock( mMutex );
 
     if (mConnected)
+    {
+        mHandlerObject.reset(new ProfileHandler<Object>());
+        mHandlerCursor.reset( new ProfileHandler<Cursor>() );
+        mHandlerCursor25d.reset( new ProfileHandler<Cursor25d>() );
         mListener.unregisterMessageReceived(mMessageReceivedCallbackId);
+    }
 
 	mListener.shutdown();
 	mConnected = false;
