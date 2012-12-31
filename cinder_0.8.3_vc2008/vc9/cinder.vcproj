@@ -786,18 +786,10 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="qtime"
+				Name="tuio"
 				>
 				<File
-					RelativePath="..\src\cinder\qtime\MovieWriter.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\cinder\qtime\QuickTime.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\cinder\qtime\QuickTimeUtils.cpp"
+					RelativePath="..\src\cinder\tuio\TuioClient.cpp"
 					>
 				</File>
 			</Filter>
@@ -1460,18 +1452,22 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="qtime"
+				Name="tuio"
 				>
 				<File
-					RelativePath="..\include\cinder\qtime\MovieWriter.h"
+					RelativePath="..\include\cinder\tuio\TuioClient.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\cinder\qtime\QuickTime.h"
+					RelativePath="..\include\cinder\tuio\TuioCursor.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\cinder\qtime\QuickTimeUtils.h"
+					RelativePath="..\include\cinder\tuio\TuioObject.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\tuio\TuioProfileBase.h"
 					>
 				</File>
 			</Filter>

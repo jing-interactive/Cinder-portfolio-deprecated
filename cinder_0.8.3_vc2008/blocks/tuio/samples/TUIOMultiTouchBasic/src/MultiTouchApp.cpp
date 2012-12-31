@@ -4,8 +4,8 @@
 #include "cinder/System.h"
 #include "cinder/Rand.h"
 #include "cinder/Utilities.h"
-#include "TuioClient.h"
-#include "OscSender.h"
+#include "cinder/tuio/TuioClient.h"
+#include "cinder/osc/OscSender.h"
 #include "cinder/params/Params.h"
 #include "MiniConfig.h"
 

@@ -45,7 +45,7 @@ class OscListener : public ::osc::OscPacketListener {
 	OscListener();
 	~OscListener();
 	
-	void setup(int listen_port);
+	bool setup(int listen_port);
 	
 	bool hasWaitingMessages() const;
 	bool getNextMessage( Message * );
@@ -77,17 +77,27 @@ OscListener::OscListener()
 	mListen_socket = NULL;
 }
 
-void OscListener::setup(int listen_port)
+bool OscListener::setup(int listen_port)
 {
 	if (mListen_socket) {
 		shutdown();
+        return false;
 	}
 	
 	mSocketHasShutdown = false;
 	
-	mListen_socket = new UdpListeningReceiveSocket(IpEndpointName(IpEndpointName::ANY_ADDRESS, listen_port), this);
+    try
+    {
+        mListen_socket = new UdpListeningReceiveSocket(IpEndpointName(IpEndpointName::ANY_ADDRESS, listen_port), this);
+    }
+    catch (std::runtime_error& e)
+    {
+        return false;
+    }
 
 	mThread = std::shared_ptr<std::thread>( new std::thread( &OscListener::threadSocket, this ) );
+
+    return true;
 }
 
 void OscListener::shutdown() {
@@ -113,7 +123,6 @@ void OscListener::threadSocket() {
 	
 	mListen_socket->Run();
 	mSocketHasShutdown = true;
-	
 }
 
 void OscListener::ProcessMessage( const ::osc::ReceivedMessage &m, const IpEndpointName& remoteEndpoint ) {
