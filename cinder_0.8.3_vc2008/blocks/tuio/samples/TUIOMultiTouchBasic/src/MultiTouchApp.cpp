@@ -33,7 +33,8 @@ struct TouchPoint {
         else
             gl::color( mColor );
 
-        gl::draw( mLine );
+        if (mLine.size() > 0)
+            gl::draw( mLine );
     }
 
     void startDying() { mTimeOfDeath = getElapsedSeconds() + 2.0f; } // two seconds till dead
@@ -100,13 +101,13 @@ public:
         }
     }
 
-    enum {USAGE_CLIENT, USAGE_SERVER, USAGE_GATEWAY};
+    enum {USAGE_CLIENT, USAGE_SERVER, USAGE_GATEWAY, USAGE_COUNT};
 
     void onConnect()
     {
-        math<int>::clamp(APP_USAGE, USAGE_CLIENT, USAGE_GATEWAY);
+        APP_USAGE = math<int>::clamp(APP_USAGE, USAGE_CLIENT, USAGE_GATEWAY);
 
-        mActivePoints.clear();
+        mClearJobScheduled = true;
         mCursorPressed = false;
 
         mTuioClient.disconnect();
@@ -115,40 +116,55 @@ public:
 
         char buffer[MAX_PATH] = {0};
 
-        switch (APP_USAGE)
+        strcpy(buffer, mEnumTypes[APP_USAGE].c_str());
+
+#define CATCH_ERROR  catch (std::exception& e)   {\
+            sprintf_s(buffer, MAX_PATH, "%s | [FAIL] %s!!!", buffer, e.what());\
+            console() << __FILE__ << " (" << __LINE__ << ") " << e.what() << endl;\
+            mCurrentAppUsage = USAGE_COUNT;\
+            break;}
+
+        do 
         {
-        case USAGE_CLIENT:
+            if (APP_USAGE != USAGE_SERVER)
             {
-                mTuioClient.connect(LOCAL_TUIO_PORT);
-                sprintf_s(buffer, MAX_PATH, "%s : listening at #%d", 
-                    mEnumTypes[APP_USAGE].c_str(), LOCAL_TUIO_PORT);
-            }break;
-        case USAGE_SERVER:
+                try
+                {
+                    mTuioClient.connect(LOCAL_TUIO_PORT);
+                    sprintf_s(buffer, MAX_PATH, "%s | listen at #%d", 
+                        buffer, LOCAL_TUIO_PORT);
+                    mCurrentAppUsage = APP_USAGE;
+                }
+                CATCH_ERROR
+            }
+
+            if (APP_USAGE != USAGE_CLIENT)
             {
-                mTuioServer.setup(REMOTE_IP, REMOTE_TUIO_PORT);
-                mTuioServer.setup(REMOTE_IP, REMOTE_OSC_PORT);
-                sprintf_s(buffer, MAX_PATH , "%s : sending to %s: #%d | #%d", 
-                    mEnumTypes[APP_USAGE].c_str(), REMOTE_IP.c_str(), REMOTE_TUIO_PORT, REMOTE_OSC_PORT);
-                mStatus = buffer;
-            }break;
-        case USAGE_GATEWAY:
-            {
-                mTuioClient.connect(LOCAL_TUIO_PORT);
-                mTuioServer.setup(REMOTE_IP, REMOTE_TUIO_PORT);
-                mOscServer.setup(REMOTE_IP, REMOTE_OSC_PORT);
-                sprintf_s(buffer, MAX_PATH, "%s : listening at %d, sending to %s: #%d | #%d", 
-                    mEnumTypes[APP_USAGE].c_str(), LOCAL_TUIO_PORT, REMOTE_IP.c_str(), REMOTE_TUIO_PORT, REMOTE_OSC_PORT);
-            }break;
-        default:
-            break;
-        }
+                try
+                {
+                    mTuioServer.setup(REMOTE_IP, REMOTE_TUIO_PORT);
+                    mOscServer.setup(REMOTE_IP, REMOTE_OSC_PORT);
+                    sprintf_s(buffer, MAX_PATH , "%s | sending to %s: #%d | #%d", 
+                        buffer, REMOTE_IP.c_str(), REMOTE_TUIO_PORT, REMOTE_OSC_PORT);
+                    mCurrentAppUsage = APP_USAGE;
+                }
+                CATCH_ERROR
+            }
+        } while (0);
+
+#undef CATCH_ERROR
+
         mStatus = buffer;
     }
 
     void	setup()
     {
+        console() << "TuioGateway built on " << __DATE__ << endl;
+
         readConfig();
         mStatus = "idle..press CONNECT button";
+        mClearJobScheduled = true;
+        mCurrentAppUsage = USAGE_COUNT;
 
         mParams = params::InterfaceGl("param", Vec2i(270, 240));
         {
@@ -178,7 +194,20 @@ public:
 
         console() << "MT: " << System::hasMultiTouch() << " Max points: " << System::getMaxMultiTouchPoints() << std::endl;
 
-        mFont = Font("YouYuan", 24);
+        mFont = Font("YouYuan", 22);
+    }
+
+    void update()
+    {
+        N_DISPLAYS = math<int>::clamp(N_DISPLAYS, 1, 8);
+        REMOTE_DISPLAY_ID = math<int>::clamp(REMOTE_DISPLAY_ID, 1, N_DISPLAYS);
+
+        if (mClearJobScheduled)
+        {
+            mClearJobScheduled = false;
+            mActivePoints.clear();
+            mDyingPoints.clear();
+        }
     }
 
     void	draw()
@@ -204,16 +233,21 @@ public:
 
         // draw yellow circles at the active touch points
         gl::color( Color( 1, 1, 0 ) );
-        vector<TouchEvent::Touch> activeTouches( mTuioClient.getActiveTouches() );
+        vector<tuio::Cursor> activeTouches( mTuioClient.getCursors() );
 
         if (mCursorPressed)
         {
-            activeTouches.push_back(TouchEvent::Touch(mCursorPos, mPrevCursorPos, -1, getElapsedSeconds(), NULL));
+            activeTouches.push_back(tuio::Cursor(
+                "", -1, Vec2f(mCursorPos.x/getWindowWidth(), mCursorPos.y/getWindowHeight())
+                ));
             mPrevCursorPos = mCursorPos;
         }
 
-        for( vector<TouchEvent::Touch>::const_iterator touchIt = activeTouches.begin(); touchIt != activeTouches.end(); ++touchIt )
-            gl::drawStrokedCircle( touchIt->getPos(), 20.0f );
+        if (mCurrentAppUsage == USAGE_SERVER || mCurrentAppUsage == USAGE_GATEWAY)
+            sendTuioMessages(mTuioServer, activeTouches);
+
+        for( vector<tuio::Cursor>::const_iterator touchIt = activeTouches.begin(); touchIt != activeTouches.end(); ++touchIt )
+            gl::drawStrokedCircle( Vec2f(touchIt->getPos().x * getWindowWidth(), touchIt->getPos().y * getWindowHeight()),20.0f );
 
         gl::drawString(mStatus, Vec2f(10, getWindowHeight() - 100), ColorA::white(), mFont);
         mParams.draw();
@@ -235,6 +269,64 @@ public:
         }
     }
 
+    void sendTuioMessages( osc::Sender& sender, const vector<tuio::Cursor>& activeTouches ) 
+    {
+        osc::Bundle b;
+        osc::Message alive;
+        // Sends alive message - saying 'Hey, there's no alive blobs'
+        alive.setAddress("/tuio/2Dcur");
+        alive.addStringArg("alive");
+
+        // Send fseq message
+        osc::Message fseq;
+        fseq.setAddress( "/tuio/2Dcur" );
+        fseq.addStringArg( "fseq" );
+        fseq.addIntArg(getElapsedFrames());
+
+        float cellSize = 1.0f/N_DISPLAYS;
+        float x0 = cellSize * (REMOTE_DISPLAY_ID - 1);
+        float x1 = cellSize * (REMOTE_DISPLAY_ID);
+
+        if (!activeTouches.empty())
+        {
+            for (vector<tuio::Cursor>::const_iterator it = activeTouches.begin(); it != activeTouches.end(); ++it)
+            {
+                float x = it->getPos().x;
+                float y = it->getPos().y;
+
+                x = x0 + x * cellSize;
+                //y = y0 + y * cellSize;
+
+                if (x <= x0 || x >= x1 || y <= 0 || y >= 1.0f)
+                    continue;
+
+                osc::Message set;
+                set.setAddress( "/tuio/2Dcur" );
+                set.addStringArg("set");
+                set.addIntArg(it->getSessionId());				// id
+                set.addFloatArg(x);	// x
+                set.addFloatArg(y);	// y
+                set.addFloatArg(it->getSpeed().x);			// dX
+                set.addFloatArg(it->getSpeed().y);			// dY
+                set.addFloatArg(it->getMotionAccel());		// m
+
+                b.addMessage( set );							// add message to bundle
+                alive.addIntArg(it->getSessionId());				// add blob to list of ALL active IDs
+            }
+        }
+        b.addMessage( alive );		// add message to bundle
+        b.addMessage( fseq );		// add message to bundle
+
+        try
+        {
+            sender.sendBundle( b ); // send bundle
+        }
+        catch (std::exception& e)
+        {
+            console() << "sendBundle : " << e.what() << endl;
+        }
+    }
+
 private:
     map<uint32_t,TouchPoint>	mActivePoints;
     list<TouchPoint>			mDyingPoints;
@@ -252,6 +344,8 @@ private:
     mutex                       mMutex;
     bool                        mCursorPressed;
     Vec2f                       mCursorPos, mPrevCursorPos;
+    bool                        mClearJobScheduled;
+    int                         mCurrentAppUsage;
 };
 
 CINDER_APP_BASIC( TuioGateway, RendererGl )
