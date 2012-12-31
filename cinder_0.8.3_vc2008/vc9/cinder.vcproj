@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="Ws2_32.lib wldap32.lib libpng.lib shlwapi.lib OpenGL32.lib zlib.lib pixman-1.lib wmvcore.lib Strmiids.lib Msimg32.lib osc_d.lib"
+				AdditionalDependencies="Ws2_32.lib wldap32.lib libpng.lib shlwapi.lib OpenGL32.lib zlib.lib pixman-1.lib wmvcore.lib Strmiids.lib Msimg32.lib"
 				OutputFile="..\lib\cinder_d.lib"
 				AdditionalLibraryDirectories="..\lib\msw;..\lib\OpenCV"
 				IgnoreAllDefaultLibraries="true"
@@ -135,7 +135,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="Ws2_32.lib wldap32.lib libpng.lib shlwapi.lib OpenGL32.lib zlib.lib pixman-1.lib wmvcore.lib Strmiids.lib Msimg32.lib osc.lib"
+				AdditionalDependencies="Ws2_32.lib wldap32.lib libpng.lib shlwapi.lib OpenGL32.lib zlib.lib pixman-1.lib wmvcore.lib Strmiids.lib Msimg32.lib"
 				OutputFile="..\lib\cinder.lib"
 				AdditionalLibraryDirectories="..\lib\msw;..\lib\OpenCV"
 				IgnoreAllDefaultLibraries="true"
@@ -264,6 +264,14 @@
 			<File
 				RelativePath="..\src\cinder\Json.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\cinder\Matrix.cpp"
@@ -300,6 +308,14 @@
 			<File
 				RelativePath="..\src\cinder\Serial.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\cinder\Shape2d.cpp"
@@ -414,30 +430,26 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="audio"
+				Name="linebreak"
 				>
 				<File
-					RelativePath="..\src\cinder\audio\Io.cpp"
+					RelativePath="..\src\linebreak\linebreak.c"
 					>
 				</File>
 				<File
-					RelativePath="..\src\cinder\audio\Output.cpp"
+					RelativePath="..\src\linebreak\linebreak.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\cinder\audio\OutputImplXAudio.cpp"
+					RelativePath="..\src\linebreak\linebreakdata.c"
 					>
 				</File>
 				<File
-					RelativePath="..\src\cinder\audio\PcmBuffer.cpp"
+					RelativePath="..\src\linebreak\linebreakdef.c"
 					>
 				</File>
 				<File
-					RelativePath="..\src\cinder\audio\SourceFileWav.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\cinder\audio\SourceFileWindowsMedia.cpp"
+					RelativePath="..\src\linebreak\linebreakdef.h"
 					>
 				</File>
 			</Filter>
@@ -714,30 +726,6 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="json"
-				>
-				<File
-					RelativePath="..\src\jsoncpp\json_batchallocator.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\jsoncpp\json_reader.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\jsoncpp\json_tool.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\jsoncpp\json_value.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\jsoncpp\json_writer.cpp"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="osc"
 				>
 				<File
@@ -756,34 +744,38 @@
 					RelativePath="..\src\cinder\osc\OscSender.cpp"
 					>
 				</File>
-			</Filter>
-			<Filter
-				Name="svg"
-				>
-				<File
-					RelativePath="..\src\linebreak\linebreak.c"
+				<Filter
+					Name="oscpack"
 					>
-				</File>
-				<File
-					RelativePath="..\src\linebreak\linebreak.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\linebreak\linebreakdata.c"
-					>
-				</File>
-				<File
-					RelativePath="..\src\linebreak\linebreakdef.c"
-					>
-				</File>
-				<File
-					RelativePath="..\src\linebreak\linebreakdef.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\cinder\svg\Svg.cpp"
-					>
-				</File>
+					<File
+						RelativePath="..\src\cinder\osc\ip\IpEndpointName.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\src\cinder\osc\ip\NetworkingUtils.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\src\cinder\osc\osc\OscOutboundPacketStream.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\src\cinder\osc\osc\OscPrintReceivedElements.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\src\cinder\osc\osc\OscReceivedElements.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\src\cinder\osc\osc\OscTypes.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\src\cinder\osc\ip\UdpSocket.cpp"
+						>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="tuio"
@@ -1144,46 +1136,6 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="audio"
-				>
-				<File
-					RelativePath="..\include\cinder\audio\Callback.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\cinder\audio\FftProcessor.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\cinder\audio\FftProcessorImplXDsp.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\cinder\audio\Io.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\cinder\audio\Output.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\cinder\audio\OutputImplXAudio.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\cinder\audio\PcmBuffer.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\cinder\audio\SourceFileWav.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\cinder\audio\SourceFileWindowsMedia.h"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="cairo"
 				>
 				<File
@@ -1328,42 +1280,6 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="json"
-				>
-				<File
-					RelativePath="..\include\json\autolink.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\json\config.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\json\features.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\json\forwards.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\json\json.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\json\reader.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\json\value.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\json\writer.h"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="osc"
 				>
 				<File
@@ -1436,18 +1352,6 @@
 				</File>
 				<File
 					RelativePath="..\include\cinder\osc\ip\UdpSocket.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="svg"
-				>
-				<File
-					RelativePath="..\include\cinder\svg\Svg.h"
-					>
-				</File>
-				<File
-					RelativePath="..\include\cinder\svg\SvgGl.h"
 					>
 				</File>
 			</Filter>

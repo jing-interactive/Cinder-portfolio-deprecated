@@ -31,6 +31,7 @@
 #include "cinder/osc/osc/OscPacketListener.h"
 #include "cinder/osc/osc/OscReceivedElements.h"
 #include "cinder/osc/ip/UdpSocket.h"
+#include "cinder/app/AppBasic.h"
 
 #include <iostream>
 #include <assert.h>
@@ -85,7 +86,7 @@ void OscListener::setup(int listen_port)
 	
 	mSocketHasShutdown = false;
 	
-	mListen_socket = new UdpListeningReceiveSocket(IpEndpointName(IpEndpointName::ANY_ADDRESS, listen_port), this);
+    mListen_socket = new UdpListeningReceiveSocket(IpEndpointName(IpEndpointName::ANY_ADDRESS, listen_port), this);
 
 	mThread = std::shared_ptr<std::thread>( new std::thread( &OscListener::threadSocket, this ) );
 }
