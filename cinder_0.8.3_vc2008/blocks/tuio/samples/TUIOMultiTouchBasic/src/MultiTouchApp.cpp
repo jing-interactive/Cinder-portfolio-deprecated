@@ -17,88 +17,28 @@ using namespace ci::app;
 #include <list>
 using namespace std;
 
-struct TouchPoint {
-    TouchPoint() {}
-    TouchPoint( const Vec2f &initialPt, const Color &color ) : mColor( color ), mTimeOfDeath( -1.0 ) 
-    {
-        mLine.push_back( initialPt ); 
-    }
-
-    void addPoint( const Vec2f &pt ) { mLine.push_back( pt ); }
-
-    void draw() const
-    {
-        if( mTimeOfDeath > 0 ) // are we dying? then fade out
-            gl::color( ColorA( mColor, ( mTimeOfDeath - getElapsedSeconds() ) / 2.0f ) );
-        else
-            gl::color( mColor );
-
-        if (mLine.size() > 0)
-            gl::draw( mLine );
-    }
-
-    void startDying() { mTimeOfDeath = getElapsedSeconds() + 2.0f; } // two seconds till dead
-
-    bool isDead() const { return getElapsedSeconds() > mTimeOfDeath; }
-
-    PolyLine<Vec2f>	mLine;
-    Color			mColor;
-    float			mTimeOfDeath;
-};
-
 class TuioGateway : public AppBasic {
 public:
-    void	prepareSettings( Settings *settings )
-    {
-        settings->enableMultiTouch();
-    }
+//     void prepareSettings( Settings *settings )
+//     {
+//         settings->enableMultiTouch();
+//     }
 
-    void    mouseDown( MouseEvent event )
+    void mouseDown( MouseEvent event )
     {
         mouseDrag(event);
         mPrevCursorPos = mCursorPos;
     }
 
-    void    mouseUp( MouseEvent event )
+    void mouseUp( MouseEvent event )
     {
         mCursorPressed = false;
     }
 
-    void    mouseDrag( MouseEvent event )
+    void mouseDrag( MouseEvent event )
     {
         mCursorPressed = true;
         mCursorPos = event.getPos();
-    }
-
-
-    void	touchesBegan( TouchEvent event )
-    {
-        //console() << "Began: " << event << std::endl;
-
-        for( vector<TouchEvent::Touch>::const_iterator touchIt = event.getTouches().begin(); touchIt != event.getTouches().end(); ++touchIt ) {
-            Color newColor( CM_HSV, Rand::randFloat(), 1, 1 );
-            mActivePoints.insert( make_pair( touchIt->getId(), TouchPoint( touchIt->getPos(), newColor ) ) );
-        }
-    }
-
-    void	touchesMoved( TouchEvent event )
-    {
-        //console() << "Moved: " << event << std::endl;
-
-        for( vector<TouchEvent::Touch>::const_iterator touchIt = event.getTouches().begin(); touchIt != event.getTouches().end(); ++touchIt )
-            mActivePoints[touchIt->getId()].addPoint( touchIt->getPos() );
-    }
-
-    void	touchesEnded( TouchEvent event )
-    {
-        //console() << "Ended: " << event << std::endl;
-
-        lock_guard<mutex> locker(mMutex);
-        for( vector<TouchEvent::Touch>::const_iterator touchIt = event.getTouches().begin(); touchIt != event.getTouches().end(); ++touchIt ) {
-            mActivePoints[touchIt->getId()].startDying();
-            mDyingPoints.push_back( mActivePoints[touchIt->getId()] );
-            mActivePoints.erase( touchIt->getId() );
-        }
     }
 
     enum {USAGE_CLIENT, USAGE_SERVER, USAGE_GATEWAY, USAGE_COUNT};
@@ -107,7 +47,6 @@ public:
     {
         APP_USAGE = math<int>::clamp(APP_USAGE, USAGE_CLIENT, USAGE_GATEWAY);
 
-        mClearJobScheduled = true;
         mCursorPressed = false;
 
         mTuioClient.disconnect();
@@ -135,7 +74,7 @@ public:
                         buffer, LOCAL_TUIO_PORT);
                     mCurrentAppUsage = APP_USAGE;
                 }
-                CATCH_ERROR
+                CATCH_ERROR 
             }
 
             if (APP_USAGE != USAGE_CLIENT)
@@ -157,13 +96,12 @@ public:
         mStatus = buffer;
     }
 
-    void	setup()
+    void setup()
     {
         console() << "TuioGateway built on " << __DATE__ << endl;
 
         readConfig();
         mStatus = "idle..press CONNECT button";
-        mClearJobScheduled = true;
         mCurrentAppUsage = USAGE_COUNT;
 
         mParams = params::InterfaceGl("param", Vec2i(270, 240));
@@ -190,9 +128,8 @@ public:
             onConnect();
         }
   
-        mTuioClient.registerTouches( this );
-
-        console() << "MT: " << System::hasMultiTouch() << " Max points: " << System::getMaxMultiTouchPoints() << std::endl;
+        //mTuioClient.registerTouches( this );
+        //console() << "MT: " << System::hasMultiTouch() << " Max points: " << System::getMaxMultiTouchPoints() << std::endl;
 
         mFont = Font("YouYuan", 22);
     }
@@ -202,74 +139,73 @@ public:
         N_DISPLAYS = math<int>::clamp(N_DISPLAYS, 1, 8);
         REMOTE_DISPLAY_ID = math<int>::clamp(REMOTE_DISPLAY_ID, 1, N_DISPLAYS);
 
-        if (mClearJobScheduled)
-        {
-            mClearJobScheduled = false;
-            mActivePoints.clear();
-            mDyingPoints.clear();
-        }
-    }
-
-    void	draw()
-    {
-        gl::enableAlphaBlending();
-        gl::clear( Color( 0.1f, 0.1f, 0.1f ) );
-        gl::setMatricesWindow( getWindowWidth(), getWindowHeight() );
-
-        {
-            lock_guard<mutex> locker(mMutex);
-            for( map<uint32_t,TouchPoint>::const_iterator activeIt = mActivePoints.begin(); activeIt != mActivePoints.end(); ++activeIt ) {
-                activeIt->second.draw();
-            }
-        }
-
-        for( list<TouchPoint>::iterator dyingIt = mDyingPoints.begin(); dyingIt != mDyingPoints.end(); ) {
-            dyingIt->draw();
-            if( dyingIt->isDead() )
-                dyingIt = mDyingPoints.erase( dyingIt );
-            else
-                ++dyingIt;
-        }
-
-        // draw yellow circles at the active touch points
-        gl::color( Color( 1, 1, 0 ) );
-        vector<tuio::Cursor> activeTouches( mTuioClient.getCursors() );
+        mActiveTouches = mTuioClient.getCursors();
 
         if (mCursorPressed)
         {
-            activeTouches.push_back(tuio::Cursor(
+            mActiveTouches.push_back(tuio::Cursor(
                 "", -1, Vec2f(mCursorPos.x/getWindowWidth(), mCursorPos.y/getWindowHeight())
                 ));
             mPrevCursorPos = mCursorPos;
         }
 
         if (mCurrentAppUsage == USAGE_SERVER || mCurrentAppUsage == USAGE_GATEWAY)
-            sendTuioMessages(mTuioServer, activeTouches);
+        {
+            sendTuioMessage(mTuioServer, mActiveTouches);
+            sendOscMessages(mOscServer, mActiveTouches);
+        }
+    }
 
-        for( vector<tuio::Cursor>::const_iterator touchIt = activeTouches.begin(); touchIt != activeTouches.end(); ++touchIt )
-            gl::drawStrokedCircle( Vec2f(touchIt->getPos().x * getWindowWidth(), touchIt->getPos().y * getWindowHeight()),20.0f );
+    void draw()
+    {
+        gl::enableAlphaBlending();
+        gl::clear( Color( 0.1f, 0.1f, 0.1f ) );
+        gl::setMatricesWindow( getWindowWidth(), getWindowHeight() );
 
-        gl::drawString(mStatus, Vec2f(10, getWindowHeight() - 100), ColorA::white(), mFont);
+        if (VISUAL_EFFECT)
+        {
+            // draw yellow circles at the active touch points
+            gl::color( Color( 1, 1, 0 ) );
+
+            for( vector<tuio::Cursor>::const_iterator touchIt = mActiveTouches.begin(); touchIt != mActiveTouches.end(); ++touchIt )
+                gl::drawStrokedCircle( Vec2f(touchIt->getPos().x * getWindowWidth(), touchIt->getPos().y * getWindowHeight()),20.0f );
+
+            gl::drawString(mStatus, Vec2f(10, getWindowHeight() - 100), ColorA::white(), mFont);
+        }
+
         mParams.draw();
     }
 
-    void	keyDown( KeyEvent event ) {
+    void keyDown( KeyEvent event ) {
         switch (event.getCode())
         {
-        case KeyEvent::KEY_SPACE:
-            {
-                setFullScreen( ! isFullScreen() ); 
-            }break;
+//         case KeyEvent::KEY_SPACE:
+//             {
+//                 setFullScreen( ! isFullScreen() ); 
+//             }break;
         case KeyEvent::KEY_ESCAPE:
             {
                 quit();
             }break;
+        case KeyEvent::KEY_h:
+            {
+                if (mParams.isVisible())
+                {
+                    mParams.show( false );
+                    VISUAL_EFFECT = false;
+                }
+                else
+                {
+                    mParams.show( true );
+                    VISUAL_EFFECT = true;
+                }
+            }
         default:
             break;
         }
     }
 
-    void sendTuioMessages( osc::Sender& sender, const vector<tuio::Cursor>& activeTouches ) 
+    void sendTuioMessage( osc::Sender& sender, const vector<tuio::Cursor>& cursors ) 
     {
         osc::Bundle b;
         osc::Message alive;
@@ -283,13 +219,13 @@ public:
         fseq.addStringArg( "fseq" );
         fseq.addIntArg(getElapsedFrames());
 
-        float cellSize = 1.0f/N_DISPLAYS;
-        float x0 = cellSize * (REMOTE_DISPLAY_ID - 1);
-        float x1 = cellSize * (REMOTE_DISPLAY_ID);
-
-        if (!activeTouches.empty())
+        if (!cursors.empty())
         {
-            for (vector<tuio::Cursor>::const_iterator it = activeTouches.begin(); it != activeTouches.end(); ++it)
+            float cellSize = 1.0f/N_DISPLAYS;
+            float x0 = cellSize * (REMOTE_DISPLAY_ID - 1);
+            float x1 = cellSize * (REMOTE_DISPLAY_ID);
+
+            for (vector<tuio::Cursor>::const_iterator it = cursors.begin(); it != cursors.end(); ++it)
             {
                 float x = it->getPos().x;
                 float y = it->getPos().y;
@@ -327,10 +263,35 @@ public:
         }
     }
 
+    void sendOscMessages( osc::Sender& sender, const vector<tuio::Cursor>& cursors ) 
+    {
+        if (!cursors.empty())
+        {
+            float cellSize = 1.0f/N_DISPLAYS;
+            float x0 = cellSize * (REMOTE_DISPLAY_ID - 1);
+            float x1 = cellSize * (REMOTE_DISPLAY_ID);
+
+            for (vector<tuio::Cursor>::const_iterator it = cursors.begin(); it != cursors.end(); ++it)
+            {
+                float x = it->getPos().x;
+                float y = it->getPos().y;
+
+                x = x0 + x * cellSize;
+                //y = y0 + y * cellSize;
+
+                if (x <= x0 || x >= x1 || y <= 0 || y >= 1.0f)
+                    continue;
+
+                osc::Message m;
+                m.setAddress("/cursor");
+                m.addFloatArg(x);
+                m.addFloatArg(y);
+                sender.sendMessage(m);
+            }
+        }
+    }
+
 private:
-    map<uint32_t,TouchPoint>	mActivePoints;
-    list<TouchPoint>			mDyingPoints;
- 
     params::InterfaceGl         mParams;
 
     tuio::Client				mTuioClient;
@@ -344,8 +305,9 @@ private:
     mutex                       mMutex;
     bool                        mCursorPressed;
     Vec2f                       mCursorPos, mPrevCursorPos;
-    bool                        mClearJobScheduled;
+
     int                         mCurrentAppUsage;
+    vector<tuio::Cursor>        mActiveTouches;
 };
 
 CINDER_APP_BASIC( TuioGateway, RendererGl )

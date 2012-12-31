@@ -202,13 +202,15 @@ Client::Client()
 void Client::connect( int port )
 {
 	mListener.setup( port );
-	mMessageReceivedCallbackId = mListener.registerMessageReceived( this, &Client::oscMessageReceived );
+
+    mMessageReceivedCallbackId = mListener.registerMessageReceived( this, &Client::oscMessageReceived );
 	mConnected = true;
 }
 	
 void Client::disconnect() {
 	lock_guard<mutex> lock( mMutex );
 
+	mListener.shutdown();
     if (mConnected)
     {
         mHandlerObject.reset(new ProfileHandler<Object>());
@@ -216,8 +218,6 @@ void Client::disconnect() {
         mHandlerCursor25d.reset( new ProfileHandler<Cursor25d>() );
         mListener.unregisterMessageReceived(mMessageReceivedCallbackId);
     }
-
-	mListener.shutdown();
 	mConnected = false;
 }
 
