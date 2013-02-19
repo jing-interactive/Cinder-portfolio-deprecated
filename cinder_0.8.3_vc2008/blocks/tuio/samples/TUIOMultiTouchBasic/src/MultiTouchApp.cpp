@@ -282,11 +282,21 @@ public:
                 if (x <= x0 || x >= x1 || y <= 0 || y >= 1.0f)
                     continue;
 
-                osc::Message m;
-                m.setAddress("/cursor");
-                m.addFloatArg(x);
-                m.addFloatArg(y);
-                sender.sendMessage(m);
+                osc::Bundle bundle;
+                {
+                    osc::Message m;
+                    m.setAddress("/cursor/x");
+                    m.addFloatArg(x);
+                    bundle.addMessage(m);
+                }
+                {
+                    osc::Message m;
+                    m.setAddress("/cursor/y");
+                    m.addFloatArg(y);
+                    bundle.addMessage(m);
+                }
+                sender.sendBundle(bundle);
+                break;// only send first valid cursor
             }
         }
     }
