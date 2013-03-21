@@ -785,6 +785,14 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="svg"
+				>
+				<File
+					RelativePath="..\src\cinder\svg\Svg.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -1352,6 +1360,18 @@
 				</File>
 				<File
 					RelativePath="..\include\cinder\osc\ip\UdpSocket.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="svg"
+				>
+				<File
+					RelativePath="..\include\cinder\svg\Svg.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\svg\SvgGl.h"
 					>
 				</File>
 			</Filter>

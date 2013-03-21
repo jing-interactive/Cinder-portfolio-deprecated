@@ -33,7 +33,7 @@ namespace cinder { namespace app {
 class MouseEvent : public Event {
   public:
 	MouseEvent() : Event() {}
-	MouseEvent( int aInitiator, int aX, int aY, unsigned int aModifiers, float aWheelIncrement, uint32_t aNativeModifiers )
+	MouseEvent( int aInitiator, int aX, int aY, unsigned int aModifiers = 0, float aWheelIncrement = 0.0f, uint32_t aNativeModifiers = 0)
 		: Event(), mInitiator( aInitiator ), mX( aX ), mY( aY ), mModifiers( aModifiers ), mWheelIncrement( aWheelIncrement ), mNativeModifiers( aNativeModifiers )
 	{}
 	
@@ -70,6 +70,9 @@ class MouseEvent : public Event {
 	
 	//! Returns the platform-native modifier mask
 	uint32_t	getNativeModifiers() const { return mNativeModifiers; }	
+
+    //! Set the platform-native modifier mask
+    void    	setNativeModifiers(uint32_t modifiers) { mNativeModifiers = modifiers; }	
 
 	enum {	LEFT_DOWN	= 0x0001,
 			RIGHT_DOWN	= 0x0002,
