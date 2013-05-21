@@ -69,9 +69,10 @@ class FontManager
 		
 		return mDefault;
 	}
+ public:
+    ~FontManager();
  private:
 	FontManager();
-	~FontManager();
 
 	static FontManager	*sInstance;
 
@@ -113,6 +114,18 @@ FontManager::~FontManager()
 #if defined( CINDER_MAC )
 	[nsFontManager release];
 #endif
+}
+
+namespace
+{
+    static struct AutoDeleter
+    {
+        ~AutoDeleter()
+        {
+            FontManager* mgr =  FontManager::instance();
+            delete mgr;
+        }
+    }_;
 }
 
 FontManager* FontManager::instance()

@@ -25,7 +25,7 @@ class bsplineApp : public AppBasic {
 	void	drawBSpline( cairo::Context &ctx );
 	void	draw();
 
-	vector<Vec2f>		mPoints;
+	vector<Vec2f>		mRawPoints;
 	int					mTrackedPoint;
 	int					mDegree;
 	bool				mOpen, mLoop;
@@ -37,8 +37,8 @@ void bsplineApp::mouseDown( MouseEvent event )
 	if( event.isLeft() ) { // line
 		Vec2f clickPt = Vec2f( event.getPos() );
 		int nearestIdx = findNearestPt( clickPt );
-		if( ( nearestIdx < 0 ) || ( mPoints[nearestIdx].distance( clickPt ) > MIN_CLICK_DISTANCE ) ) {
-			mPoints.push_back( Vec2f( event.getPos() ) );
+		if( ( nearestIdx < 0 ) || ( mRawPoints[nearestIdx].distance( clickPt ) > MIN_CLICK_DISTANCE ) ) {
+			mRawPoints.push_back( Vec2f( event.getPos() ) );
 			mTrackedPoint = -1;
 		}
 		else
@@ -50,7 +50,7 @@ void bsplineApp::mouseDown( MouseEvent event )
 void bsplineApp::mouseDrag( MouseEvent event )
 {
 	if( mTrackedPoint >= 0 ) {
-		mPoints[mTrackedPoint] = Vec2f( event.getPos() );
+		mRawPoints[mTrackedPoint] = Vec2f( event.getPos() );
 		calcLength();
 	}
 }
@@ -65,7 +65,7 @@ void bsplineApp::keyDown( KeyEvent event ) {
 		setFullScreen( false );
 	}
 	else if( event.getChar() == 'x' ) {
-		mPoints.clear();
+		mRawPoints.clear();
 	}
 	else if( event.getChar() == 'd' ) { // reduce the degree
 		mDegree = ( mDegree > 1 ) ? mDegree - 1 : mDegree;
@@ -106,14 +106,14 @@ void bsplineApp::keyDown( KeyEvent event ) {
 
 int bsplineApp::findNearestPt( const Vec2f &aPt )
 {
-	if( mPoints.empty() ) return -1;
+	if( mRawPoints.empty() ) return -1;
 	
 	int result = 0;
-	float nearestDist = mPoints[0].distance( aPt );
-	for( size_t i = 1; i < mPoints.size(); ++i ) {
-		if( mPoints[i].distance( aPt ) < nearestDist ) {
+	float nearestDist = mRawPoints[0].distance( aPt );
+	for( size_t i = 1; i < mRawPoints.size(); ++i ) {
+		if( mRawPoints[i].distance( aPt ) < nearestDist ) {
 			result = i;
-			nearestDist = mPoints[i].distance( aPt );
+			nearestDist = mRawPoints[i].distance( aPt );
 		}
 	}
 	
@@ -122,18 +122,18 @@ int bsplineApp::findNearestPt( const Vec2f &aPt )
 
 void bsplineApp::calcLength()
 {
-	if( mPoints.size() > (size_t)mDegree ) {
-		BSpline2f spline( mPoints, mDegree, mLoop, mOpen );
+	if( mRawPoints.size() > (size_t)mDegree ) {
+		BSpline2f spline( mRawPoints, mDegree, mLoop, mOpen );
 		console() << "Arc Length: " << spline.getLength( 0, 1 ) << std::endl;
 	}
 }
 
 void bsplineApp::drawBSpline( cairo::Context &ctx )
 {
-	if( mPoints.size() > (size_t)mDegree ) {
+	if( mRawPoints.size() > (size_t)mDegree ) {
 		ctx.setLineWidth( 2.5f );
 		ctx.setSourceRgb( 1.0f, 0.5f, 0.25f );
-		ctx.appendPath( Path2d( BSpline2f( mPoints, mDegree, mLoop, mOpen ) ) );
+		ctx.appendPath( Path2d( BSpline2f( mRawPoints, mDegree, mLoop, mOpen ) ) );
 		ctx.stroke();
 //		ctx.fill();
 	}
@@ -148,15 +148,15 @@ void bsplineApp::draw()
 	
 	// draw the control points
 	ctx.setSourceRgb( 1.0f, 1.0f, 0.0f );
-	for( size_t p = 0; p < mPoints.size(); ++p ) {
+	for( size_t p = 0; p < mRawPoints.size(); ++p ) {
 		ctx.newSubPath();
-		ctx.arc( mPoints[p], 2.5f, 0, 2 * 3.14159 );
+		ctx.arc( mRawPoints[p], 2.5f, 0, 2 * 3.14159 );
 	}
 	ctx.stroke();
 
-	if( mPoints.size() > (size_t)mDegree ) {
+	if( mRawPoints.size() > (size_t)mDegree ) {
 		// draw the curve by approximating via linear subdivision
-		BSpline2f spline( mPoints, mDegree, mLoop, mOpen );
+		BSpline2f spline( mRawPoints, mDegree, mLoop, mOpen );
 		ctx.setLineWidth( 8.0f );
 		ctx.setSourceRgb( 0.25f, 1.0f, 0.5f );
 		ctx.moveTo( spline.getPosition( 0 ) );

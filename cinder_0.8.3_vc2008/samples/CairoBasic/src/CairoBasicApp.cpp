@@ -78,20 +78,20 @@ void CairoBasicApp::keyDown( KeyEvent event )
 	else if( event.getChar() == 'x' ) {
 		mFlowers.clear();
 	}
-	else if( event.getChar() == 's' ) {
-		cairo::Context ctx( cairo::SurfaceSvg( getHomeDirectory() + "CairoBasicShot.svg", getWindowWidth(), getWindowHeight() ) );
-		renderScene( ctx );
-	}
+// 	else if( event.getChar() == 's' ) {
+// 		cairo::Context ctx( cairo::SurfaceSvg( getHomeDirectory() / "CairoBasicShot.svg", getWindowWidth(), getWindowHeight() ) );
+// 		renderScene( ctx );
+// 	}
 	else if( event.getChar() == 'e' ) {
-		cairo::Context ctx( cairo::SurfaceEps( getHomeDirectory() + "CairoBasicShot.eps", getWindowWidth(), getWindowHeight() ) );
+		cairo::Context ctx( cairo::SurfaceEps( getHomeDirectory() / "CairoBasicShot.eps", getWindowWidth(), getWindowHeight() ) );
 		renderScene( ctx );
 	}
 	else if( event.getChar() == 'p' ) {
-		cairo::Context ctx( cairo::SurfacePs( getHomeDirectory() + "CairoBasicShot.ps", getWindowWidth(), getWindowHeight() ) );
+		cairo::Context ctx( cairo::SurfacePs( getHomeDirectory() / "CairoBasicShot.ps", getWindowWidth(), getWindowHeight() ) );
 		renderScene( ctx );
 	}	
 	else if( event.getChar() == 'd' ) {
-		cairo::Context ctx( cairo::SurfacePdf( getHomeDirectory() + "CairoBasicShot.pdf", getWindowWidth(), getWindowHeight() ) );
+		cairo::Context ctx( cairo::SurfacePdf( getHomeDirectory() / "CairoBasicShot.pdf", getWindowWidth(), getWindowHeight() ) );
 		renderScene( ctx );
 	}	
 }

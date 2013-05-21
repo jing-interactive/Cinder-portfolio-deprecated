@@ -117,9 +117,9 @@ void TubularApp::setup()
 
 	// BSpline
 	mBasePoints.push_back( Vec3f( -3,  4, 0 ) );
-	mBasePoints.push_back( Vec3f(  5,  1, 0 ) );
-	mBasePoints.push_back( Vec3f( -5, -1, 0 ) );
-	mBasePoints.push_back( Vec3f(  3, -4, 0 ) );	
+	mBasePoints.push_back( Vec3f(  5,  4, 0 ) );
+	mBasePoints.push_back( Vec3f( -5,  4, 0 ) );
+	mBasePoints.push_back( Vec3f(  3,  4, 0 ) );	
 	mCurPoints = mBasePoints;
 	
 	int  degree = 3;
@@ -219,7 +219,7 @@ void TubularApp::update()
 			float dz = 0;
 			if( i > 0 && ( i < mBasePoints.size() - 1 ) ) {
 				dx = sin( t*i )*2.0f;
-				dy = sin( t*i/3.0f );
+				//dy = sin( t*i/3.0f );
 				dz = cos( t*i )*4.0f;
 			}
 			mCurPoints[i] = mBasePoints[i] + Vec3f( dx, dy, dz );

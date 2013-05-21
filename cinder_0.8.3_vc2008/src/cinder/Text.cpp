@@ -77,6 +77,18 @@ class TextManager : private boost::noncopyable
 #endif
 };
 
+namespace
+{
+    static struct AutoDeleter
+    {
+        ~AutoDeleter()
+        {
+            TextManager* mgr =  TextManager::instance();
+            delete mgr;
+        }
+    }_;
+}
+
 TextManager *TextManager::sInstance = 0;
 
 TextManager::TextManager()

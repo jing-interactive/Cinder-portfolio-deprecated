@@ -10,17 +10,18 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include <windows.h>
 #include <gl/GL.h>
 #pragma comment(lib,"opengl32.lib")
 
 #if defined _DEBUG
-#pragma comment(lib,"opencv_core232d.lib")
-#pragma comment(lib,"opencv_imgproc232d.lib")
-#pragma comment(lib,"opencv_highgui232d.lib")
+#pragma comment(lib,"opencv_core243d.lib")
+#pragma comment(lib,"opencv_imgproc243d.lib")
+#pragma comment(lib,"opencv_highgui243d.lib")
 #else
-#pragma comment(lib,"opencv_core232.lib")
-#pragma comment(lib,"opencv_imgproc232.lib")
-#pragma comment(lib,"opencv_highgui232.lib")
+#pragma comment(lib,"opencv_core244.lib")
+#pragma comment(lib,"opencv_imgproc244.lib")
+#pragma comment(lib,"opencv_highgui244.lib")
 #endif
 
 using namespace cv;
