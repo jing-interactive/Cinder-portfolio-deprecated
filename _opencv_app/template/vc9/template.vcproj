@@ -182,7 +182,7 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\main.cpp"
+			RelativePath="..\src\main.cpp"
 			>
 		</File>
 	</Files>
