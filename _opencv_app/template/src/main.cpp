@@ -1,4 +1,4 @@
-#include "../../../_common/vOpenCV/OpenCV.h"
+#include "vOpenCV/OpenCV.h"
 
 VideoInput input;
 
@@ -13,7 +13,6 @@ int main(int argc, char** argv )
 			Mat raw = input.get_frame(); 
 			if (raw.empty())
 				break;
-			Mat raw = _raw;
 			show_mat(raw);
 			
 			int key = waitKey(1);
