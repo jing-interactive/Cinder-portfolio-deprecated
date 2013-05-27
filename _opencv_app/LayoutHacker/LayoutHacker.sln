@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LayoutHacker", "LayoutHacker\LayoutHacker.vcproj", "{3881EE24-7D01-4B07-8783-41BBE23DA68C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+		StaticRelease|Win32 = StaticRelease|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3881EE24-7D01-4B07-8783-41BBE23DA68C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3881EE24-7D01-4B07-8783-41BBE23DA68C}.Debug|Win32.Build.0 = Debug|Win32
+		{3881EE24-7D01-4B07-8783-41BBE23DA68C}.Release|Win32.ActiveCfg = Release|Win32
+		{3881EE24-7D01-4B07-8783-41BBE23DA68C}.Release|Win32.Build.0 = Release|Win32
+		{3881EE24-7D01-4B07-8783-41BBE23DA68C}.StaticRelease|Win32.ActiveCfg = StaticRelease|Win32
+		{3881EE24-7D01-4B07-8783-41BBE23DA68C}.StaticRelease|Win32.Build.0 = StaticRelease|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
