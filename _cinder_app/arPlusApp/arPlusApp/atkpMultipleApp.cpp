@@ -84,7 +84,6 @@ private:
 	gl::Texture			mTexture;				// our camera capture texture
 	bool				mDrawCapturedImage;		// whether to draw the camera texture
 
-	CameraOrtho				mCam;
 	bool trackerIsValid;						// true if tracker is created successfully
 
 	//AR
@@ -101,8 +100,6 @@ void atkpMultipleApp::prepareSettings( Settings *settings )
 	settings->setWindowSize( APP_W,APP_H );
 	settings->setFrameRate( 60.0f );
 	settings->setFullScreen( false );
-	mCam.setOrtho(APP_W, 0, APP_H, 0, -1000, 1000);
-	mCam.setEyePoint(Vec3f(0,0,-100));
 }
 
 
