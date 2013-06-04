@@ -24,7 +24,7 @@
 #include <stdlib.h>
 
 #include <ARToolKitPlus/config.h>
-#include <stdint.h>
+#include "../../stdint.h"
 
 #define arMalloc(V,T,S)  \
 { if( ((V) = (T *)malloc( sizeof(T) * (S) )) == 0 ) \

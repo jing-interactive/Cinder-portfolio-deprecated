@@ -26,8 +26,6 @@
 #include <cstdio>
 #include <ARToolKitPlus/TrackerSingleMarker.h>
 
-using ARToolKitPlus::TrackerSingleMarker;
-
 int main(int argc, char** argv) {
     // switch this between true and false to test
     // simple-id versus BCH-id markers
@@ -39,7 +37,7 @@ int main(int argc, char** argv) {
     const char *fName = useBCH ? "data/image_320_240_8_marker_id_bch_nr0100.raw"
             : "data/image_320_240_8_marker_id_simple_nr031.raw";
 
-    unsigned char cameraBuffer[numPixels];
+    unsigned char* cameraBuffer = new unsigned char[numPixels];
 
     // try to load a test camera image.
     // these images files are expected to be simple 8-bit raw pixel
@@ -63,8 +61,8 @@ int main(int argc, char** argv) {
     //  - samples at a maximum of 6x6
     //  - works with luminance (gray) images
     //  - can load a maximum of 0 non-binary pattern
-    //  - can detect a maximum of 8 patterns in one imagege
-    TrackerSingleMarker tracker(width, height, 8, 6, 6, 6, 0);
+    //  - can detect a maximum of 8 patterns in one images
+    ARToolKitPlus::TrackerSingleMarker tracker(width, height, 8, 6, 6, 6, 0);
 
     tracker.setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_LUM);
     //tracker.setLoadUndistLUT(true);
@@ -111,6 +109,8 @@ int main(int argc, char** argv) {
     printf("\n\nFound marker %d  (confidence %d%%)\n\nPose-Matrix:\n  ", markerId[0], (int(conf * 100.0f)));
     for (int i = 0; i < 16; i++)
         printf("%.2f  %s", tracker.getModelViewMatrix()[i], (i % 4 == 3) ? "\n  " : "");
+
+    delete[] cameraBuffer;
 
     return 0;
 }

@@ -65,7 +65,7 @@ const IDPATTERN fullMask = (xorMask0 << posMask0) | (xorMask1 << posMask1) | (xo
 const unsigned int bchBits = 12;
 const unsigned int idMaxBCH = (1 << bchBits) - 1;
 
-// array with indices for 90� CW rotated grid
+// array with indices for 90_deg CW rotated grid
 const int rotate90[] = {
     30, 24, 18, 12,  6,  0,
     31, 25, 19, 13,  7,  1,

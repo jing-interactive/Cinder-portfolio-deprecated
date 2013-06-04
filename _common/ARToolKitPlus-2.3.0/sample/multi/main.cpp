@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
     size_t numPixels = width * height * bpp;
     size_t numBytesRead;
     const char *fName = "data/markerboard_480-499.raw";
-    unsigned char cameraBuffer[numPixels];
+    unsigned char* cameraBuffer = new unsigned char[numPixels];
 
     // try to load a test camera image.
     // these images files are expected to be simple 8-bit raw pixel
@@ -115,6 +115,8 @@ int main(int argc, char** argv) {
             }
         }
     }
+
+    delete[] cameraBuffer;
 
     return 0;
 }
