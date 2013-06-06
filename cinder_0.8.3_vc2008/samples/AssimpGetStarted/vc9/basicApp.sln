@@ -1,0 +1,56 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "basicApp", "basicApp.vcproj", "{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "assimp", "..\..\..\..\_common\assimp--3.0.1270\workspaces\vc9\assimp.vcproj", "{5691E159-2D9B-407F-971F-EA5C592DC524}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		debug-dll|Win32 = debug-dll|Win32
+		debug-noboost-st|Win32 = debug-noboost-st|Win32
+		debug-st|Win32 = debug-st|Win32
+		Release|Win32 = Release|Win32
+		release-dll|Win32 = release-dll|Win32
+		release-noboost-st|Win32 = release-noboost-st|Win32
+		release-st|Win32 = release-st|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}.Debug|Win32.Build.0 = Debug|Win32
+		{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}.debug-dll|Win32.ActiveCfg = Debug|Win32
+		{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}.debug-dll|Win32.Build.0 = Debug|Win32
+		{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}.debug-noboost-st|Win32.ActiveCfg = Debug|Win32
+		{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}.debug-noboost-st|Win32.Build.0 = Debug|Win32
+		{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}.debug-st|Win32.ActiveCfg = Debug|Win32
+		{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}.debug-st|Win32.Build.0 = Debug|Win32
+		{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}.Release|Win32.ActiveCfg = Release|Win32
+		{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}.Release|Win32.Build.0 = Release|Win32
+		{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}.release-dll|Win32.ActiveCfg = Release|Win32
+		{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}.release-dll|Win32.Build.0 = Release|Win32
+		{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}.release-noboost-st|Win32.ActiveCfg = Release|Win32
+		{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}.release-noboost-st|Win32.Build.0 = Release|Win32
+		{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}.release-st|Win32.ActiveCfg = Release|Win32
+		{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}.release-st|Win32.Build.0 = Release|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.Debug|Win32.ActiveCfg = debug|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.Debug|Win32.Build.0 = debug|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.debug-dll|Win32.ActiveCfg = debug-dll|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.debug-dll|Win32.Build.0 = debug-dll|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.debug-noboost-st|Win32.ActiveCfg = debug-noboost-st|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.debug-noboost-st|Win32.Build.0 = debug-noboost-st|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.debug-st|Win32.ActiveCfg = debug-st|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.debug-st|Win32.Build.0 = debug-st|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.Release|Win32.ActiveCfg = release|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.Release|Win32.Build.0 = release|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.release-dll|Win32.ActiveCfg = release-dll|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.release-dll|Win32.Build.0 = release-dll|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.release-noboost-st|Win32.ActiveCfg = release-noboost-st|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.release-noboost-st|Win32.Build.0 = release-noboost-st|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.release-st|Win32.ActiveCfg = release-st|Win32
+		{5691E159-2D9B-407F-971F-EA5C592DC524}.release-st|Win32.Build.0 = release-st|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
