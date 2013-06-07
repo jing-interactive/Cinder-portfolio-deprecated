@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "basicApp", "basicApp.vcproj
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "assimp", "..\..\..\..\_common\assimp--3.0.1270\workspaces\vc9\assimp.vcproj", "{5691E159-2D9B-407F-971F-EA5C592DC524}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cinder", "..\..\..\vc9\cinder.vcproj", "{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -49,6 +51,22 @@ Global
 		{5691E159-2D9B-407F-971F-EA5C592DC524}.release-noboost-st|Win32.Build.0 = release-noboost-st|Win32
 		{5691E159-2D9B-407F-971F-EA5C592DC524}.release-st|Win32.ActiveCfg = release-st|Win32
 		{5691E159-2D9B-407F-971F-EA5C592DC524}.release-st|Win32.Build.0 = release-st|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.Debug|Win32.Build.0 = Debug|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.debug-dll|Win32.ActiveCfg = Debug|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.debug-dll|Win32.Build.0 = Debug|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.debug-noboost-st|Win32.ActiveCfg = Debug|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.debug-noboost-st|Win32.Build.0 = Debug|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.debug-st|Win32.ActiveCfg = Debug|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.debug-st|Win32.Build.0 = Debug|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.Release|Win32.ActiveCfg = Release|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.Release|Win32.Build.0 = Release|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.release-dll|Win32.ActiveCfg = Release|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.release-dll|Win32.Build.0 = Release|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.release-noboost-st|Win32.ActiveCfg = Release|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.release-noboost-st|Win32.Build.0 = Release|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.release-st|Win32.ActiveCfg = Release|Win32
+		{92B5BE70-DCAA-40E4-92D8-CC2B95AA28BE}.release-st|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
