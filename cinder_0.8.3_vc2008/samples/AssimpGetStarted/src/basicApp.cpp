@@ -8,7 +8,7 @@
 #include "cinder/gl/Light.h"
 #include "cinder/params/Params.h"
 
-#include "ciAssimp/Scene.h"
+#include "../../../blocks/assimp/src/Scene.h"
 
 using namespace ci;
 using namespace ci::app;
