@@ -27,7 +27,7 @@
 #include "cinder/gl/Texture.h"
 #include "cinder/Function.h"
 
-#include "Node.h"
+#include "Node2D.h"
 
 //! For convenience, create a new type for the shared pointer and node list
 typedef std::shared_ptr<class NodeRectangle>	NodeRectangleRef;
