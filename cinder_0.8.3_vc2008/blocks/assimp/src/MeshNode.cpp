@@ -23,7 +23,7 @@ namespace cinder { namespace assimp {
 
 MeshNode::MeshNode() :
 	mScale( Vec3f::one() ),
-	mInheritOrientation( true ),
+	mInheritRotation( true ),
 	mInheritScale( true ),
 	mNeedsUpdate( true )
 {
@@ -32,7 +32,7 @@ MeshNode::MeshNode() :
 MeshNode::MeshNode( const std::string& name ) :
 	mName( name ),
 	mScale( Vec3f::one() ),
-	mInheritOrientation( true ),
+	mInheritRotation( true ),
 	mInheritScale( true ),
 	mNeedsUpdate( true )
 {
@@ -40,13 +40,13 @@ MeshNode::MeshNode( const std::string& name ) :
 
 void MeshNode::setParent( MeshNodeRef parent )
 {
-	mParent = parent;
+	mParent = MeshNodeWeakRef(parent);
 	requestUpdate();
 }
 
 MeshNodeRef MeshNode::getParent() const
 {
-	return mParent;
+	return mParent.lock();
 }
 
 void MeshNode::addChild( MeshNodeRef child )
@@ -54,16 +54,16 @@ void MeshNode::addChild( MeshNodeRef child )
 	mChildren.push_back( child );
 }
 
-void MeshNode::setOrientation( const Quatf& q )
+void MeshNode::setRotation( const Quatf& q )
 {
-	mOrientation = q;
-	mOrientation.normalize();
+	mRotation = q;
+	mRotation.normalize();
 	requestUpdate();
 }
 
-const Quatf& MeshNode::getOrientation() const
+const Quatf& MeshNode::getRotation() const
 {
-	return mOrientation;
+	return mRotation;
 }
 
 void MeshNode::setPosition( const Vec3f& pos )
@@ -88,15 +88,15 @@ const Vec3f& MeshNode::getScale() const
 	return mScale;
 }
 
-void MeshNode::setInheritOrientation( bool inherit )
+void MeshNode::setInheritRotation( bool inherit )
 {
-	mInheritOrientation = inherit;
+	mInheritRotation = inherit;
 	requestUpdate();
 }
 
-bool MeshNode::getInheritOrientation() const
+bool MeshNode::getInheritRotation() const
 {
-	return mInheritOrientation;
+	return mInheritRotation;
 }
 
 void MeshNode::setInheritScale( bool inherit )
@@ -123,14 +123,14 @@ const string& MeshNode::getName() const
 void MeshNode::setInitialState()
 {
 	mInitialPosition = mPosition;
-	mInitialOrientation = mOrientation;
+	mInitialRotation = mRotation;
 	mInitialScale = mScale;
 }
 
 void MeshNode::resetToInitialState()
 {
 	mPosition = mInitialPosition;
-	mOrientation = mInitialOrientation;
+	mRotation = mInitialRotation;
 	mScale = mInitialScale;
 	requestUpdate();
 }
@@ -140,9 +140,9 @@ const Vec3f& MeshNode::getInitialPosition() const
 	return mInitialPosition;
 }
 
-const Quatf& MeshNode::getInitialOrientation() const
+const Quatf& MeshNode::getInitialRotation() const
 {
-	return mInitialOrientation;
+	return mInitialRotation;
 }
 
 const Vec3f& MeshNode::getInitialScale() const
@@ -150,78 +150,79 @@ const Vec3f& MeshNode::getInitialScale() const
 	return mInitialScale;
 }
 
-const Quatf& MeshNode::getDerivedOrientation() const
+const Quatf& MeshNode::getWorldRotation() const
 {
 	if ( mNeedsUpdate )
 		update();
-	return mDerivedOrientation;
+	return mWorldRotation;
 }
 
-const Vec3f& MeshNode::getDerivedPosition() const
+const Vec3f& MeshNode::getWorldPosition() const
 {
 	if ( mNeedsUpdate )
 		update();
-	return mDerivedPosition;
+	return mWorldPosition;
 }
 
-const Vec3f& MeshNode::getDerivedScale() const
+const Vec3f& MeshNode::getWorldScale() const
 {
 	if ( mNeedsUpdate )
 		update();
-	return mDerivedScale;
+	return mWorldScale;
 }
 
-const Matrix44f& MeshNode::getDerivedTransform() const
+const Matrix44f& MeshNode::getWorldTransform() const
 {
 	if ( mNeedsUpdate )
 		update();
 
-    mDerivedTransform = Matrix44f::createScale( mDerivedScale );
-    mDerivedTransform *= mDerivedOrientation.toMatrix44();
-    mDerivedTransform.setTranslate( mDerivedPosition );
+    mWorldTransform = Matrix44f::createScale( mWorldScale );
+    mWorldTransform *= mWorldRotation.toMatrix44();
+    mWorldTransform.setTranslate( mWorldPosition );
 
-    return mDerivedTransform;
+    return mWorldTransform;
 }
 
 void MeshNode::update() const
 {
-    if ( mParent )
+    MeshNodeRef parent = mParent.lock();
+    if ( parent )
     {
-        // update orientation
-        const Quatf& parentOrientation = mParent->getDerivedOrientation();
-        if ( mInheritOrientation )
+        // update Rotation
+        const Quatf& parentRotation = parent->getWorldRotation();
+        if ( mInheritRotation )
         {
-            // Combine orientation with that of parent
-            mDerivedOrientation = getOrientation() * parentOrientation;
+            // Combine Rotation with that of parent
+            mWorldRotation = getRotation() * parentRotation;
         }
         else
         {
-            mDerivedOrientation = getOrientation();
+            mWorldRotation = getRotation();
         }
 
         // update scale
-        const Vec3f& parentScale = mParent->getDerivedScale();
+        const Vec3f& parentScale = parent->getWorldScale();
         if ( mInheritScale )
         {
-            mDerivedScale = parentScale * getScale();
+            mWorldScale = parentScale * getScale();
         }
         else
         {
-            mDerivedScale = getScale();
+            mWorldScale = getScale();
         }
 
-		// change position vector based on parent's orientation&  scale
-        mDerivedPosition = ( parentScale * getPosition() ) * parentOrientation;
+		// change position vector based on parent's Rotation&  scale
+        mWorldPosition = ( parentScale * getPosition() ) * parentRotation;
 
         // add altered position vector to parent's
-        mDerivedPosition += mParent->getDerivedPosition();
+        mWorldPosition += parent->getWorldPosition();
     }
     else
     {
         // root node, no parent
-        mDerivedOrientation = getOrientation();
-        mDerivedPosition = getPosition();
-        mDerivedScale = getScale();
+        mWorldRotation = getRotation();
+        mWorldPosition = getPosition();
+        mWorldScale = getScale();
     }
 
 	mNeedsUpdate = false;

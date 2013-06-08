@@ -41,4 +41,23 @@ void Node3D::treeDrawWireframe()
 	gl::popModelView();
 }
 
+void Node3D::transform() const
+{
+    // construct transformation matrix
+    mTransform.setToIdentity();
+    mTransform.translate( mPosition );
+    mTransform *= mRotation.toMatrix44();
+    mTransform.scale( mScale );
+    mTransform.translate( -mAnchor );
+
+    // update world matrix
+    Node3DRef parent = getParent<Node3D>();
+    if(parent)
+        mWorldTransform = parent->mWorldTransform * mTransform;
+    else mWorldTransform = mTransform;
+
+    mIsTransformInvalidated = false;
+}
+
+
 } }

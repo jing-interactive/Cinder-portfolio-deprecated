@@ -182,7 +182,7 @@ public:
     void disableAnimation() { mAnimationEnabled = false; }
 
     //! Returns the total number of meshes in the model.
-    size_t getNumMeshes() const { return mModelMeshes.size(); }
+    size_t getNumMeshes() const { return mMeshes.size(); }
     //! Returns the \a n'th mesh in the model.
     TriMesh &getMesh( size_t n );
     //! Returns the \a n'th mesh in the model.
@@ -226,8 +226,8 @@ private:
 
     MeshNodeRef mRootNode; /// root node of scene
 
-    std::vector< MeshNodeRef > mMeshNodes; /// nodes with meshes
-    std::vector< MeshRef > mModelMeshes; /// all meshes
+    std::vector< MeshNodeRef > mNodes; /// nodes with meshes
+    std::vector< MeshRef > mMeshes; /// all meshes
 
     std::vector< std::string > mNodeNames;
     std::map< std::string, MeshNodeRef > mNodeMap;

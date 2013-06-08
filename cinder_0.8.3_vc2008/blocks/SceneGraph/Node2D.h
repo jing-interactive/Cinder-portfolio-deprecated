@@ -74,26 +74,7 @@ protected:
     float		mHeight;
 
     // required function (see: class Node)
-    virtual void transform() const {
-        // construct transformation matrix
-        mTransform.setToIdentity();
-        mTransform.translate( ci::Vec3f( mPosition, 0.0f ) );
-        mTransform *= mRotation.toMatrix44();
-        mTransform.scale( ci::Vec3f( mScale, 1.0f ) );
-
-        if( mAnchorIsPercentage )
-            mTransform.translate( ci::Vec3f( -mAnchor * getSize(), 0.0f ) );
-        else
-            mTransform.translate( ci::Vec3f( -mAnchor, 0.0f ) );
-
-        // update world matrix (TODO will not work with cached matrix!)
-        Node2DRef parent = getParent<Node2D>();
-        if(parent)
-            mWorldTransform = parent->mWorldTransform * mTransform;
-        else mWorldTransform = mTransform;
-
-        // TODO set mIsTransformValidated to false once the world matrix stuff has been rewritten
-    }
+    virtual void transform() const;
 };
 
 }}

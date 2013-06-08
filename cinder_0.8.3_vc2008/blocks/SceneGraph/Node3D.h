@@ -50,20 +50,7 @@ protected:
     ci::gl::Material	mMaterial;
 
     // required function (see: class Node)
-    virtual void transform() const {
-        // construct transformation matrix
-        mTransform.setToIdentity();
-        mTransform.translate( mPosition );
-        mTransform *= mRotation.toMatrix44();
-        mTransform.scale( mScale );
-        mTransform.translate( -mAnchor );
-
-        // update world matrix
-        Node3DRef parent = getParent<Node3D>();
-        if(parent)
-            mWorldTransform = parent->mWorldTransform * mTransform;
-        else mWorldTransform = mTransform;
-    }
+    virtual void transform() const;
 };
 
 } }

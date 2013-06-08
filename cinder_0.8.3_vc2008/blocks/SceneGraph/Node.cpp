@@ -469,4 +469,17 @@ Vec3f Node::unproject(float x, float y, float z) const
 	return result;
 }
 
+// TODO: for_each actions should be refactored 
+void Node::invalidateTransform() const
+{
+    mIsTransformInvalidated = true;
+
+    NodeList::const_iterator itr;
+    for(itr=mChildren.begin(); itr!=mChildren.end(); ++itr) 
+    {
+        (*itr)->invalidateTransform();
+    }
+}
+
+
 } } // namespace ph::nodes

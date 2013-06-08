@@ -142,7 +142,7 @@ public:
 	//! returns the accumulated transformation matrix of this node
 	const ci::Matrix44f& getWorldTransform() const { if(mIsTransformInvalidated) transform(); return mWorldTransform; }
 	//!
-	void invalidateTransform() const { mIsTransformInvalidated = true; }
+	void invalidateTransform() const;
 
 	//! 
 	virtual void setSelected(bool selected=true){ mIsSelected = selected; }

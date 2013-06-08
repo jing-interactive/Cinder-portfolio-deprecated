@@ -209,24 +209,24 @@ MeshNodeRef Scene::loadNodes( const aiNode *nd, MeshNodeRef parentRef )
 	aiVector3D position;
 	nd->mTransformation.Decompose( scaling, rotation, position );
 	nodeRef->setScale( fromAssimp( scaling ) );
-	nodeRef->setOrientation( fromAssimp( rotation ) );
+	nodeRef->setRotation( fromAssimp( rotation ) );
 	nodeRef->setPosition( fromAssimp( position ) );
 
 	// meshes
 	for ( unsigned i = 0; i < nd->mNumMeshes; ++i )
 	{
 		unsigned meshId = nd->mMeshes[ i ];
-		if ( meshId >= mModelMeshes.size() )
+		if ( meshId >= mMeshes.size() )
 			throw AssimpExc( "node " + nodeRef->getName() + " references mesh #" +
 					toString< unsigned >( meshId ) + " from " +
-					toString< size_t >( mModelMeshes.size() ) + " meshes." );
-		nodeRef->mMeshes.push_back( mModelMeshes[ meshId ] );
+					toString< size_t >( mMeshes.size() ) + " meshes." );
+		nodeRef->mMeshes.push_back( mMeshes[ meshId ] );
 	}
 
 	// store the node with meshes for rendering
 	if ( nd->mNumMeshes > 0 )
 	{
-		mMeshNodes.push_back( nodeRef );
+		mNodes.push_back( nodeRef );
 	}
 
 	// process all children
@@ -241,7 +241,7 @@ MeshNodeRef Scene::loadNodes( const aiNode *nd, MeshNodeRef parentRef )
 MeshRef Scene::convertAiMesh( const aiMesh *mesh )
 {
 	// the current AssimpMesh we will be populating data into.
-	MeshRef assimpMeshRef = MeshRef( new Mesh() );
+	MeshRef assimpMeshRef( new Mesh() );
 
 	assimpMeshRef->mName = fromAssimp( mesh->mName );
 
@@ -429,7 +429,7 @@ void Scene::loadAllMeshes()
 			app::console() << " [" << name << "]";
 		app::console() << endl;
 		MeshRef assimpMeshRef = convertAiMesh( mScene->mMeshes[ i ] );
-		mModelMeshes.push_back( assimpMeshRef );
+		mMeshes.push_back( assimpMeshRef );
 	}
 
 #if 0
@@ -534,7 +534,7 @@ void Scene::updateAnimation( size_t animationIndex, double currentTime )
 			presentScaling = channel->mScalingKeys[frame].mValue;
 		}
 
-		targetNode->setOrientation( fromAssimp( presentRotation ) );
+		targetNode->setRotation( fromAssimp( presentRotation ) );
 		targetNode->setScale( fromAssimp( presentScaling ) );
 		targetNode->setPosition( fromAssimp( presentPosition ) );
 	}
@@ -625,14 +625,14 @@ void Scene::setNodeOrientation( const string &name, const Quatf &rot )
 {
 	MeshNodeRef node = getAssimpNode( name );
 	if ( node )
-		node->setOrientation( rot );
+		node->setRotation( rot );
 }
 
 Quatf Scene::getNodeOrientation( const string &name )
 {
 	MeshNodeRef node = getAssimpNode( name );
 	if ( node )
-		return node->getOrientation();
+		return node->getRotation();
 	else
 		return Quatf();
 }
@@ -663,8 +663,8 @@ double Scene::getAnimationDuration( size_t n ) const
 
 void Scene::updateSkinning()
 {
-	vector< MeshNodeRef >::const_iterator it = mMeshNodes.begin();
-	for ( ; it != mMeshNodes.end(); ++it )
+	vector< MeshNodeRef >::const_iterator it = mNodes.begin();
+	for ( ; it != mNodes.end(); ++it )
 	{
 		MeshNodeRef nodeRef = *it;
 
@@ -689,7 +689,7 @@ void Scene::updateSkinning()
 				// start with the mesh-to-bone matrix
 				// and append all node transformations down the parent chain until
 				// we're back at mesh coordinates again
-				boneMatrices[ a ] = toAssimp( nodeRef->getDerivedTransform() ) *
+				boneMatrices[ a ] = toAssimp( nodeRef->getWorldTransform() ) *
 										bone->mOffsetMatrix;
 			}
 
@@ -739,8 +739,8 @@ void Scene::updateSkinning()
 
 void Scene::updateMeshes()
 {
-	vector< MeshNodeRef >::iterator it = mMeshNodes.begin();
-	for ( ; it != mMeshNodes.end(); ++it )
+	vector< MeshNodeRef >::iterator it = mNodes.begin();
+	for ( ; it != mNodes.end(); ++it )
 	{
 		MeshNodeRef nodeRef = *it;
 
@@ -789,8 +789,8 @@ void Scene::enableSkinning( bool enable /* = true */ )
 
 	mSkinningEnabled = enable;
 	// invalidate mesh cache
-	vector< MeshNodeRef >::const_iterator it = mMeshNodes.begin();
-	for ( ; it != mMeshNodes.end(); ++it )
+	vector< MeshNodeRef >::const_iterator it = mNodes.begin();
+	for ( ; it != mNodes.end(); ++it )
 	{
 		MeshNodeRef nodeRef = *it;
 
@@ -820,8 +820,8 @@ void Scene::draw()
 	glPushClientAttrib( GL_CLIENT_ALL_ATTRIB_BITS );
 	gl::enable( GL_NORMALIZE );
 
-	vector< MeshNodeRef >::const_iterator it = mMeshNodes.begin();
-	for ( ; it != mMeshNodes.end(); ++it )
+	vector< MeshNodeRef >::const_iterator it = mNodes.begin();
+	for ( ; it != mNodes.end(); ++it )
 	{
 		MeshNodeRef nodeRef = *it;
 
@@ -867,22 +867,22 @@ void Scene::draw()
 
 TriMesh & Scene::getMesh( size_t n )
 {
-    return mModelMeshes[ n ]->mCachedTriMesh;
+    return mMeshes[ n ]->mCachedTriMesh;
 }
 
 const TriMesh & Scene::getMesh( size_t n ) const
 {
-    return mModelMeshes[ n ]->mCachedTriMesh;
+    return mMeshes[ n ]->mCachedTriMesh;
 }
 
 gl::Texture & Scene::getTexture( size_t n )
 {
-    return mModelMeshes[ n ]->mTexture;
+    return mMeshes[ n ]->mTexture;
 }
 
 const gl::Texture & Scene::getTexture( size_t n ) const
 {
-    return mModelMeshes[ n ]->mTexture;
+    return mMeshes[ n ]->mTexture;
 }
 
 } } // namespace cinder::assimp
