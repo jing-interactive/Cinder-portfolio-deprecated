@@ -35,7 +35,6 @@ namespace cinder {
 #include "cinder/Matrix.h"
 #include "cinder/Vector.h"
 
-//#include <boost/enable_shared_from_this.hpp>
 #include <iostream>
 #include <deque>
 #include <map>
@@ -211,7 +210,7 @@ public:
 
 	// stream support
 	virtual inline std::string toString() const { return "Node"; }
-	friend std::ostream& operator<<(std::ostream& s, const Node& o){ return s << "[" << o.toString() << "]"; }
+	//friend std::ostream& operator<<(std::ostream& s, const Node& o){ return s << "[" << o.toString() << "]"; }
 protected:
 	bool					mIsVisible;
 	bool					mIsClickable;
