@@ -20,9 +20,9 @@
 
 #include <assert.h>
 
-#include "assimp/Importer.hpp"
-#include "assimp/scene.h"
-#include "assimp/postprocess.h"
+#include "../assimp--3.0.1270/include/assimp/Importer.hpp"
+#include "../assimp--3.0.1270/include/assimp/scene.h"
+#include "../assimp--3.0.1270/include/assimp/postprocess.h"
 
 #include "cinder/app/App.h"
 #include "cinder/ImageIo.h"
@@ -44,18 +44,18 @@ class Mesh
 public:
     const aiMesh *mAiMesh;
 
-    ci::gl::Texture mTexture;
+    gl::Texture mTexture;
 
-    std::vector< ci::uint32_t > mIndices;
+    std::vector< uint32_t > mIndices;
 
-    ci::gl::Material mMaterial;
+    gl::Material mMaterial;
     bool mTwoSided;
 
     std::vector< aiVector3D > mAnimatedPos;
     std::vector< aiVector3D > mAnimatedNorm;
 
     std::string mName;
-    ci::TriMesh mCachedTriMesh;
+    TriMesh mCachedTriMesh;
     bool mValidCache;
 };
 
@@ -149,7 +149,7 @@ void Scene::calculateDimensions()
 	mBoundingBox = AxisAlignedBox3f( aMin, aMax );
 }
 
-void Scene::calculateBoundingBox( ci::Vec3f *min, ci::Vec3f *max )
+void Scene::calculateBoundingBox( Vec3f *min, Vec3f *max )
 {
 	aiMatrix4x4 trafo;
 
@@ -194,9 +194,9 @@ void Scene::calculateBoundingBoxForNode( const aiNode *nd, aiVector3D *min, aiVe
 	*trafo = prev;
 }
 
-NodeRef Scene::loadNodes( const aiNode *nd, NodeRef parentRef )
+MeshNodeRef Scene::loadNodes( const aiNode *nd, MeshNodeRef parentRef )
 {
-	NodeRef nodeRef = NodeRef( new Node() );
+	MeshNodeRef nodeRef = MeshNodeRef( new MeshNode() );
 	nodeRef->setParent( parentRef );
 	string nodeName = fromAssimp( nd->mName );
 	nodeRef->setName( nodeName );
@@ -232,7 +232,7 @@ NodeRef Scene::loadNodes( const aiNode *nd, NodeRef parentRef )
 	// process all children
 	for ( unsigned n = 0; n < nd->mNumChildren; ++n )
 	{
-		NodeRef childRef = loadNodes( nd->mChildren[ n ], nodeRef );
+		MeshNodeRef childRef = loadNodes( nd->mChildren[ n ], nodeRef );
 		nodeRef->addChild( childRef );
 	}
 	return nodeRef;
@@ -456,7 +456,7 @@ void Scene::updateAnimation( size_t animationIndex, double currentTime )
 	{
 		const aiNodeAnim *channel = mAnim->mChannels[ a ];
 
-		NodeRef targetNode = getAssimpNode( fromAssimp( channel->mNodeName ) );
+		MeshNodeRef targetNode = getAssimpNode( fromAssimp( channel->mNodeName ) );
 
 		// ******** Position *****
 		aiVector3D presentPosition( 0, 0, 0 );
@@ -540,27 +540,27 @@ void Scene::updateAnimation( size_t animationIndex, double currentTime )
 	}
 }
 
-NodeRef Scene::getAssimpNode( const std::string &name )
+MeshNodeRef Scene::getAssimpNode( const std::string &name )
 {
-	map< string, NodeRef >::iterator i = mNodeMap.find( name );
+	map< string, MeshNodeRef >::iterator i = mNodeMap.find( name );
 	if ( i != mNodeMap.end() )
 		return i->second;
 	else
-		return NodeRef();
+		return MeshNodeRef();
 }
 
-const NodeRef Scene::getAssimpNode( const std::string &name ) const
+const MeshNodeRef Scene::getAssimpNode( const std::string &name ) const
 {
-	map< string, NodeRef >::const_iterator i = mNodeMap.find( name );
+	map< string, MeshNodeRef >::const_iterator i = mNodeMap.find( name );
 	if ( i != mNodeMap.end() )
 		return i->second;
 	else
-		return NodeRef();
+		return MeshNodeRef();
 }
 
 size_t Scene::getAssimpNodeNumMeshes( const string &name )
 {
-	NodeRef node = getAssimpNode( name );
+	MeshNodeRef node = getAssimpNode( name );
 	if ( node )
 		return node->mMeshes.size();
 	else
@@ -569,7 +569,7 @@ size_t Scene::getAssimpNodeNumMeshes( const string &name )
 
 TriMesh& Scene::getAssimpNodeMesh( const string &name, size_t n /* = 0 */ )
 {
-	NodeRef node = getAssimpNode( name );
+	MeshNodeRef node = getAssimpNode( name );
 	if ( node && n < node->mMeshes.size() )
 		return node->mMeshes[ n ]->mCachedTriMesh;
 	else
@@ -578,7 +578,7 @@ TriMesh& Scene::getAssimpNodeMesh( const string &name, size_t n /* = 0 */ )
 
 const TriMesh& Scene::getAssimpNodeMesh( const string &name, size_t n /* = 0 */ ) const
 {
-	const NodeRef node = getAssimpNode( name );
+	const MeshNodeRef node = getAssimpNode( name );
 	if ( node && n < node->mMeshes.size() )
 		return node->mMeshes[ n ]->mCachedTriMesh;
 	else
@@ -587,7 +587,7 @@ const TriMesh& Scene::getAssimpNodeMesh( const string &name, size_t n /* = 0 */ 
 
 gl::Texture& Scene::getAssimpNodeTexture( const string &name, size_t n /* = 0 */ )
 {
-	NodeRef node = getAssimpNode( name );
+	MeshNodeRef node = getAssimpNode( name );
 	if ( node && n < node->mMeshes.size() )
 		return node->mMeshes[ n ]->mTexture;
 	else
@@ -596,7 +596,7 @@ gl::Texture& Scene::getAssimpNodeTexture( const string &name, size_t n /* = 0 */
 
 const gl::Texture& Scene::getAssimpNodeTexture( const string &name, size_t n /* = 0 */ ) const
 {
-	const NodeRef node = getAssimpNode( name );
+	const MeshNodeRef node = getAssimpNode( name );
 	if ( node && n < node->mMeshes.size() )
 		return node->mMeshes[ n ]->mTexture;
 	else
@@ -605,7 +605,7 @@ const gl::Texture& Scene::getAssimpNodeTexture( const string &name, size_t n /* 
 
 gl::Material& Scene::getAssimpNodeMaterial( const string &name, size_t n /* = 0 */ )
 {
-	NodeRef node = getAssimpNode( name );
+	MeshNodeRef node = getAssimpNode( name );
 	if ( node && n < node->mMeshes.size() )
 		return node->mMeshes[ n ]->mMaterial;
 	else
@@ -614,7 +614,7 @@ gl::Material& Scene::getAssimpNodeMaterial( const string &name, size_t n /* = 0 
 
 const gl::Material& Scene::getAssimpNodeMaterial( const string &name, size_t n /* = 0 */ ) const
 {
-	const NodeRef node = getAssimpNode( name );
+	const MeshNodeRef node = getAssimpNode( name );
 	if ( node && n < node->mMeshes.size() )
 		return node->mMeshes[ n ]->mMaterial;
 	else
@@ -623,14 +623,14 @@ const gl::Material& Scene::getAssimpNodeMaterial( const string &name, size_t n /
 
 void Scene::setNodeOrientation( const string &name, const Quatf &rot )
 {
-	NodeRef node = getAssimpNode( name );
+	MeshNodeRef node = getAssimpNode( name );
 	if ( node )
 		node->setOrientation( rot );
 }
 
 Quatf Scene::getNodeOrientation( const string &name )
 {
-	NodeRef node = getAssimpNode( name );
+	MeshNodeRef node = getAssimpNode( name );
 	if ( node )
 		return node->getOrientation();
 	else
@@ -663,10 +663,10 @@ double Scene::getAnimationDuration( size_t n ) const
 
 void Scene::updateSkinning()
 {
-	vector< NodeRef >::const_iterator it = mMeshNodes.begin();
+	vector< MeshNodeRef >::const_iterator it = mMeshNodes.begin();
 	for ( ; it != mMeshNodes.end(); ++it )
 	{
-		NodeRef nodeRef = *it;
+		MeshNodeRef nodeRef = *it;
 
 		vector< MeshRef >::const_iterator meshIt = nodeRef->mMeshes.begin();
 		for ( ; meshIt != nodeRef->mMeshes.end(); ++meshIt )
@@ -684,7 +684,7 @@ void Scene::updateSkinning()
 
 				// find the corresponding node by again looking recursively through
 				// the node hierarchy for the same name
-				NodeRef nodeRef = getAssimpNode( fromAssimp( bone->mName ) );
+				MeshNodeRef nodeRef = getAssimpNode( fromAssimp( bone->mName ) );
 				assert( nodeRef );
 				// start with the mesh-to-bone matrix
 				// and append all node transformations down the parent chain until
@@ -739,10 +739,10 @@ void Scene::updateSkinning()
 
 void Scene::updateMeshes()
 {
-	vector< NodeRef >::iterator it = mMeshNodes.begin();
+	vector< MeshNodeRef >::iterator it = mMeshNodes.begin();
 	for ( ; it != mMeshNodes.end(); ++it )
 	{
-		NodeRef nodeRef = *it;
+		MeshNodeRef nodeRef = *it;
 
 		vector< MeshRef >::iterator meshIt = nodeRef->mMeshes.begin();
 		for ( ; meshIt != nodeRef->mMeshes.end(); ++meshIt )
@@ -789,10 +789,10 @@ void Scene::enableSkinning( bool enable /* = true */ )
 
 	mSkinningEnabled = enable;
 	// invalidate mesh cache
-	vector< NodeRef >::const_iterator it = mMeshNodes.begin();
+	vector< MeshNodeRef >::const_iterator it = mMeshNodes.begin();
 	for ( ; it != mMeshNodes.end(); ++it )
 	{
-		NodeRef nodeRef = *it;
+		MeshNodeRef nodeRef = *it;
 
 		vector< MeshRef >::const_iterator meshIt = nodeRef->mMeshes.begin();
 		for ( ; meshIt != nodeRef->mMeshes.end(); ++meshIt )
@@ -820,10 +820,10 @@ void Scene::draw()
 	glPushClientAttrib( GL_CLIENT_ALL_ATTRIB_BITS );
 	gl::enable( GL_NORMALIZE );
 
-	vector< NodeRef >::const_iterator it = mMeshNodes.begin();
+	vector< MeshNodeRef >::const_iterator it = mMeshNodes.begin();
 	for ( ; it != mMeshNodes.end(); ++it )
 	{
-		NodeRef nodeRef = *it;
+		MeshNodeRef nodeRef = *it;
 
 		vector< MeshRef >::const_iterator meshIt = nodeRef->mMeshes.begin();
 		for ( ; meshIt != nodeRef->mMeshes.end(); ++meshIt )
@@ -865,22 +865,22 @@ void Scene::draw()
 	glPopAttrib();
 }
 
-ci::TriMesh & Scene::getMesh( size_t n )
+TriMesh & Scene::getMesh( size_t n )
 {
     return mModelMeshes[ n ]->mCachedTriMesh;
 }
 
-const ci::TriMesh & Scene::getMesh( size_t n ) const
+const TriMesh & Scene::getMesh( size_t n ) const
 {
     return mModelMeshes[ n ]->mCachedTriMesh;
 }
 
-ci::gl::Texture & Scene::getTexture( size_t n )
+gl::Texture & Scene::getTexture( size_t n )
 {
     return mModelMeshes[ n ]->mTexture;
 }
 
-const ci::gl::Texture & Scene::getTexture( size_t n ) const
+const gl::Texture & Scene::getTexture( size_t n ) const
 {
     return mModelMeshes[ n ]->mTexture;
 }

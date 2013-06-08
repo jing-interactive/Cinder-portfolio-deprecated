@@ -15,14 +15,13 @@
  along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "Node.h"
+#include "MeshNode.h"
 
-using namespace ci;
 using namespace std;
 
 namespace cinder { namespace assimp {
 
-Node::Node() :
+MeshNode::MeshNode() :
 	mScale( Vec3f::one() ),
 	mInheritOrientation( true ),
 	mInheritScale( true ),
@@ -30,7 +29,7 @@ Node::Node() :
 {
 }
 
-Node::Node( const std::string& name ) :
+MeshNode::MeshNode( const std::string& name ) :
 	mName( name ),
 	mScale( Vec3f::one() ),
 	mInheritOrientation( true ),
@@ -39,96 +38,96 @@ Node::Node( const std::string& name ) :
 {
 }
 
-void Node::setParent( NodeRef parent )
+void MeshNode::setParent( MeshNodeRef parent )
 {
 	mParent = parent;
 	requestUpdate();
 }
 
-NodeRef Node::getParent() const
+MeshNodeRef MeshNode::getParent() const
 {
 	return mParent;
 }
 
-void Node::addChild( NodeRef child )
+void MeshNode::addChild( MeshNodeRef child )
 {
 	mChildren.push_back( child );
 }
 
-void Node::setOrientation( const ci::Quatf& q )
+void MeshNode::setOrientation( const Quatf& q )
 {
 	mOrientation = q;
 	mOrientation.normalize();
 	requestUpdate();
 }
 
-const Quatf& Node::getOrientation() const
+const Quatf& MeshNode::getOrientation() const
 {
 	return mOrientation;
 }
 
-void Node::setPosition( const ci::Vec3f& pos )
+void MeshNode::setPosition( const Vec3f& pos )
 {
 	mPosition = pos;
 	requestUpdate();
 }
 
-const Vec3f& Node::getPosition() const
+const Vec3f& MeshNode::getPosition() const
 {
 	return mPosition;
 }
 
-void Node::setScale( const Vec3f& scale )
+void MeshNode::setScale( const Vec3f& scale )
 {
 	mScale = scale;
 	requestUpdate();
 }
 
-const Vec3f& Node::getScale() const
+const Vec3f& MeshNode::getScale() const
 {
 	return mScale;
 }
 
-void Node::setInheritOrientation( bool inherit )
+void MeshNode::setInheritOrientation( bool inherit )
 {
 	mInheritOrientation = inherit;
 	requestUpdate();
 }
 
-bool Node::getInheritOrientation() const
+bool MeshNode::getInheritOrientation() const
 {
 	return mInheritOrientation;
 }
 
-void Node::setInheritScale( bool inherit )
+void MeshNode::setInheritScale( bool inherit )
 {
 	mInheritScale = inherit;
 	requestUpdate();
 }
 
-bool Node::getInheritScale() const
+bool MeshNode::getInheritScale() const
 {
 	return mInheritScale;
 }
 
-void Node::setName( const string& name )
+void MeshNode::setName( const string& name )
 {
 	mName = name;
 }
 
-const string& Node::getName() const
+const string& MeshNode::getName() const
 {
 	return mName;
 }
 
-void Node::setInitialState()
+void MeshNode::setInitialState()
 {
 	mInitialPosition = mPosition;
 	mInitialOrientation = mOrientation;
 	mInitialScale = mScale;
 }
 
-void Node::resetToInitialState()
+void MeshNode::resetToInitialState()
 {
 	mPosition = mInitialPosition;
 	mOrientation = mInitialOrientation;
@@ -136,43 +135,43 @@ void Node::resetToInitialState()
 	requestUpdate();
 }
 
-const Vec3f& Node::getInitialPosition() const
+const Vec3f& MeshNode::getInitialPosition() const
 {
 	return mInitialPosition;
 }
 
-const Quatf& Node::getInitialOrientation() const
+const Quatf& MeshNode::getInitialOrientation() const
 {
 	return mInitialOrientation;
 }
 
-const Vec3f& Node::getInitialScale() const
+const Vec3f& MeshNode::getInitialScale() const
 {
 	return mInitialScale;
 }
 
-const Quatf& Node::getDerivedOrientation() const
+const Quatf& MeshNode::getDerivedOrientation() const
 {
 	if ( mNeedsUpdate )
 		update();
 	return mDerivedOrientation;
 }
 
-const Vec3f& Node::getDerivedPosition() const
+const Vec3f& MeshNode::getDerivedPosition() const
 {
 	if ( mNeedsUpdate )
 		update();
 	return mDerivedPosition;
 }
 
-const Vec3f& Node::getDerivedScale() const
+const Vec3f& MeshNode::getDerivedScale() const
 {
 	if ( mNeedsUpdate )
 		update();
 	return mDerivedScale;
 }
 
-const Matrix44f& Node::getDerivedTransform() const
+const Matrix44f& MeshNode::getDerivedTransform() const
 {
 	if ( mNeedsUpdate )
 		update();
@@ -184,7 +183,7 @@ const Matrix44f& Node::getDerivedTransform() const
     return mDerivedTransform;
 }
 
-void Node::update() const
+void MeshNode::update() const
 {
     if ( mParent )
     {
@@ -228,11 +227,11 @@ void Node::update() const
 	mNeedsUpdate = false;
 }
 
-void Node::requestUpdate()
+void MeshNode::requestUpdate()
 {
 	mNeedsUpdate = true;
 
-	for ( vector< NodeRef >::iterator it = mChildren.begin();
+	for ( vector< MeshNodeRef >::iterator it = mChildren.begin();
 			it != mChildren.end(); ++it )
 	{
 		(*it)->requestUpdate();
