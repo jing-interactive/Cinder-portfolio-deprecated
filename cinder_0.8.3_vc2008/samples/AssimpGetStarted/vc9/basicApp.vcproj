@@ -180,7 +180,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\src\basicApp.cpp"
+				RelativePath="..\src\ciAssimp\Node.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\ciAssimp\Scene.cpp"
 				>
 			</File>
 		</Filter>
@@ -189,6 +193,14 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath="..\src\ciAssimp\Node.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\ciAssimp\Scene.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -196,6 +208,10 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
+		<File
+			RelativePath="..\src\basicApp.cpp"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
