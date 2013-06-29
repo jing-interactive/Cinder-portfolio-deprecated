@@ -24,7 +24,6 @@
 
 // forward declarations
 namespace cinder {
-	class AxisAlignedBox; 
 	class Camera; class CameraPersp; class CameraStereo; class CameraOrtho;
 	namespace app {
 		class MouseEvent; class KeyEvent; class ResizeEvent; class FileDropEvent;

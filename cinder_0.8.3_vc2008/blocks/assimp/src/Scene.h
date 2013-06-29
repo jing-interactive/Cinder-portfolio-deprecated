@@ -23,8 +23,6 @@
 
 #include "cinder/Cinder.h"
 #include "cinder/Color.h"
-#include "cinder/TriMesh.h"
-#include "cinder/Stream.h"
 #include "cinder/AxisAlignedBox.h"
 
 #include "MeshNode.h"

@@ -266,7 +266,6 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -790,6 +789,42 @@
 				>
 				<File
 					RelativePath="..\src\cinder\svg\Svg.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="json"
+				>
+				<File
+					RelativePath="..\src\jsoncpp\json_batchallocator.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\jsoncpp\json_internalarray.inl"
+					>
+				</File>
+				<File
+					RelativePath="..\src\jsoncpp\json_internalmap.inl"
+					>
+				</File>
+				<File
+					RelativePath="..\src\jsoncpp\json_reader.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\jsoncpp\json_tool.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\jsoncpp\json_value.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\jsoncpp\json_valueiterator.inl"
+					>
+				</File>
+				<File
+					RelativePath="..\src\jsoncpp\json_writer.cpp"
 					>
 				</File>
 			</Filter>
@@ -1392,6 +1427,42 @@
 				</File>
 				<File
 					RelativePath="..\include\cinder\tuio\TuioProfileBase.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="json"
+				>
+				<File
+					RelativePath="..\include\json\autolink.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\json\config.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\json\features.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\json\forwards.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\json\json.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\json\reader.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\json\value.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\json\writer.h"
 					>
 				</File>
 			</Filter>
