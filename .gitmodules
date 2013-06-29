@@ -13,3 +13,6 @@
 [submodule "cinder_0.8.3_vc2008/blocks/ciUI"]
 	path = cinder_0.8.3_vc2008/blocks/ciUI
 	url = git@github.com:vinjn/ciUI.git
+[submodule "Cinder-Samples"]
+	path = Cinder-Samples
+	url = git@github.com:paulhoux/Cinder-Samples.git
