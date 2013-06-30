@@ -24,6 +24,12 @@
 #include "../assimp--3.0.1270/include/assimp/scene.h"
 #include "../assimp--3.0.1270/include/assimp/postprocess.h"
 
+// for cinder builds, please add the corresponding path to linker configuration
+// ..\..\..\blocks\assimp\assimp--3.0.1270\lib\assimp_debug-dll_Win32\
+// ..\..\..\blocks\assimp\assimp--3.0.1270\lib\assimp_release-dll_Win32\
+
+#pragma comment(lib, "assimp.lib")
+
 #include "cinder/app/App.h"
 #include "cinder/ImageIo.h"
 #include "cinder/CinderMath.h"
