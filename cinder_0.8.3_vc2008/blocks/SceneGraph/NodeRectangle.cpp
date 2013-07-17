@@ -172,7 +172,10 @@ bool NodeRectangle::mouseDown(MouseEvent event)
 	if (mIsSelected && mDownCallback)
 	{
 		mDownCallback(event);
-		return true;
+        if (mCanvasMode)
+            return false;
+        else
+            return true;
 	}
 
 	return true;
@@ -226,7 +229,10 @@ bool NodeRectangle::mouseUp(MouseEvent event)
             if (mUserData != NULL)
                 event.setNativeModifiers(reinterpret_cast<uint32_t>(mUserData));
             mUpCallback(event);
-            return true;
+            if (mCanvasMode)
+                return false;
+            else
+                return true;
         }
  	}
 
