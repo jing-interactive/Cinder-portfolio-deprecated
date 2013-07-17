@@ -207,6 +207,9 @@ public:
 
 	virtual bool resize( const ci::Vec2i& event );
 
+    void setName(const std::string& name);
+    const std::string& getName() const;
+
 	// stream support
 	virtual inline std::string toString() const { return "Node"; }
 	//friend std::ostream& operator<<(std::ostream& s, const Node& o){ return s << "[" << o.toString() << "]"; }
@@ -214,6 +217,8 @@ protected:
 	bool					mIsVisible;
 	bool					mIsClickable;
 	bool					mIsSelected;
+
+    std::string             mName;
 
 	const unsigned int		mUuid;
 

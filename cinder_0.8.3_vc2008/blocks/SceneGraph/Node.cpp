@@ -481,5 +481,14 @@ void Node::invalidateTransform() const
     }
 }
 
+void Node::setName(const std::string& name)
+{
+    mName = name;
+}
+
+const std::string& Node::getName() const
+{
+    return mName;
+}
 
 } } // namespace ph::nodes

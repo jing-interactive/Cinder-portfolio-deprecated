@@ -32,7 +32,6 @@ using namespace ph::nodes;
 NodeRectangle::NodeRectangle(void)
 	: mTouchMode(UNTOUCHED),
     mCanvasMode(false),
-    mToggleMode(false),
     mAlwaysHighlit(false),
     mUserData(NULL)
 {

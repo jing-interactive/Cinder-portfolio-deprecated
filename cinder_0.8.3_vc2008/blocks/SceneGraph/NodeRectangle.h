@@ -78,7 +78,6 @@ public:
     void setMouseDrag( T *obj, void (T::*callback)(ci::app::MouseEvent) ) { mDragCallback = std::bind1st( std::mem_fun( callback ), obj ); }
 
     bool mCanvasMode;
-    bool mToggleMode;
     bool mAlwaysHighlit;
     void* mUserData;
 protected:
