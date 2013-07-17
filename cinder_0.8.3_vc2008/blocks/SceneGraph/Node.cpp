@@ -253,7 +253,7 @@ void Node::treeDraw()
 //  when there are more than a few nodes. 
 bool Node::treeMouseMove( MouseEvent event )
 {
-	if(!mIsVisible) return false;
+	if(!mIsVisible || !mIsClickable) return false;
 
 	// test children first, from top to bottom
 	NodeList nodes(mChildren);
@@ -270,7 +270,7 @@ bool Node::treeMouseMove( MouseEvent event )
 
 bool Node::treeMouseDown( MouseEvent event )
 {
-	if(!mIsVisible) return false;
+	if(!mIsVisible || !mIsClickable) return false;
 
 	// test children first, from top to bottom
 	NodeList nodes(mChildren);
@@ -287,7 +287,7 @@ bool Node::treeMouseDown( MouseEvent event )
 
 bool Node::treeMouseDrag( MouseEvent event )
 {
-	if(!mIsVisible) return false;
+	if(!mIsVisible || !mIsClickable) return false;
 
 	// test children first, from top to bottom
 	NodeList nodes(mChildren);
@@ -304,7 +304,7 @@ bool Node::treeMouseDrag( MouseEvent event )
 
 bool Node::treeMouseUp( MouseEvent event )
 {
-	if(!mIsVisible) return false;
+	if(!mIsVisible || !mIsClickable) return false;
 
 	// test children first, from top to bottom
 	NodeList nodes(mChildren);

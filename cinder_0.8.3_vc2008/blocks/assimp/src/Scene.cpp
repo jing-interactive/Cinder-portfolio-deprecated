@@ -397,7 +397,14 @@ MeshRef Scene::convertAiMesh( const aiMesh *mesh )
 			}
 		}
 
-		assimpMeshRef->mTexture = gl::Texture( loadImage( realPath ), format );
+        try 
+        {
+    		assimpMeshRef->mTexture = gl::Texture( loadImage( realPath ), format );
+        }
+        catch (ImageIoExceptionFailedLoad& exc)
+        {
+            app::console() << "Failed to load image from " << realPath << endl; 
+        }
 	}
 
 	assimpMeshRef->mAiMesh = mesh;

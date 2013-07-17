@@ -59,6 +59,17 @@ void NodeRectangle::draw()
 
 	if (mTexPressed || mTexNormal || mAlwaysHighlit)
 	{
+        // TODO: refactor
+        if (!mIsClickable)
+        {   
+            gl::enableAlphaBlending();
+            gl::color( ColorA::white() );
+            gl::draw(mTexDisabled ? mTexDisabled : mTexPressed, bounds);
+            gl::disableAlphaBlending();
+
+            return;
+        }
+
         if (mAlwaysHighlit)
         {
             gl::enableAlphaBlending();
@@ -223,8 +234,9 @@ bool NodeRectangle::mouseUp(MouseEvent event)
 	return false;
 }
 
-void NodeRectangle::setTexture( ci::gl::Texture texPressed, ci::gl::Texture texNormal)
+void NodeRectangle::setTexture( gl::Texture texPressed, gl::Texture texNormal, gl::Texture texDisabled)
 {
 	mTexPressed = texPressed;
 	mTexNormal = texNormal;
+    mTexDisabled = texDisabled;
 }

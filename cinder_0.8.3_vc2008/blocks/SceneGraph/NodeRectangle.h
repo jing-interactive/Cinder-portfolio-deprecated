@@ -52,7 +52,7 @@ public:
 	void update( double elapsed=0.0 );
 	void draw();
 
-	void setTexture(ci::gl::Texture texPressed = ci::gl::Texture(), ci::gl::Texture texNormal = ci::gl::Texture());
+	void setTexture(ci::gl::Texture texPressed = ci::gl::Texture(), ci::gl::Texture texNormal = ci::gl::Texture(), ci::gl::Texture texDisabled = ci::gl::Texture());
 
 	//! The nodes support Cinder's event methods:
 	//! mouseMove(), mouseDown(), mouseDrag(), mouseUp(), keyDown(), keyUp() and resize()
@@ -91,8 +91,10 @@ protected:
 	ci::Vec2f		mInitialMouse;
 	ci::Vec2f		mCurrentMouse;
 	
+    // TODO: merge
 	ci::gl::Texture mTexPressed;
 	ci::gl::Texture mTexNormal;
+    ci::gl::Texture mTexDisabled;
 
 	std::function<void (ci::app::MouseEvent)> mUpCallback;
 	std::function<void (ci::app::MouseEvent)> mDownCallback;

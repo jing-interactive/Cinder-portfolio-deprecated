@@ -1,4 +1,5 @@
 #include "Node3D.h"
+#include "cinder/app/App.h"
 
 using namespace ci;
 
@@ -53,7 +54,7 @@ void Node3D::transform() const
     // update world matrix
     Node3DRef parent = getParent<Node3D>();
     if(parent)
-        mWorldTransform = parent->mWorldTransform * mTransform;
+        mWorldTransform = parent->getWorldTransform() * mTransform;
     else mWorldTransform = mTransform;
 
     mIsTransformInvalidated = false;
