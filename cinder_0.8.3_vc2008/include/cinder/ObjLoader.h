@@ -75,7 +75,8 @@ class ObjLoader {
             Ka[0] = Ka[1] = Ka[2] = 0;
             Kd[0] = Kd[1] = Kd[2] = 1;
         }
-        Material(const Material& rhs) {
+
+        Material( const Material& rhs ) {
             mName = rhs.mName;
             Ka[0] = rhs.Ka[0];
             Ka[1] = rhs.Ka[1];
@@ -84,9 +85,10 @@ class ObjLoader {
             Kd[1] = rhs.Kd[1];
             Kd[2] = rhs.Kd[2];
         }
+
         std::string mName;
-        float Ka[3];
-        float Kd[3];
+        float		Ka[3];
+        float		Kd[3];
     };
     
 	struct Face {
@@ -94,7 +96,7 @@ class ObjLoader {
 		std::vector<int>	mVertexIndices;
 		std::vector<int>	mTexCoordIndices;
 		std::vector<int>	mNormalIndices;
-        const Material*     mMaterial;
+		const Material*     mMaterial;
 	};
 
 	struct Group {
@@ -110,6 +112,9 @@ class ObjLoader {
 	
     //! Returns the total number of groups.
 	size_t		getNumGroups() const { return mGroups.size(); }
+	
+	//! Returns a vector<> of the Groups in the OBJ.
+	const std::vector<Group>&		getGroups() const { return mGroups; }
 	
  private:
 	typedef boost::tuple<int,int> VertexPair;
@@ -129,7 +134,7 @@ class ObjLoader {
 	std::vector<Vec3f>			    mVertices, mNormals;
 	std::vector<Vec2f>			    mTexCoords;
 	std::vector<Group>			    mGroups;
-    std::map<std::string, Material> mMaterials;
+	std::map<std::string, Material> mMaterials;
 };
 
 } // namespace cinder
