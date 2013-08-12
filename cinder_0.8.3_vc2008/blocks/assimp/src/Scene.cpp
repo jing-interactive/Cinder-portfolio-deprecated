@@ -38,6 +38,8 @@
 #include "cinder/gl/Texture.h"
 #include "cinder/gl/Material.h"
 
+#include <boost/make_shared.hpp>
+
 #include "Scene.h"
 
 using namespace std;
@@ -133,7 +135,7 @@ Scene::Scene( fs::path filename ) :
 					 aiProcess_ValidateDataStructure |
 					 aiProcess_OptimizeMeshes;
 
-	mImporterRef = shared_ptr< Assimp::Importer >( new Assimp::Importer() );
+    mImporterRef = boost::make_shared< Assimp::Importer >();
 	mImporterRef->SetPropertyInteger( AI_CONFIG_PP_SBP_REMOVE,
 			aiPrimitiveType_LINE | aiPrimitiveType_POINT );
 	mImporterRef->SetPropertyInteger( AI_CONFIG_PP_PTV_NORMALIZE, true );
@@ -401,7 +403,7 @@ MeshRef Scene::convertAiMesh( const aiMesh *mesh )
         {
     		assimpMeshRef->mTexture = gl::Texture( loadImage( realPath ), format );
         }
-        catch (ImageIoExceptionFailedLoad& exc)
+        catch (ImageIoExceptionFailedLoad&)
         {
             app::console() << "Failed to load image from " << realPath << endl; 
         }
