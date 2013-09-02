@@ -114,4 +114,4 @@ void CaptureApp::draw()
 }
 
 
-CINDER_APP_BASIC( CaptureApp, RendererGl )
+CINDER_APP_CONSOLE( CaptureApp, RendererGl )
