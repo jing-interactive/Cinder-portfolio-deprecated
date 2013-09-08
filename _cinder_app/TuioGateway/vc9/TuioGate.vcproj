@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="TuioGate"
+	Name="TuioGateway"
 	ProjectGUID="{9DA00FEA-5218-413E-B762-35D91045B3B4}"
 	RootNamespace="TuioGate"
 	Keyword="Win32Proj"
@@ -63,6 +63,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="cinder_d.lib osc_d.lib"
+				OutputFile="$(SolutionDir)\..\bin\$(ProjectName).exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\..\..\blocks\osc\lib\vc9;..\..\..\..\..\lib;..\..\..\..\..\lib\msw"
 				GenerateDebugInformation="true"
@@ -138,6 +139,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="cinder.lib osc.lib"
+				OutputFile="$(SolutionDir)\..\bin\$(ProjectName).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\..\..\blocks\osc\lib\vc9;..\..\..\..\..\lib;..\..\..\..\..\lib\msw"
 				GenerateDebugInformation="true"
@@ -215,150 +217,6 @@
 				RelativePath=".\Resources.rc"
 				>
 			</File>
-		</Filter>
-		<Filter
-			Name="Blocks"
-			>
-			<Filter
-				Name="tuio"
-				>
-				<Filter
-					Name="include"
-					>
-					<File
-						RelativePath="..\..\..\include\TuioClient.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\include\TuioCursor.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\include\TuioObject.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\include\TuioProfileBase.h"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="src"
-					>
-					<File
-						RelativePath="..\..\..\src\TuioClient.cpp"
-						>
-					</File>
-				</Filter>
-			</Filter>
-			<Filter
-				Name="osc"
-				>
-				<Filter
-					Name="include"
-					>
-					<File
-						RelativePath="..\..\..\..\osc\include\OscArg.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\..\osc\include\OscBundle.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\..\osc\include\OscListener.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\..\osc\include\OscMessage.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\..\osc\include\OscSender.h"
-						>
-					</File>
-					<Filter
-						Name="ip"
-						>
-						<File
-							RelativePath="..\..\..\..\osc\include\ip\IpEndpointName.h"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\..\osc\include\ip\NetworkingUtils.h"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\..\osc\include\ip\PacketListener.h"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\..\osc\include\ip\TimerListener.h"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\..\osc\include\ip\UdpSocket.h"
-							>
-						</File>
-					</Filter>
-					<Filter
-						Name="osc"
-						>
-						<File
-							RelativePath="..\..\..\..\osc\include\osc\MessageMappingOscPacketListener.h"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\..\osc\include\osc\OscException.h"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\..\osc\include\osc\OscHostEndianness.h"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\..\osc\include\osc\OscOutboundPacketStream.h"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\..\osc\include\osc\OscPacketListener.h"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\..\osc\include\osc\OscPrintReceivedElements.h"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\..\osc\include\osc\OscReceivedElements.h"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\..\osc\include\osc\OscTypes.h"
-							>
-						</File>
-					</Filter>
-				</Filter>
-				<Filter
-					Name="src"
-					>
-					<File
-						RelativePath="..\..\..\..\osc\src\OscBundle.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\..\osc\src\OscListener.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\..\osc\src\OscMessage.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\..\osc\src\OscSender.cpp"
-						>
-					</File>
-				</Filter>
-			</Filter>
 		</Filter>
 	</Files>
 	<Globals>
