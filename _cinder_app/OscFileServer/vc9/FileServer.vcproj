@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="FileServer"
+	Name="OscApp"
 	ProjectGUID="{9DA00FEA-5218-413E-B762-35D91045B3B4}"
 	RootNamespace="FileServer"
 	Keyword="Win32Proj"
@@ -180,7 +180,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\src\FileServerApp.cpp"
+				RelativePath="..\src\OscApp.cpp"
 				>
 			</File>
 		</Filter>
@@ -189,10 +189,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath="..\include\Resources.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -202,7 +198,7 @@
 			<File
 				RelativePath=".\Resources.rc"
 				>
-			</File>			
+			</File>
 		</Filter>
 	</Files>
 	<Globals>
