@@ -13,6 +13,7 @@ struct OscApp : public AppBasic
     
     void prepareSettings(Settings *settings)
     {
+        settings->setTitle("flex");
         settings->setWindowPos(0, 0);
         settings->setWindowSize(640, 480);
     }

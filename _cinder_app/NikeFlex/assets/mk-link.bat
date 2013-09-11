@@ -1,0 +1,1 @@
+mklink scene.plots ..\..\..\..\CamServer\bin\scene.plots
