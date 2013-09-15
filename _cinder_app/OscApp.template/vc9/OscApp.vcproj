@@ -176,6 +176,18 @@
 	</References>
 	<Files>
 		<File
+			RelativePath="..\include\item.def"
+			>
+		</File>
+		<File
+			RelativePath="..\..\..\_common\MiniConfig.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\..\_common\MiniConfig.h"
+			>
+		</File>
+		<File
 			RelativePath="..\src\OscApp.cpp"
 			>
 		</File>
