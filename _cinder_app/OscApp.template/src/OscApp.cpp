@@ -21,21 +21,22 @@ struct OscApp : public AppBasic
     {
         mListener.setup(kPort);
     //  sender.setup();
+        mListener.registerMessageReceived(this, &OscApp::onOscMessage);
+    }
+
+    void onOscMessage(const osc::Message* msg)
+    {
+        const string& addr = msg->getAddress();
+
+        if (addr == "/pull")
+        {
+            int file_idx = msg->getArgAsInt32(0);
+        }
     }
 
     void update()
     {
-        while (mListener.hasWaitingMessages())
-        {
-            osc::Message msg;
-            mListener.getNextMessage(&msg);
-            const string& addr = msg.getAddress();
-
-            if (addr == "/pull")
-            {
-                int file_idx = msg.getArgAsInt32(0);
-            }
-        }
+    
     }
 
     void draw()

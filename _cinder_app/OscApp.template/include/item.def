@@ -1,0 +1,6 @@
+GROUP_DEF(helper)
+ITEM_DEF(float, VIRTUAL_RADIUS, 3.0f)
+
+GROUP_DEF(tracking)
+ITEM_DEF(float, EFFECTIVE_RADIUS, 5.0f)
+
