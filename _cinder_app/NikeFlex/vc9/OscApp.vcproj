@@ -176,7 +176,7 @@
 	</References>
 	<Files>
 		<File
-			RelativePath="..\src\item.def"
+			RelativePath="..\include\item.def"
 			>
 		</File>
 		<File
