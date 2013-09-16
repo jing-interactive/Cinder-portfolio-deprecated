@@ -1,0 +1,6 @@
+states:
+* interaction - breathe
+* interaction - max - non-interactive-breathe
+* animation - sin / cos
+* animation - sparkling
+* animation - ???
