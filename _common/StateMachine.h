@@ -1,52 +1,58 @@
 #pragma once
 
-#include <cinder/cinder.h>
+#include "cinder/cinder.h"
 
-template <typename AppType>
+template <typename ObjT>
 struct State
 {
-	State(AppType& app):_app(app){}
-	virtual void enter() = 0;
-	virtual void update() = 0;
-	virtual void draw() = 0;
-	virtual void exit() = 0;
+    typedef std::shared_ptr<State<ObjT>> Ref;
+
+	State(ObjT& obj): mObj(obj){}
+    virtual void enter()    {};
+	virtual void update()   {};
+	virtual void draw()     {};
+	virtual void exit()     {};
 protected:
-	AppType& _app;
+	ObjT& mObj;
 };
 
-template <typename AppType>
+template <typename ObjT>
 struct StateMachine
 {
-	std::shared_ptr<State<AppType>> _current_state;
-	std::shared_ptr<State<AppType>> _prev_state;
-	std::shared_ptr<State<AppType>> _global_state;//which never changes
+    typedef typename State<ObjT>::Ref StateRef;
+	StateRef mCurrentState;
+	StateRef mPrevState;
+	StateRef mGlobalState;
 
-	virtual void setupStates() = 0;
-
-	virtual void update()
+	void updateIt()
 	{
-		if (_global_state)
-			_global_state->update();
-		if (_current_state)
-			_current_state->update();
+		if (mGlobalState)
+			mGlobalState->update();
+		if (mCurrentState)
+			mCurrentState->update();
 	}
 
-	virtual void draw()	
+	void drawIt()
 	{
-		if (_global_state)
-			_global_state->draw();
-		if (_current_state)
-			_current_state->draw();
+		if (mGlobalState)
+			mGlobalState->draw();
+		if (mCurrentState)
+			mCurrentState->draw();
 	}
 
-	void changeToState(const std::shared_ptr<State<AppType>>& new_state)
+	void changeToPreviousState()
 	{
-		if (_current_state)
+		changeToState(mPrevState);
+	}
+
+	void changeToState(const StateRef& newState)
+	{
+		if (mCurrentState)
 		{
-			_prev_state = _current_state;
-			_current_state->exit();
+			mPrevState = mCurrentState;
+			mCurrentState->exit();
 		}
-		_current_state = new_state;
-		_current_state->enter();
+		mCurrentState = newState;
+		mCurrentState->enter();
 	}
 };

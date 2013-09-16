@@ -3,12 +3,78 @@
 #include "cinder/osc/OscSender.h"
 #include "cinder/osc/OscListener.h"
 #include "../../../_common/MiniConfig.h"
+#include "../../../_common/StateMachine.h"
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-struct OscApp : public AppBasic 
+struct OscApp;
+
+// global variables
+osc::Listener   mListener;
+osc::Sender     mSender;
+vector<Vec2f>   mScenePositions;
+vector<float>   mScenePowers;
+
+bool            mDirty;
+vector<Vec2f>   mVisitors;
+vector<Vec2f>   mVisitorsTemp;
+
+struct InteractiveState : public State<OscApp>
+{
+    InteractiveState(OscApp& app): State<OscApp>(app){}
+
+    void update();
+
+    void draw()
+    {
+        gl::color(Color::white());
+        for (size_t k=0; k<mVisitors.size(); k++)
+        {
+            gl::drawStrokedEllipse(mVisitors[k], VIRTUAL_RADIUS, VIRTUAL_RADIUS);
+        }
+
+        for (size_t i=0; i<mScenePositions.size(); i++)
+        {
+            mScenePowers[i] = 0;
+            for (size_t k=0; k<mVisitors.size(); k++)
+            {
+                float dist = EFFECTIVE_RADIUS / mScenePositions[i].distance(mVisitors[k]);
+                mScenePowers[i] += dist * dist;
+            }
+
+            gl::color(Color(0, 0, constrain(mScenePowers[i], 0.0f, 1.0f)));
+            gl::drawStrokedEllipse(mScenePositions[i], VIRTUAL_RADIUS, VIRTUAL_RADIUS);
+        }
+    }
+};
+
+struct InteractiveMaxState : public State<OscApp>
+{
+    InteractiveMaxState(OscApp& app): State<OscApp>(app){}
+
+    void enter()
+    {
+
+    }
+
+    void draw()
+    {
+
+    }
+};
+
+struct AnimationState : public State<OscApp>
+{
+    AnimationState(OscApp& app): State<OscApp>(app){}
+    void draw()
+    {
+
+    }
+};
+
+struct OscApp : public AppBasic, StateMachine<OscApp>
 {
     void prepareSettings(Settings *settings)
     {
@@ -36,7 +102,7 @@ struct OscApp : public AppBasic
     void setup()
     {
         mListener.setup(OSC_PORT);
-    //  sender.setup();
+        //  sender.setup();
         ifstream ifs(getAssetPath("scene.plots").string().c_str());
         if (!ifs)
         {
@@ -48,11 +114,16 @@ struct OscApp : public AppBasic
         while (ifs >> cx >> cy)
         {
             Vec2f center(cx * getWindowWidth(), cy * getWindowHeight());
-            mScenePlots.push_back(center);
+            mScenePositions.push_back(center);
         }
-        mSceneLights.resize(mScenePlots.size());
+        mScenePowers.resize(mScenePositions.size());
 
         mListener.registerMessageReceived(this, &OscApp::onOscMessage);
+
+        mStateInteractive = StateRef(new InteractiveState(*this));
+        mStateAnimation = StateRef(new AnimationState(*this));
+
+        changeToState(mStateInteractive);
     }
 
     void onOscMessage(const osc::Message* msg)
@@ -88,41 +159,29 @@ struct OscApp : public AppBasic
             mVisitors = mVisitorsTemp;
             mDirty = false;
         }
+
+        updateIt();
     }
 
     void draw()
     {
         gl::clear(ColorA::black());
 
-        gl::color(Color::white());
-        for (size_t k=0; k<mVisitors.size(); k++)
-        {
-            gl::drawStrokedEllipse(mVisitors[k], VIRTUAL_RADIUS, VIRTUAL_RADIUS);
-        }
-
-        for (size_t i=0; i<mScenePlots.size(); i++)
-        {
-            mSceneLights[i] = 0;
-            for (size_t k=0; k<mVisitors.size(); k++)
-            {
-                float dist = EFFECTIVE_RADIUS / mScenePlots[i].distance(mVisitors[k]);
-                mSceneLights[i] += dist * dist;
-            }
-
-            gl::color(Color(0, 0, constrain(mSceneLights[i], 0.0f, 1.0f)));
-            gl::drawStrokedEllipse(mScenePlots[i], VIRTUAL_RADIUS, VIRTUAL_RADIUS);
-        }
+        drawIt();
     }
 
-private:
-    osc::Listener   mListener;
-    osc::Sender     mSender;
-    vector<Vec2f>   mScenePlots;
-    vector<float>   mSceneLights;
-
-    bool            mDirty;
-    vector<Vec2f>   mVisitors;
-    vector<Vec2f>   mVisitorsTemp;
+public:
+    StateRef        mStateInteractive;
+    StateRef        mStateInteractiveMax;
+    StateRef        mStateAnimation;
 };
+
+void InteractiveState::update()
+{
+    if (false)
+    {
+        mObj.changeToState(mObj.mStateInteractiveMax);
+    }
+}
 
 CINDER_APP_BASIC(OscApp, RendererGl)

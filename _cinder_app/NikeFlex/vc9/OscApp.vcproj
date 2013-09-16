@@ -191,6 +191,10 @@
 			RelativePath="..\src\OscApp.cpp"
 			>
 		</File>
+		<File
+			RelativePath="..\..\..\_common\StateMachine.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
