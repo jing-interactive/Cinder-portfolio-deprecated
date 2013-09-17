@@ -1,7 +1,5 @@
 #pragma once
 
-#include "cinder/cinder.h"
-
 template <typename ObjT>
 struct State
 {
