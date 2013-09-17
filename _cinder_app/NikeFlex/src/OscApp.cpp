@@ -11,71 +11,65 @@ using namespace std;
 
 struct OscApp;
 
-// global variables
 osc::Listener   mListener;
-osc::Sender     mSender;
-vector<Vec2f>   mScenePositions;
-vector<float>   mScenePowers;
 
-bool            mDirty;
+struct Led
+{
+    Led(const Vec2f& pos) : mPos(pos)
+    {
+        mValue = mTargetValue = 0.0f;
+        mIsDirty = false;
+    }
+
+    void setValue(float aValue)
+    {
+        mTargetValue = aValue;
+        mIsDirty = true;
+    }
+
+    float getValue()
+    {
+        if (mIsDirty)
+        {
+            mValue = constrain(lerp(mValue, mTargetValue, LED_LERP_FACTOR), 0.0f, 1.0f);
+        }
+        return mValue;
+    }
+
+    Vec2f   mPos;
+
+private:
+    float   mValue;
+    float   mTargetValue;
+    bool    mIsDirty;
+};
+vector<Led>     mLeds;
+
+bool            mOscDirty;
 vector<Vec2f>   mVisitors;
 vector<Vec2f>   mVisitorsTemp;
 
-struct InteractiveState : public State<OscApp>
+#define GET_INSTANCE_IMPL(classname) \
+    static Ref getInstance()\
+    {\
+        static Ref sInstance = Ref(new classname);\
+        return sInstance;\
+    }
+
+struct FirstState : public State<OscApp>
 {
-    InteractiveState(OscApp& app): State<OscApp>(app){}
+    GET_INSTANCE_IMPL(FirstState);
 
-    void update();
-
-    void draw()
-    {
-        gl::color(Color::white());
-        for (size_t k=0; k<mVisitors.size(); k++)
-        {
-            gl::drawStrokedEllipse(mVisitors[k], VIRTUAL_RADIUS, VIRTUAL_RADIUS);
-        }
-
-        for (size_t i=0; i<mScenePositions.size(); i++)
-        {
-            mScenePowers[i] = 0;
-            for (size_t k=0; k<mVisitors.size(); k++)
-            {
-                float dist = EFFECTIVE_RADIUS / mScenePositions[i].distance(mVisitors[k]);
-                mScenePowers[i] += dist * dist;
-            }
-
-            gl::color(Color(0, 0, constrain(mScenePowers[i], 0.0f, 1.0f)));
-            gl::drawStrokedEllipse(mScenePositions[i], VIRTUAL_RADIUS, VIRTUAL_RADIUS);
-        }
-    }
-};
-
-struct InteractiveMaxState : public State<OscApp>
-{
-    InteractiveMaxState(OscApp& app): State<OscApp>(app){}
-
-    void enter()
-    {
-
-    }
-
-    void draw()
-    {
-
-    }
-};
-
-struct AnimationState : public State<OscApp>
-{
-    AnimationState(OscApp& app): State<OscApp>(app){}
-    void draw()
-    {
-
-    }
+    void enter(OscApp* app);
 };
 
 struct OscApp : public AppBasic, StateMachine<OscApp>
 {
+    OscApp() : StateMachine<OscApp>(this) 
+    {
+
+    }
+
     void prepareSettings(Settings *settings)
     {
         settings->setTitle("flex");
@@ -113,17 +107,15 @@ struct OscApp : public AppBasic, StateMachine<OscApp>
         float cx, cy;
         while (ifs >> cx >> cy)
         {
-            Vec2f center(cx * getWindowWidth(), cy * getWindowHeight());
-            mScenePositions.push_back(center);
+            Vec2f center(
+                cx * getWindowWidth(), cy * getWindowHeight());
+
+            mLeds.push_back(Led(center));
         }
-        mScenePowers.resize(mScenePositions.size());
 
         mListener.registerMessageReceived(this, &OscApp::onOscMessage);
 
-        mStateInteractive = StateRef(new InteractiveState(*this));
-        mStateAnimation = StateRef(new AnimationState(*this));
-
-        changeToState(mStateInteractive);
+        changeToState(FirstState::getInstance());
     }
 
     void onOscMessage(const osc::Message* msg)
@@ -138,7 +130,7 @@ struct OscApp : public AppBasic, StateMachine<OscApp>
 
         if (addr == "/end")
         {
-            mDirty = true;
+            mOscDirty = true;
             return;
         }
 
@@ -154,10 +146,10 @@ struct OscApp : public AppBasic, StateMachine<OscApp>
 
     void update()
     {
-        if (mDirty)
+        if (mOscDirty)
         {
             mVisitors = mVisitorsTemp;
-            mDirty = false;
+            mOscDirty = false;
         }
 
         updateIt();
@@ -167,21 +159,97 @@ struct OscApp : public AppBasic, StateMachine<OscApp>
     {
         gl::clear(ColorA::black());
 
+        gl::color(Color::white());
+        for (size_t k=0; k<mVisitors.size(); k++)
+        {
+            gl::drawStrokedEllipse(mVisitors[k], VIRTUAL_RADIUS, VIRTUAL_RADIUS);
+        }
+
+        for (size_t i=0; i<mLeds.size(); i++)
+        {
+            gl::color(Color(0, 0, mLeds[i].getValue()));
+            gl::drawStrokedEllipse(mLeds[i].mPos, VIRTUAL_RADIUS, VIRTUAL_RADIUS);
+        }
+
         drawIt();
     }
 
-public:
-    StateRef        mStateInteractive;
-    StateRef        mStateInteractiveMax;
-    StateRef        mStateAnimation;
+private:
+
 };
 
-void InteractiveState::update()
+struct InteractiveState : public State<OscApp>
 {
-    if (false)
+    GET_INSTANCE_IMPL(InteractiveState);
+
+    void update(OscApp* app)
     {
-        mObj.changeToState(mObj.mStateInteractiveMax);
+        for (size_t i=0; i<mLeds.size(); i++)
+        {
+            float sum = 0;
+            for (size_t k=0; k<mVisitors.size(); k++)
+            {
+                float dist = EFFECTIVE_RADIUS / mLeds[i].mPos.distance(mVisitors[k]);
+                sum += dist * dist;
+            }
+            mLeds[i].setValue(sum);
+        }
+
+        if (false)
+        {
+            app->changeToState(FirstState::getInstance());
+        }        
     }
+};
+
+struct InteractiveMaxState : public State<OscApp>
+{
+    GET_INSTANCE_IMPL(InteractiveMaxState);
+
+    void enter(OscApp* app)
+    {
+
+    }
+
+    void update(OscApp* app)
+    {
+
+    }
+};
+
+struct IdleBulletState : public State<OscApp>
+{
+    GET_INSTANCE_IMPL(IdleBulletState);
+
+    void update(OscApp* app)
+    {
+
+    }
+};
+
+struct IdleSparkState : public State<OscApp>
+{
+    GET_INSTANCE_IMPL(IdleSparkState);
+
+    void update(OscApp* app)
+    {
+
+    }
+};
+
+struct IdleWTFState : public State<OscApp>
+{
+    GET_INSTANCE_IMPL(IdleWTFState);
+
+    void update(OscApp* app)
+    {
+
+    }
+};
+
+void FirstState::enter(OscApp* app)
+{
+    app->changeToState(InteractiveMaxState::getInstance());
 }
 
 CINDER_APP_BASIC(OscApp, RendererGl)

@@ -1,9 +1,14 @@
 GROUP_DEF(helper)
-ITEM_DEF(float, VIRTUAL_RADIUS, 3.0f)       // 测试用的渲染圆
+ITEM_DEF(float, VIRTUAL_RADIUS, 3.0f)
 
 GROUP_DEF(tracking)
 ITEM_DEF(int,   OSC_PORT,       3333)
-ITEM_DEF(float, EFFECTIVE_RADIUS, 30.0f)    // 影响到灯光的最大距离
-ITEM_DEF(float, MAX_POWER_RATIO, 0.5f)      // 能量总和超过该比例进入 MAX 模式
+ITEM_DEF(float, EFFECTIVE_RADIUS, 30.0f)    // 脫掳脧矛碌陆碌脝鹿芒碌脛脳卯麓贸戮脿脌毛
+ITEM_DEF(float, MAX_POWER_RATIO, 0.5f)      // 脛脺脕驴脳脺潞脥鲁卢鹿媒赂脙卤脠脌媒陆酶脠毛 MAX 脛拢脢陆
+
+GROUP_DEF(animation)
+ITEM_DEF(float,	IDLE_STATE_SECONDS, 5.0f)
+ITEM_DEF(float,	LED_LERP_FACTOR, 0.5f)
+
 
 
