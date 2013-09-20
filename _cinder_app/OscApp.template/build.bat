@@ -1,0 +1,1 @@
+msbuild vc9\OscApp.sln /p:Configuration=Release /m

@@ -1,14 +1,24 @@
 GROUP_DEF(helper)
 ITEM_DEF(float, VIRTUAL_RADIUS, 3.0f)
+ITEM_DEF(bool, IS_DEBUG_MODE, true)
 
 GROUP_DEF(tracking)
 ITEM_DEF(int,   OSC_PORT,       3333)
-ITEM_DEF(float, EFFECTIVE_RADIUS, 30.0f)    // Ó°Ïìµ½µÆ¹âµÄ×î´ó¾àÀë
-ITEM_DEF(float, MAX_POWER_RATIO, 0.5f)      // ÄÜÁ¿×ÜºÍ³¬¹ý¸Ã±ÈÀý½øÈë MAX Ä£Ê½
+ITEM_DEF(float, EFFECTIVE_RADIUS, 30.0f)    // visitors will affect leds within radius of <EFFECTIVE_RADIUS> pixels
+ITEM_DEF(float, MAX_POWER_RATIO, 0.5f)      // After <MAX_POWER_RATIO> of the leds are lit up, go to MAX mode
 
 GROUP_DEF(animation)
 ITEM_DEF(float,	IDLE_STATE_SECONDS, 5.0f)
-ITEM_DEF(float,	LED_LERP_FACTOR, 0.5f)
+ITEM_DEF(float,	LED_LERP_FACTOR, 0.1f)
+ITEM_DEF(float,	LED_SIN_FACTOR, 0.5f)
+
+ITEM_DEF(float, IDLE_BULLET_SPEED, 4.0f)    // move <IDLE_BULLET_SPEED> entry in one second
+ITEM_DEF(float, IDLE_BULLET_FADEOUT_SPEED, 0.05f)
+
+ITEM_DEF(float, IDLE_SPARK_INTERVAL, 0.5f)  // generate random sparks in every <IDLE_SPARK_INTERVAL> seconds
+ITEM_DEF(int,   IDLE_SPARK_COUNT, 4)     // generate <IDLE_SPARK_COUNT> sparks every time
+
+
 
 
 
