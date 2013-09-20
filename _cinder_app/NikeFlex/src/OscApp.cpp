@@ -3,6 +3,7 @@
 #include "cinder/osc/OscSender.h"
 #include "cinder/osc/OscListener.h"
 #include "cinder/Rand.h"
+#include "cinder/params/Params.h"
 
 #include "../../../_common/MiniConfig.h"
 #include "../../../_common/StateMachine.h"
@@ -60,6 +61,8 @@ vector<Vec2f>   mVisitorsTemp;
 
 osc::Listener   mListener;
 bool            mIsInteractiveStates = false;
+
+params::InterfaceGl mParams;
 
 struct OscApp : public AppBasic, StateMachine<OscApp>
 {
@@ -156,6 +159,8 @@ struct OscApp : public AppBasic, StateMachine<OscApp>
         }
 
         drawIt();
+
+        params::InterfaceGl::draw();
     }
 };
 
@@ -290,6 +295,9 @@ struct StateIdleWTF : public State<OscApp>
 
 void OscApp::setup()
 {
+    mParams = params::InterfaceGl("param", Vec2i(300, 300));
+    setupConfigUI(&mParams);
+
     mListener.setup(OSC_PORT);
     //  sender.setup();
     ifstream ifs(getAssetPath("scene.plots").string().c_str());
@@ -302,9 +310,7 @@ void OscApp::setup()
     float cx, cy;
     while (ifs >> cx >> cy)
     {
-        Vec2f center(
-            cx * getWindowWidth(), cy * getWindowHeight());
-
+        Vec2f center(cx * getWindowWidth(), cy * getWindowHeight());
         mLeds.push_back(Led(center));
     }
 

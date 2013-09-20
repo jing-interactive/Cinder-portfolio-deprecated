@@ -2,6 +2,7 @@
 #include <cinder/xml.h>
 #include <cinder/Utilities.h>
 #include <cinder/app/App.h>
+#include <cinder/params/Params.h>
 
 using namespace ci;
 using namespace ci::app;
@@ -99,4 +100,15 @@ void writeConfig()
 	catch( ... ) {
 		console() << "[Warning] Fails to write to " << configPath.string() <<endl;
 	}
+}
+
+void setupConfigUI(cinder::params::InterfaceGl* params)
+{
+#define GROUP_DEF(grp)                  params->addSeparator();       
+#define ITEM_DEF(type, var, default)    params->addParam(#var, &var);
+#include "item.def"
+#undef ITEM_DEF
+#undef GROUP_DEF
+    params->addSeparator();
+    params->addButton("SAVE", writeConfig);
 }

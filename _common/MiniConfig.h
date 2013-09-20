@@ -22,3 +22,9 @@ using std::string;
 
 void readConfig();
 void writeConfig();
+
+namespace cinder { namespace params {
+class InterfaceGl;
+} }
+
+void setupConfigUI(cinder::params::InterfaceGl* params);
