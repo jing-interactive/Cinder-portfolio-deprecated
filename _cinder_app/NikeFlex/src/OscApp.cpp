@@ -21,6 +21,17 @@ namespace cinder { namespace gl {
     }
 } }
 
+const float kSumThreshold = 0.1f;
+
+bool            gOscDirty = false;
+vector<Vec2f>   gVisitors;
+vector<Vec2f>   gVisitorsTemp;
+
+osc::Listener   gListener;
+bool            gIsInteractiveState = false;
+
+params::InterfaceGl gParams;
+
 struct Led
 {
     Led(const Vec2f& pos) : mPos(pos)
@@ -45,6 +56,17 @@ struct Led
         return mValue;
     }
 
+    float getDistanceToScene()
+    {
+        float sum = 0;
+        for (size_t k=0; k<gVisitors.size(); k++)
+        {
+            float dist = EFFECTIVE_RADIUS / mPos.distance(gVisitors[k]);
+            sum += dist * dist;
+        }
+        return sum;
+    }
+
     Vec2f   mPos;
     float   mBirthTime;
     float   mTargetValue;
@@ -53,16 +75,7 @@ private:
     float   mValue;
     bool    mIsDirty;
 };
-vector<Led>     mLeds;
-
-bool            mOscDirty = false;
-vector<Vec2f>   mVisitors;
-vector<Vec2f>   mVisitorsTemp;
-
-osc::Listener   mListener;
-bool            mIsInteractiveStates = false;
-
-params::InterfaceGl mParams;
+vector<Led>     gLeds;
 
 struct OscApp : public AppBasic, StateMachine<OscApp>
 {
@@ -99,13 +112,13 @@ struct OscApp : public AppBasic, StateMachine<OscApp>
 
         if (addr == "/start")
         {
-            mVisitorsTemp.clear();
+            gVisitorsTemp.clear();
             return;
         }
 
         if (addr == "/end")
         {
-            mOscDirty = true;
+            gOscDirty = true;
             return;
         }
 
@@ -113,48 +126,33 @@ struct OscApp : public AppBasic, StateMachine<OscApp>
         {
             float cx = msg->getArgAsFloat(2) * getWindowWidth();
             float cy = msg->getArgAsFloat(3) * getWindowHeight();
-            mVisitorsTemp.push_back(Vec2f(cx, cy));
+            gVisitorsTemp.push_back(Vec2f(cx, cy));
 
             return;
         }
     }
 
-    void update()
-    {
-        if (mOscDirty)
-        {
-            mVisitors = mVisitorsTemp;
-            mOscDirty = false;
-        }
-
-        if (IS_DEBUG_MODE)
-        {
-            mVisitors.clear();
-            mVisitors.push_back(getMousePos());
-        }
-
-        updateIt();
-    }
+    void update();
 
     void draw()
     {
         gl::clear(ColorA::black());
 
         gl::color(Color::white());
-        for (size_t k=0; k<mVisitors.size(); k++)
+        for (size_t k=0; k<gVisitors.size(); k++)
         {
-            gl::drawStrokedEllipse(mVisitors[k], VIRTUAL_RADIUS, VIRTUAL_RADIUS);
+            gl::drawStrokedEllipse(gVisitors[k], VIRTUAL_RADIUS, VIRTUAL_RADIUS);
         }
 
-        for (size_t i=0; i<mLeds.size(); i++)
+        for (size_t i=0; i<gLeds.size(); i++)
         {
-            float wave = mLeds[i].getValue();
-            if (mIsInteractiveStates)
+            float value = gLeds[i].getValue();
+            if (gIsInteractiveState)
             {
-                wave *= abs(sin(getElapsedSeconds() - mLeds[i].mBirthTime) * LED_SIN_FACTOR);
+                value *= abs(sin(getElapsedSeconds() - gLeds[i].mBirthTime) * LED_SIN_FACTOR);
             }
-            gl::color(Color(0, 0, wave));
-            gl::drawSolidEllipse(mLeds[i].mPos, VIRTUAL_RADIUS, VIRTUAL_RADIUS);
+            gl::color(Color(0, 0, value));
+            gl::drawSolidEllipse(gLeds[i].mPos, VIRTUAL_RADIUS, VIRTUAL_RADIUS);
             gl::drawPoint(Vec2f(i, 0));
         }
 
@@ -164,36 +162,47 @@ struct OscApp : public AppBasic, StateMachine<OscApp>
     }
 };
 
-#define GET_INSTANCE_IMPL(classname) \
-    static Ref getInstance()\
-{\
-    static Ref sInstance = Ref(new classname);\
-    return sInstance;\
-}
-
-struct StateInteractive : public State<OscApp>
+struct MyState : public State<OscApp>
 {
-    GET_INSTANCE_IMPL(StateInteractive);
+    void updateLastSeconds(OscApp* app)
+    {
+        mLastSeconds = getElapsedSeconds();
+    }
+
+    static Ref getRandomIdleState();
+
+    void tryChangeIdleState(OscApp* app)
+    {
+        if (!gIsInteractiveState)
+        {
+            if (getElapsedSeconds() - mLastSeconds > IDLE_SWITCH_PERIOD)
+            {
+                app->changeToState(getRandomIdleState());
+            }
+        }
+    }
+
+    float mLastSeconds;
+};
+
+struct StateInteractive : public MyState
+{
+    GET_SINGLETON_IMPL(StateInteractive);
 
     void enter(OscApp* app)
     {
         console() << "Enter StateInteractive" << endl;
-        mIsInteractiveStates = true;
+        gIsInteractiveState = true;
+        updateLastSeconds(app);
     }
 
     void update(OscApp* app)
     {
         float totalSum = 0;
-        for (size_t i=0; i<mLeds.size(); i++)
+        for (size_t i=0; i<gLeds.size(); i++)
         {
-            Led& led = mLeds[i];
-            float sum = 0;
-            for (size_t k=0; k<mVisitors.size(); k++)
-            {
-                float dist = EFFECTIVE_RADIUS / led.mPos.distance(mVisitors[k]);
-                sum += dist * dist;
-            }
-            const float kSumThreshold = 0.1f;
+            Led& led = gLeds[i];
+            float sum = led.getDistanceToScene();
             if (sum <= kSumThreshold)
             {
                 led.mBirthTime = getElapsedSeconds();
@@ -203,102 +212,113 @@ struct StateInteractive : public State<OscApp>
         }
 
 #ifdef MAX_STATE_ENABLED
-        if (totalSum > MAX_POWER_RATIO * mLeds.size())
+        if (totalSum > MAX_POWER_RATIO * gLeds.size())
         {
-            app->changeToState(StateMaxInteractive::getInstance());
+            app->changeToState(StateMaxInteractive::getSingleton());
         }
 #endif // MAX_STATE_ENABLED
     }
 };
 
-struct StateMaxInteractive : public State<OscApp>
+struct StateMaxInteractive : public MyState
 {
-    GET_INSTANCE_IMPL(StateMaxInteractive);
+    GET_SINGLETON_IMPL(StateMaxInteractive);
 
     void enter(OscApp* app)
     {
         console() << "Enter StateMaxInteractive" << endl;
-        mIsInteractiveStates = true;
+        gIsInteractiveState = true;
+        updateLastSeconds(app);
     }
 };
 
-struct StateIdleBullet : public State<OscApp>
+struct StateIdleBullet : public MyState
 {
-    GET_INSTANCE_IMPL(StateIdleBullet);
+    GET_SINGLETON_IMPL(StateIdleBullet);
 
     void enter(OscApp* app)
     {
         console() << "Enter StateIdleBullet" << endl;
-        mIsInteractiveStates = false;
-        mBirthTime = getElapsedSeconds();
+        gIsInteractiveState = false;
+        updateLastSeconds(app);
     }
 
     void update(OscApp* app)
     {
-        float elpased = getElapsedSeconds() - mBirthTime;
+        float elpased = getElapsedSeconds() - mLastSeconds;
 
-        for (size_t i=0; i<mLeds.size(); i++)
+        for (size_t i=0; i<gLeds.size(); i++)
         {
-            mLeds[i].setValue(mLeds[i].mTargetValue - elpased * IDLE_BULLET_FADEOUT_SPEED);
+            gLeds[i].setValue(gLeds[i].mTargetValue - elpased * IDLE_BULLET_FADEOUT_SPEED);
         }
 
-        size_t currentIndex = static_cast<size_t>(IDLE_BULLET_SPEED * elpased) % mLeds.size();
-        mLeds[currentIndex].setValue(1.0f);
-    }
+        size_t currentIndex = static_cast<size_t>(IDLE_BULLET_SPEED * elpased) % gLeds.size();
+        gLeds[currentIndex].setValue(1.0f);
 
-    float   mBirthTime;
+        tryChangeIdleState(app);
+    }
 };
 
-struct StateIdleSpark : public State<OscApp>
+struct StateIdleSpark : public MyState
 {
-    GET_INSTANCE_IMPL(StateIdleSpark);
+    GET_SINGLETON_IMPL(StateIdleSpark);
 
-    void setup(OscApp* app)
+    void enter(OscApp* app)
     {
         console() << "Enter StateIdleSpark" << endl;
-        mIsInteractiveStates = false;
-        mLastGenerateTime = getElapsedSeconds();
+        gIsInteractiveState = false;
+        updateLastSeconds(app);
     }
 
     void update(OscApp* app)
     {
-        if (getElapsedSeconds() - mLastGenerateTime > IDLE_SPARK_INTERVAL)
+        if (getElapsedSeconds() - mLastSeconds > IDLE_SPARK_INTERVAL)
         {
             for (int i = 0; i < IDLE_SPARK_COUNT; i++)
             {
-                mLeds[rand() % mLeds.size()].setValue(randFloat());
+                gLeds[rand() % gLeds.size()].setValue(randFloat());
             }
-            mLastGenerateTime = getElapsedSeconds();
+            updateLastSeconds(app);
         }
-    }
 
-    float   mLastGenerateTime;
+        tryChangeIdleState(app);
+    }
 };
 
-struct StateIdleWTF : public State<OscApp>
+struct StateIdleWTF : public MyState
 {
-    GET_INSTANCE_IMPL(StateIdleWTF);
+    GET_SINGLETON_IMPL(StateIdleWTF);
 
-    void setup(OscApp* app)
+    void enter(OscApp* app)
     {
         console() << "Enter StateIdleWTF" << endl;
-        mIsInteractiveStates = false;
+        gIsInteractiveState = false;
+        updateLastSeconds(app);
     }
 
     void update(OscApp* app)
     {
-
+        tryChangeIdleState(app);
     }
 };
 
-#undef GET_INSTANCE_IMPL
+MyState::Ref MyState::getRandomIdleState()
+{
+    switch (rand() % 3)
+    {
+        case 0: return StateIdleBullet::getSingleton();
+        case 1: return StateIdleSpark::getSingleton();
+        case 2: return StateIdleWTF::getSingleton();
+        default: throw Exception();
+    }
+}
 
 void OscApp::setup()
 {
-    mParams = params::InterfaceGl("param", Vec2i(300, 300));
-    setupConfigUI(&mParams);
+    gParams = params::InterfaceGl("param", Vec2i(300, 300));
+    setupConfigUI(&gParams);
 
-    mListener.setup(OSC_PORT);
+    gListener.setup(OSC_PORT);
     //  sender.setup();
     ifstream ifs(getAssetPath("scene.plots").string().c_str());
     if (!ifs)
@@ -311,12 +331,46 @@ void OscApp::setup()
     while (ifs >> cx >> cy)
     {
         Vec2f center(cx * getWindowWidth(), cy * getWindowHeight());
-        mLeds.push_back(Led(center));
+        gLeds.push_back(Led(center));
     }
 
-    mListener.registerMessageReceived(this, &OscApp::onOscMessage);
+    gListener.registerMessageReceived(this, &OscApp::onOscMessage);
 
-    changeToState(StateIdleBullet::getInstance());
+    changeToState(StateIdleBullet::getSingleton());
+}
+
+void OscApp::update()
+{
+    if (gOscDirty)
+    {
+        gVisitors = gVisitorsTemp;
+        gOscDirty = false;
+    }
+
+    if (IS_DEBUG_MODE)
+    {
+        gVisitors.clear();
+        gVisitors.push_back(getMousePos());
+    }
+
+    bool isPrevInteractiveState = gIsInteractiveState;
+    for (size_t i=0; i<gLeds.size(); i++)
+    {
+        Led& led = gLeds[i];
+        float sum = led.getDistanceToScene();
+        gIsInteractiveState = (sum > kSumThreshold);
+    }
+
+    if (!isPrevInteractiveState && gIsInteractiveState)
+    {
+        changeToState(StateInteractive::getSingleton());
+    }
+    else if (isPrevInteractiveState & !gIsInteractiveState)
+    {
+        changeToState(MyState::getRandomIdleState());
+    }
+
+    updateIt();
 }
 
 void OscApp::keyUp(KeyEvent event)
@@ -333,23 +387,23 @@ void OscApp::keyUp(KeyEvent event)
         }break;
     case KeyEvent::KEY_1:
         {
-            changeToState(StateInteractive::getInstance());
+            changeToState(StateInteractive::getSingleton());
         }break;
     case KeyEvent::KEY_2:
         {
-            changeToState(StateMaxInteractive::getInstance());
+            changeToState(StateMaxInteractive::getSingleton());
         }break;
     case KeyEvent::KEY_3:
         {
-            changeToState(StateIdleBullet::getInstance());
+            changeToState(StateIdleBullet::getSingleton());
         }break;
     case KeyEvent::KEY_4:
         {
-            changeToState(StateIdleSpark::getInstance());
+            changeToState(StateIdleSpark::getSingleton());
         }break;
     case KeyEvent::KEY_5:
         {
-            changeToState(StateIdleWTF::getInstance());
+            changeToState(StateIdleWTF::getSingleton());
         }break;
     default: break;
     }

@@ -11,6 +11,13 @@ struct State
     virtual void exit(ObjT* host)     {};
 };
 
+#define GET_SINGLETON_IMPL(classname) \
+    static Ref getSingleton()\
+{\
+    static Ref sInstance = Ref(new classname);\
+    return sInstance;\
+}
+
 template <typename ObjT>
 struct StateMachine
 {

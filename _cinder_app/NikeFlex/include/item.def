@@ -16,7 +16,9 @@ ITEM_DEF(float, IDLE_BULLET_SPEED, 4.0f)    // move <IDLE_BULLET_SPEED> entry in
 ITEM_DEF(float, IDLE_BULLET_FADEOUT_SPEED, 0.05f)
 
 ITEM_DEF(float, IDLE_SPARK_INTERVAL, 0.5f)  // generate random sparks in every <IDLE_SPARK_INTERVAL> seconds
-ITEM_DEF(int,   IDLE_SPARK_COUNT, 4)     // generate <IDLE_SPARK_COUNT> sparks every time
+ITEM_DEF(int,   IDLE_SPARK_COUNT, 4)        // generate <IDLE_SPARK_COUNT> sparks every time
+
+ITEM_DEF(float, IDLE_SWITCH_PERIOD, 5.0f)   // after <IDLE_SWITCH_PERIOD> seconds, idle animation will change
 
 
 
