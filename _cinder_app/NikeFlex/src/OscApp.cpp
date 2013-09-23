@@ -151,7 +151,7 @@ struct OscApp : public AppBasic, StateMachine<OscApp>
             {
                 value *= abs(sin(getElapsedSeconds() - gLeds[i].mBirthTime) * LED_SIN_FACTOR);
             }
-            gl::color(Color(0, 0, value));
+            gl::color(Color(value, value, value));
             gl::drawSolidEllipse(gLeds[i].mPos, VIRTUAL_RADIUS, VIRTUAL_RADIUS);
             gl::drawPoint(Vec2f(i, 0));
         }
@@ -166,7 +166,7 @@ struct MyState : public State<OscApp>
 {
     void updateLastSeconds(OscApp* app)
     {
-        mLastSeconds = getElapsedSeconds();
+        mBirthSeconds = getElapsedSeconds();
     }
 
     static Ref getRandomIdleState();
@@ -175,14 +175,14 @@ struct MyState : public State<OscApp>
     {
         if (!gIsInteractiveState)
         {
-            if (getElapsedSeconds() - mLastSeconds > IDLE_SWITCH_PERIOD)
+            if (getElapsedSeconds() - mBirthSeconds > IDLE_SWITCH_PERIOD)
             {
                 app->changeToState(getRandomIdleState());
             }
         }
     }
 
-    float mLastSeconds;
+    float mBirthSeconds;
 };
 
 struct StateInteractive : public MyState
@@ -245,7 +245,7 @@ struct StateIdleBullet : public MyState
 
     void update(OscApp* app)
     {
-        float elpased = getElapsedSeconds() - mLastSeconds;
+        float elpased = getElapsedSeconds() - mBirthSeconds;
 
         for (size_t i=0; i<gLeds.size(); i++)
         {
@@ -268,21 +268,24 @@ struct StateIdleSpark : public MyState
         console() << "Enter StateIdleSpark" << endl;
         gIsInteractiveState = false;
         updateLastSeconds(app);
+        mLastSpark = getElapsedSeconds();
     }
 
     void update(OscApp* app)
     {
-        if (getElapsedSeconds() - mLastSeconds > IDLE_SPARK_INTERVAL)
+        if (getElapsedSeconds() - mLastSpark > IDLE_SPARK_INTERVAL)
         {
             for (int i = 0; i < IDLE_SPARK_COUNT; i++)
             {
                 gLeds[rand() % gLeds.size()].setValue(randFloat());
             }
-            updateLastSeconds(app);
+            mLastSpark = getElapsedSeconds();
         }
 
         tryChangeIdleState(app);
     }
+
+    float mLastSpark;
 };
 
 struct StateIdleWTF : public MyState
