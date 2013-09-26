@@ -14,15 +14,6 @@ using namespace std;
 
 struct OscApp;
 
-namespace cinder { namespace gl {
-    void drawPoint( const Vec2f &pt )
-    {
-        drawSolidRect( Rectf( pt.x, pt.y, pt.x+1, pt.y+1 ) );
-    }
-} }
-
-const float kSumThreshold = 0.1f;
-
 bool            gOscDirty = false;
 vector<Vec2f>   gVisitors;
 vector<Vec2f>   gVisitorsTemp;
@@ -94,14 +85,6 @@ struct OscApp : public AppBasic, StateMachine<OscApp>
         readConfig();
     }
 
-    void keyDown(KeyEvent event)
-    {
-        if (event.getCode() == KeyEvent::KEY_d)
-        {
-            return;
-        }
-    }
-
     void keyUp(KeyEvent event);
 
     void setup();
@@ -141,7 +124,7 @@ struct OscApp : public AppBasic, StateMachine<OscApp>
         gl::color(Color::white());
         for (size_t k=0; k<gVisitors.size(); k++)
         {
-            gl::drawStrokedEllipse(gVisitors[k], VIRTUAL_RADIUS, VIRTUAL_RADIUS);
+            gl::drawStrokedEllipse(gVisitors[k], VIRTUAL_CIRCLE_RADIUS, VIRTUAL_CIRCLE_RADIUS);
         }
 
         for (size_t i=0; i<gLeds.size(); i++)
@@ -152,7 +135,7 @@ struct OscApp : public AppBasic, StateMachine<OscApp>
                 value *= abs(sin(getElapsedSeconds() - gLeds[i].mBirthTime) * LED_SIN_FACTOR);
             }
             gl::color(Color(value, value, value));
-            gl::drawSolidEllipse(gLeds[i].mPos, VIRTUAL_RADIUS, VIRTUAL_RADIUS);
+            gl::drawSolidEllipse(gLeds[i].mPos, VIRTUAL_CIRCLE_RADIUS, VIRTUAL_CIRCLE_RADIUS);
             gl::drawPoint(Vec2f(i, 0));
         }
 
@@ -185,6 +168,21 @@ struct MyState : public State<OscApp>
     float mBirthSeconds;
 };
 
+
+struct StateMaxInteractive : public MyState
+{
+    GET_SINGLETON_IMPL(StateMaxInteractive);
+
+    void enter(OscApp* app)
+    {
+        console() << "Enter StateMaxInteractive" << endl;
+        gIsInteractiveState = true;
+        updateLastSeconds(app);
+    }
+
+    void update(OscApp* host);
+};
+
 struct StateInteractive : public MyState
 {
     GET_SINGLETON_IMPL(StateInteractive);
@@ -203,7 +201,7 @@ struct StateInteractive : public MyState
         {
             Led& led = gLeds[i];
             float sum = led.getDistanceToScene();
-            if (sum <= kSumThreshold)
+            if (sum <= IDLE_TO_INTERACTIVE_THRESH)
             {
                 led.mBirthTime = getElapsedSeconds();
             }
@@ -211,26 +209,17 @@ struct StateInteractive : public MyState
             totalSum += sum;
         }
 
-#ifdef MAX_STATE_ENABLED
         if (totalSum > MAX_POWER_RATIO * gLeds.size())
         {
             app->changeToState(StateMaxInteractive::getSingleton());
         }
-#endif // MAX_STATE_ENABLED
     }
 };
 
-struct StateMaxInteractive : public MyState
+void StateMaxInteractive::update( OscApp* host )
 {
-    GET_SINGLETON_IMPL(StateMaxInteractive);
 
-    void enter(OscApp* app)
-    {
-        console() << "Enter StateMaxInteractive" << endl;
-        gIsInteractiveState = true;
-        updateLastSeconds(app);
-    }
-};
+}
 
 struct StateIdleBullet : public MyState
 {
@@ -357,12 +346,13 @@ void OscApp::update()
     }
 
     bool isPrevInteractiveState = gIsInteractiveState;
+    float sum = 0;
     for (size_t i=0; i<gLeds.size(); i++)
     {
         Led& led = gLeds[i];
-        float sum = led.getDistanceToScene();
-        gIsInteractiveState = (sum > kSumThreshold);
+        sum += led.getDistanceToScene();
     }
+    gIsInteractiveState = (sum > IDLE_TO_INTERACTIVE_THRESH);
 
     if (!isPrevInteractiveState && gIsInteractiveState)
     {
