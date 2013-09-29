@@ -87,7 +87,7 @@ void writeConfig()
 #undef GROUP_DEF
         if (!group.getTag().empty()) tree.push_back(group);
 
-#if 1
+#ifdef CHINESE_GBK_ENCODING_ENABLED
         OStreamRef os = writeFile(configPath)->getStream();
         std::ofstream of(configPath.string().c_str());
         const std::string kGbkHeader = "<?xml version=\"1.0\" encoding=\"gbk\"?>";
