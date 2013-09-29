@@ -1,0 +1,1 @@
+msbuild vc9\App.sln /p:Configuration=Release /m
