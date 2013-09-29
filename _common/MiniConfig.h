@@ -28,3 +28,4 @@ class InterfaceGl;
 } }
 
 void setupConfigUI(cinder::params::InterfaceGl* params);
+int getConfigUIHeight();

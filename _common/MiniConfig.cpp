@@ -112,3 +112,16 @@ void setupConfigUI(cinder::params::InterfaceGl* params)
     params->addSeparator();
     params->addButton("SAVE", writeConfig);
 }
+
+int getConfigUIHeight()
+{
+    const int kItemHeight = 20;
+    int height = kItemHeight * 2; // top + bottom
+
+#define GROUP_DEF(grp)                  height += kItemHeight;
+#define ITEM_DEF(type, var, default)    height += kItemHeight;
+#include "item.def"
+#undef ITEM_DEF
+#undef GROUP_DEF
+    return height;
+}
