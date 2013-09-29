@@ -1,3 +1,5 @@
+// fix Spark µƒŒ Ã‚
+
 #include "cinder/app/AppBasic.h"
 #include "cinder/gl/gl.h"
 #include "cinder/osc/OscSender.h"
@@ -20,6 +22,7 @@ vector<Vec2f>   gVisitorsTemp;
 
 osc::Listener   gListener;
 bool            gIsInteractiveState = false;
+float           gInteractionEndingTime = 0;
 
 params::InterfaceGl gParams;
 
@@ -42,7 +45,14 @@ struct Led
     {
         if (mIsDirty)
         {
-            mValue = constrain(lerp(mValue, mTargetValue, LED_LERP_FACTOR), 0.0f, 1.0f);
+            if (gIsInteractiveState)
+            {
+                mValue = constrain(lerp(mValue, mTargetValue, INTERACTIVE_LERP_FACTOR), 0.0f, 1.0f);
+            }
+            else
+            {
+                mValue = constrain(lerp(mValue, mTargetValue, LED_LERP_FACTOR), 0.0f, 1.0f);
+            }
         }
         return mValue;
     }
@@ -52,8 +62,21 @@ struct Led
         float sum = 0;
         for (size_t k=0; k<gVisitors.size(); k++)
         {
-            float dist = EFFECTIVE_RADIUS / mPos.distance(gVisitors[k]);
-            sum += dist * dist;
+            float dist = mPos.distance(gVisitors[k]);
+            float val = 0;
+            if (dist > MAX_EFFECTIVE_RADIUS)
+            {
+                val = 0;
+            }
+            else if (dist < MIN_EFFECTIVE_RADIUS)
+            {
+                val = 1.0f;
+            }
+            else
+            {
+                val = 1.0f - dist / MAX_EFFECTIVE_RADIUS;
+            }
+            sum += val;
         }
         return sum;
     }
@@ -62,7 +85,6 @@ struct Led
     float   mBirthTime;
     float   mTargetValue;
 
-private:
     float   mValue;
     bool    mIsDirty;
 };
@@ -80,7 +102,7 @@ struct OscApp : public AppBasic, StateMachine<OscApp>
         settings->setTitle("flex");
         settings->setBorderless();
         settings->setWindowPos(0, 0);
-        settings->setWindowSize(640, 480);
+        settings->setWindowSize(640, 640);
 
         readConfig();
     }
@@ -130,10 +152,7 @@ struct OscApp : public AppBasic, StateMachine<OscApp>
         for (size_t i=0; i<gLeds.size(); i++)
         {
             float value = gLeds[i].getValue();
-            if (gIsInteractiveState)
-            {
-                value *= abs(sin(getElapsedSeconds() - gLeds[i].mBirthTime) * LED_SIN_FACTOR);
-            }
+            //value = constrain(value * COLOR_MULTIPLIER, 0.0f, 1.0f);
             gl::color(Color(value, value, value));
             gl::drawSolidEllipse(gLeds[i].mPos, VIRTUAL_CIRCLE_RADIUS, VIRTUAL_CIRCLE_RADIUS);
             gl::drawPoint(Vec2f(i, 0));
@@ -147,27 +166,21 @@ struct OscApp : public AppBasic, StateMachine<OscApp>
 
 struct MyState : public State<OscApp>
 {
-    void updateLastSeconds(OscApp* app)
+    void enterShared(OscApp* app)
     {
         mBirthSeconds = getElapsedSeconds();
+        for (size_t i=0; i<gLeds.size(); i++)
+        {
+            gLeds[i].setValue(0.0f);
+        }
     }
 
     static Ref getRandomIdleState();
 
-    void tryChangeIdleState(OscApp* app)
-    {
-        if (!gIsInteractiveState)
-        {
-            if (getElapsedSeconds() - mBirthSeconds > IDLE_SWITCH_PERIOD)
-            {
-                app->changeToState(getRandomIdleState());
-            }
-        }
-    }
+    void tryChangeIdleState(OscApp* app);
 
     float mBirthSeconds;
 };
-
 
 struct StateMaxInteractive : public MyState
 {
@@ -177,7 +190,12 @@ struct StateMaxInteractive : public MyState
     {
         console() << "Enter StateMaxInteractive" << endl;
         gIsInteractiveState = true;
-        updateLastSeconds(app);
+        enterShared(app);
+        for (size_t i=0; i<gLeds.size(); i++)
+        {
+            gLeds[i].mBirthTime = getElapsedSeconds();
+            gLeds[i].setValue(0.0f);
+        }
     }
 
     void update(OscApp* host);
@@ -191,25 +209,29 @@ struct StateInteractive : public MyState
     {
         console() << "Enter StateInteractive" << endl;
         gIsInteractiveState = true;
-        updateLastSeconds(app);
+        enterShared(app);
     }
 
     void update(OscApp* app)
     {
         float totalSum = 0;
+        float maxSum = 0;
         for (size_t i=0; i<gLeds.size(); i++)
         {
             Led& led = gLeds[i];
             float sum = led.getDistanceToScene();
+            maxSum = max(maxSum, sum);
             if (sum <= IDLE_TO_INTERACTIVE_THRESH)
             {
                 led.mBirthTime = getElapsedSeconds();
             }
             led.setValue(sum);
-            totalSum += sum;
+            totalSum += led.getValue();
         }
-
-        if (totalSum > MAX_POWER_RATIO * gLeds.size())
+#ifdef _DEBUG
+        console() << "maxSum: " << maxSum << endl;
+#endif
+        if (totalSum > MAX_POWER_PERCENT * gLeds.size())
         {
             app->changeToState(StateMaxInteractive::getSingleton());
         }
@@ -218,8 +240,48 @@ struct StateInteractive : public MyState
 
 void StateMaxInteractive::update( OscApp* host )
 {
-
+    for (size_t i=0; i<gLeds.size(); i++)
+    {
+        float value = MAX_AMPLIFIER * abs(sin((getElapsedSeconds() - gLeds[i].mBirthTime) * MAX_SIN_FACTOR));
+        gLeds[i].mValue = gLeds[i].mTargetValue = value + 0.1f;
+    }
+    //console() << gLeds[0].mValue << endl;
 }
+
+struct StateTransmit : public MyState
+{
+    GET_SINGLETON_IMPL(StateTransmit);
+
+    MyState::Ref mNextState;
+    void setRealState(MyState::Ref nextState)
+    {
+        mNextState = nextState;
+    }
+
+    void enter(OscApp* app)
+    {
+        console() << "Enter StateTransmit" << endl;
+        gIsInteractiveState = false;
+        enterShared(app);
+    }
+
+    void update(OscApp* app)
+    {
+        bool niceToChange = true;
+        for (size_t i=0; i<gLeds.size(); i++)
+        {
+            gLeds[i].setValue(gLeds[i].mValue - 0.1f);
+            if (gLeds[i].mValue > 0.0f)
+            {
+                niceToChange = false;
+            }
+        }
+        if (niceToChange)
+        {
+            app->changeToState(mNextState);
+        }
+    }
+};
 
 struct StateIdleBullet : public MyState
 {
@@ -229,7 +291,7 @@ struct StateIdleBullet : public MyState
     {
         console() << "Enter StateIdleBullet" << endl;
         gIsInteractiveState = false;
-        updateLastSeconds(app);
+        enterShared(app);
     }
 
     void update(OscApp* app)
@@ -238,10 +300,10 @@ struct StateIdleBullet : public MyState
 
         for (size_t i=0; i<gLeds.size(); i++)
         {
-            gLeds[i].setValue(gLeds[i].mTargetValue - elpased * IDLE_BULLET_FADEOUT_SPEED);
+            gLeds[i].setValue(gLeds[i].mTargetValue - elpased * BULLET_FADEOUT_SPEED);
         }
 
-        size_t currentIndex = static_cast<size_t>(IDLE_BULLET_SPEED * elpased) % gLeds.size();
+        size_t currentIndex = static_cast<size_t>(BULLET_SPEED * elpased) % gLeds.size();
         gLeds[currentIndex].setValue(1.0f);
 
         tryChangeIdleState(app);
@@ -256,58 +318,227 @@ struct StateIdleSpark : public MyState
     {
         console() << "Enter StateIdleSpark" << endl;
         gIsInteractiveState = false;
-        updateLastSeconds(app);
+        enterShared(app);
         mLastSpark = getElapsedSeconds();
+        mSpeeds.resize(gLeds.size());
     }
 
     void update(OscApp* app)
     {
-        if (getElapsedSeconds() - mLastSpark > IDLE_SPARK_INTERVAL)
+        float elpased = getElapsedSeconds() - mBirthSeconds;
+
+        for (int i = 0; i < gLeds.size(); i++)
         {
-            for (int i = 0; i < IDLE_SPARK_COUNT; i++)
+            gLeds[i].setValue(gLeds[i].mTargetValue + (getElapsedSeconds() - gLeds[i].mBirthTime) * mSpeeds[i]);
+
+            if (mSpeeds[i] > FLT_EPSILON)
             {
-                gLeds[rand() % gLeds.size()].setValue(randFloat());
+                if (gLeds[i].getValue() > 0.95f)
+                {
+                    gLeds[i].mBirthTime = getElapsedSeconds();
+                    mSpeeds[i] = -SPARK_FADEOUT_SPEED;
+                }
             }
+            else if (mSpeeds[i] < -FLT_EPSILON)
+            {
+                // fade out
+                //if (gLeds[i].getValue() < 0.05f)
+                //{
+                //    gLeds[i].mBirthTime = getElapsedSeconds();
+                //    mSpeeds[i] = -SPARK_FADEOUT_SPEED;
+                //}
+            }
+        }
+
+        if (getElapsedSeconds() - mLastSpark > SPARK_INTERVAL)
+        {
             mLastSpark = getElapsedSeconds();
+
+            size_t idx = rand() % gLeds.size();
+
+            size_t minId = max<int>(0,               idx);
+            size_t maxId = min<int>(gLeds.size(),    idx + SPARK_COUNT);
+            for (size_t i=minId; i<maxId; i++)
+            {
+                if (gLeds[i].getValue() < FLT_EPSILON)
+                {
+                    gLeds[i].setValue(0.0f);
+                    gLeds[i].mBirthTime = getElapsedSeconds();
+                    mSpeeds[i] = SPARK_FADEIN_SPEED;
+                }
+                //gLeds[i].setValue(1.0f);
+            }
         }
 
         tryChangeIdleState(app);
     }
 
+    vector<float> mSpeeds;
     float mLastSpark;
 };
 
-struct StateIdleWTF : public MyState
+struct StateIdleDragon : public MyState
 {
-    GET_SINGLETON_IMPL(StateIdleWTF);
+    GET_SINGLETON_IMPL(StateIdleDragon);
 
     void enter(OscApp* app)
     {
-        console() << "Enter StateIdleWTF" << endl;
+        console() << "Enter StateIdleDragon" << endl;
         gIsInteractiveState = false;
-        updateLastSeconds(app);
+        enterShared(app);
+        mLastDragon = 0;
+        mCurrentGroup = 0;
+        mCount = 0;
+        mStartId = 0;
+        mEndId = 0;
     }
 
     void update(OscApp* app)
     {
+        float elpased = getElapsedSeconds() - mBirthSeconds;
+
+        for (size_t i=0; i<gLeds.size(); i++)
+        {
+            gLeds[i].setValue(gLeds[i].mTargetValue * (1.0f - DRAGON_FADEOUT_SPEED) );
+        }
+
+        if (getElapsedSeconds() - mLastDragon > DRAGON_INTERVAL)
+        {
+            mLastDragon = getElapsedSeconds();
+            if (mCount == 0 || mCount == 2)
+            {
+                mCount = 1;
+                if (mCount == 2)
+                    mCount = 0;
+                mStartId = rand() % gLeds.size();
+                mEndId = rand() % gLeds.size();
+
+                if (mStartId > mEndId)
+                {
+                    swap(mStartId, mEndId);
+                }
+
+                if (mEndId - mStartId < 4)
+                {
+                    mEndId = min<int>(mStartId + randInt(4, 8), gLeds.size() - 1);
+                }
+            }
+            else
+            {
+                mCount = 2;
+                swap(mStartId, mEndId);
+            }
+        }
+
+        int idx = lerp(mStartId, mEndId, (getElapsedSeconds() - mLastDragon) / DRAGON_INTERVAL);
+        gLeds[idx].setValue(1.0f);
+
         tryChangeIdleState(app);
     }
+
+    float mLastDragon; 
+    int mCurrentGroup;
+    int mStartId;
+    int mEndId;
+    int mCurrentId;
+    float mTimeSlice;
+    int mCount; // 0/1/2
+};
+
+struct StateIdleBlocky : public MyState
+{
+    GET_SINGLETON_IMPL(StateIdleBlocky);
+
+    vector<float> mSpeed;
+
+    void enter(OscApp* app)
+    {
+        console() << "Enter StateIdleBlocky" << endl;
+        gIsInteractiveState = false;
+        enterShared(app);
+        mSpeed.resize(gLeds.size());
+
+        count = 0;
+    }
+
+    float time;
+
+    void update(OscApp* app)
+    {
+        float elpased = getElapsedSeconds() - time;
+
+        if (count == 0)
+        {
+            time = getElapsedSeconds();
+
+            count = 1;
+            for (size_t i=0; i<gLeds.size(); i++)
+            {
+                gLeds[i].mValue = gLeds[i].mTargetValue = 0.0f;
+                mSpeed[i] = randFloat(BLOCKY_FADEOUT_MINSPEED, BLOCKY_FADEOUT_MAXSPEED) * 0.3f;
+            }
+        }
+
+        for (size_t i=0; i<gLeds.size(); i++)
+        {
+            gLeds[i].setValue(gLeds[i].mTargetValue + elpased * mSpeed[i]);
+        }
+
+        tryChangeIdleState(app);
+
+        float sum = 0;
+        for (size_t i=0; i<gLeds.size(); i++)
+        {
+            sum += gLeds[i].getValue();
+        }
+        if (count == 2 && sum < 0.5f)
+        {
+            count = 0;
+        }
+        else if (count == 1 && sum > gLeds.size() * 0.8f)
+        {
+            count = 2;
+            time = getElapsedSeconds();
+
+            for (size_t i=0; i<gLeds.size(); i++)
+            {
+                //gLeds[i].mValue = gLeds[i].mTargetValue = 1.0f;
+                mSpeed[i] = -randFloat(BLOCKY_FADEOUT_MINSPEED, BLOCKY_FADEOUT_MAXSPEED) * 0.3f;
+            }
+        }
+    }
+
+    int count;
 };
 
 MyState::Ref MyState::getRandomIdleState()
 {
-    switch (rand() % 3)
+    switch (rand() % 4)
     {
         case 0: return StateIdleBullet::getSingleton();
-        case 1: return StateIdleSpark::getSingleton();
-        case 2: return StateIdleWTF::getSingleton();
+        case 1: return StateIdleDragon::getSingleton();
+        case 2: return StateIdleBlocky::getSingleton();
+        case 3: return StateIdleSpark::getSingleton();
         default: throw Exception();
     }
 }
 
+void MyState::tryChangeIdleState( OscApp* app )
+{
+    if (!gIsInteractiveState)
+    {
+        if (getElapsedSeconds() - mBirthSeconds > IDLE_SWITCH_PERIOD)
+        {
+            ((StateTransmit*)(StateTransmit::getSingleton().get()))->setRealState(getRandomIdleState());
+            app->changeToState(StateTransmit::getSingleton());
+        }
+    }
+}
+
+
 void OscApp::setup()
 {
-    gParams = params::InterfaceGl("param", Vec2i(300, 300));
+    gParams = params::InterfaceGl("param", Vec2i(300, 450));
     setupConfigUI(&gParams);
 
     gListener.setup(OSC_PORT);
@@ -352,7 +583,18 @@ void OscApp::update()
         Led& led = gLeds[i];
         sum += led.getDistanceToScene();
     }
-    gIsInteractiveState = (sum > IDLE_TO_INTERACTIVE_THRESH);
+    if (sum > IDLE_TO_INTERACTIVE_THRESH)
+    {
+        gIsInteractiveState = true;
+        gInteractionEndingTime = getElapsedSeconds();
+    }
+    else
+    {
+        if (getElapsedSeconds() - gInteractionEndingTime > IDLE_TO_INTERACTIVE_SECONDS)
+        {
+            gIsInteractiveState = false;
+        }
+    }
 
     if (!isPrevInteractiveState && gIsInteractiveState)
     {
@@ -370,10 +612,6 @@ void OscApp::keyUp(KeyEvent event)
 {
     switch (event.getCode())
     {
-    case KeyEvent::KEY_SPACE:
-        {
-            readConfig();
-        }break;
     case KeyEvent::KEY_ESCAPE:
         {
             quit();
@@ -396,7 +634,11 @@ void OscApp::keyUp(KeyEvent event)
         }break;
     case KeyEvent::KEY_5:
         {
-            changeToState(StateIdleWTF::getSingleton());
+            changeToState(StateIdleDragon::getSingleton());
+        }break;
+    case KeyEvent::KEY_6:
+        {
+            changeToState(StateIdleBlocky::getSingleton());
         }break;
     default: break;
     }

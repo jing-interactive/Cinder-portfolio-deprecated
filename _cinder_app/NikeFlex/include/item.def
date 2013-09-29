@@ -1,23 +1,40 @@
 GROUP_DEF(helper)
 ITEM_DEF(float, VIRTUAL_CIRCLE_RADIUS, 3.0f)
-ITEM_DEF(bool,  IS_DEBUG_MODE, true)
+ITEM_DEF(bool,  IS_DEBUG_MODE, false)
 ITEM_DEF(int,   OSC_PORT,       3333)
 
 GROUP_DEF(interactive)
-ITEM_DEF(float, EFFECTIVE_RADIUS, 30.0f)    // visitors will affect leds within radius of <EFFECTIVE_RADIUS> pixels
-ITEM_DEF(float, MAX_POWER_RATIO, 0.5f)      // After <MAX_POWER_RATIO> of the leds are lit up, go to MAX mode
+ITEM_DEF(float, MAX_EFFECTIVE_RADIUS, 110.0f)    // visitors will affect leds within radius of <MAX_EFFECTIVE_RADIUS> pixels
+ITEM_DEF(float, MIN_EFFECTIVE_RADIUS, 60.0f)    // distances smaller than <MIN_EFFECTIVE_RADIUS> are equal
+ITEM_DEF(float,	INTERACTIVE_LERP_FACTOR, 0.01f)
 ITEM_DEF(float, IDLE_TO_INTERACTIVE_THRESH, 0.1f) // if sum of distance to scene is bigger than <IDLE_TO_INTERACTIVE_THRESH>, will go to interactive mode
+ITEM_DEF(float, IDLE_TO_INTERACTIVE_SECONDS, 3.0f) // if sum of distance to scene is bigger than <IDLE_TO_INTERACTIVE_THRESH>, will go to interactive mode
+
+GROUP_DEF(interactive.max)
+ITEM_DEF(float, MAX_BIRTH_DELTA,    0.01f)
+ITEM_DEF(float, MAX_POWER_PERCENT, 0.7f)        // After <MAX_POWER_PERCENT> of the leds are lit up, go to MAX mode
+ITEM_DEF(float,	MAX_SIN_FACTOR, 0.4f)
+ITEM_DEF(float,	MAX_AMPLIFIER, 0.8f)
 
 GROUP_DEF(idle.general)
-ITEM_DEF(float,	IDLE_STATE_SECONDS, 5.0f)
 ITEM_DEF(float,	LED_LERP_FACTOR, 0.1f)
-ITEM_DEF(float,	LED_SIN_FACTOR, 0.5f)
-ITEM_DEF(float, IDLE_SWITCH_PERIOD, 5.0f)   // after <IDLE_SWITCH_PERIOD> seconds, idle animation will change
+ITEM_DEF(float, IDLE_SWITCH_PERIOD, 20.0f)   // after <IDLE_SWITCH_PERIOD> seconds, idle animation will change
 
 GROUP_DEF(idle.bullet)
-ITEM_DEF(float, IDLE_BULLET_SPEED, 4.0f)    // move <IDLE_BULLET_SPEED> entry in one second
-ITEM_DEF(float, IDLE_BULLET_FADEOUT_SPEED, 0.05f)
+ITEM_DEF(float, BULLET_SPEED, 11.0f)    // move <BULLET_SPEED> entry in one second
+ITEM_DEF(float, BULLET_FADEOUT_SPEED, 0.001f)
 
 GROUP_DEF(idle.spark)
-ITEM_DEF(float, IDLE_SPARK_INTERVAL, 0.5f)  // generate random sparks in every <IDLE_SPARK_INTERVAL> seconds
-ITEM_DEF(int,   IDLE_SPARK_COUNT, 4)        // generate <IDLE_SPARK_COUNT> sparks every time
+ITEM_DEF(float, SPARK_INTERVAL, 0.15f)  // generate random sparks in every <SPARK_INTERVAL> seconds
+ITEM_DEF(float, SPARK_FADEIN_SPEED, 0.02f)
+ITEM_DEF(float, SPARK_FADEOUT_SPEED, 0.02f)
+ITEM_DEF(int,   SPARK_COUNT, 3)        // generate <SPARK_COUNT> sparks every time
+
+GROUP_DEF(idle.DRAGON)
+ITEM_DEF(float, DRAGON_INTERVAL, 1.6f)    // generate random sparks in every <SPARK_INTERVAL> seconds
+ITEM_DEF(float, DRAGON_SPEED, 2)      // generate random sparks in every <SPARK_INTERVAL> seconds
+ITEM_DEF(float, DRAGON_FADEOUT_SPEED, 0.03f)
+
+GROUP_DEF(idle.blocky)
+ITEM_DEF(float, BLOCKY_FADEOUT_MINSPEED, 0.001f)
+ITEM_DEF(float, BLOCKY_FADEOUT_MAXSPEED, 0.01f)
