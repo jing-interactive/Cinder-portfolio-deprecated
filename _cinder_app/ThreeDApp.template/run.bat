@@ -1,2 +1,2 @@
 call build.bat
-bin\App.exe
+bin\CiApp.exe

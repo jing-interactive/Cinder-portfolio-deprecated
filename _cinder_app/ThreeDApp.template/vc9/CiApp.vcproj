@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="App"
+	Name="CiApp"
 	ProjectGUID="{9DA00FEA-5218-413E-B762-35D91045B3B4}"
 	RootNamespace="FileServer"
 	Keyword="Win32Proj"
@@ -176,6 +176,10 @@
 	</References>
 	<Files>
 		<File
+			RelativePath="..\src\CiApp.cpp"
+			>
+		</File>
+		<File
 			RelativePath="..\include\item.def"
 			>
 		</File>
@@ -185,10 +189,6 @@
 		</File>
 		<File
 			RelativePath="..\..\..\_common\MiniConfig.h"
-			>
-		</File>
-		<File
-			RelativePath="..\src\App.cpp"
 			>
 		</File>
 	</Files>

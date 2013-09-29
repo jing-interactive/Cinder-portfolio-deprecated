@@ -1,1 +1,1 @@
-msbuild vc9\App.sln /p:Configuration=Release /m
+msbuild vc9\CiApp.sln /p:Configuration=Release /m
