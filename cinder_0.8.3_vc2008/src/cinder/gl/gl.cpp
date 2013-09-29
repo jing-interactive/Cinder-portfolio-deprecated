@@ -1572,4 +1572,9 @@ SaveFramebufferBinding::~SaveFramebufferBinding()
 #endif
 }
 
+void drawPoint( const Vec2f &pt )
+{
+    drawSolidRect( Rectf( pt.x, pt.y, pt.x+1, pt.y+1 ) );
+}
+
 } } // namespace gl::cinder

@@ -362,6 +362,8 @@ class Exception : public cinder::Exception {
 class ExceptionUnknownTarget : public Exception {
 };
 
+void drawPoint( const Vec2f &pt );
+
 } } // namespace cinder::gl 
 
 //@{
