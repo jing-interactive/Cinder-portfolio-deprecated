@@ -1,9 +1,12 @@
 #include "cinder/app/AppBasic.h"
+#include "cinder/ImageIo.h"
+
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
 #include "cinder/gl/Fbo.h"
 #include "cinder/gl/GlslProg.h"
 #include "cinder/gl/Vbo.h"
+
 #include "cinder/params/Params.h"
 
 #include "../../../_common/MiniConfig.h"
@@ -26,6 +29,25 @@ struct CiApp : public AppBasic
     {
         mParams = params::InterfaceGl("params", Vec2i(300, getConfigUIHeight()));
         setupConfigUI(&mParams);
+
+        mWorldTex = loadImage(loadAsset("texture.png"));
+
+        for (int z = 0; z < kCellCount; z++)
+        {
+            for (int y = 0; y < kCellCount; y++)
+            {
+                for (int x = 0; x < kCellCount; x++)
+                {
+                    float yd = (y - kCellCount * 0.5f + 0.5f) * 0.4;
+                    float zd = (z - kCellCount * 0.5f + 0.5f) * 0.4;
+                    mCells[z][y][x] = randInt(16);
+                    if (randFloat() > math<float>::sqrt(math<float>::(yd * yd + zd * zd)) - 0.8f)
+                    {
+                        mCells[z][y][x] = 0;
+                    }
+                }
+            }
+        }
     }
 
     void keyUp(KeyEvent event)
@@ -38,18 +60,41 @@ struct CiApp : public AppBasic
 
     void update()
     {
-    
+
     }
 
     void draw()
     {
         gl::clear(ColorA::black());
 
+        mWorldTex.bind();
+        for (int z = 0; z < kCellCount; z++)
+        {
+            for (int y = 0; y < kCellCount; y++)
+            {
+                for (int x = 0; x < kCellCount; x++)
+                {
+                    int idx = mCells[z][y][x];
+                    if (idx > 0)
+                    {
+                        gl::drawCube(Vec3f(x * CELL_SIZE, y * CELL_SIZE, z * CELL_SIZE), 
+                            Vec3f(CELL_SIZE, CELL_SIZE, CELL_SIZE));
+                    }
+                }
+            }
+        }
         mParams.draw();
     }
 
 private:
+    // opengl
     params::InterfaceGl mParams;
+    gl::Texture         mWorldTex;
+
+private:
+    // world
+    static const size_t kCellCount = 64;
+    int                 mCells[kCellCount][kCellCount][kCellCount];
 };
 
 CINDER_APP_BASIC(CiApp, RendererGl)

@@ -1,4 +1,6 @@
 #include "cinder/app/AppBasic.h"
+#include "cinder/ImageIo.h"
+
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
 #include "cinder/gl/Fbo.h"
@@ -16,10 +18,10 @@ struct CiApp : public AppBasic
 {
     void prepareSettings(Settings *settings)
     {
+        readConfig();
+        
         settings->setWindowPos(0, 0);
         settings->setWindowSize(WIN_WIDTH, WIN_HEIGHT);
-
-        readConfig();
     }
 
     void setup()
