@@ -1,5 +1,6 @@
 #include "cinder/app/AppBasic.h"
 #include "cinder/ImageIo.h"
+#include "cinder/Camera.h"
 
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"

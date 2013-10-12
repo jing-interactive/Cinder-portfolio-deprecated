@@ -1,5 +1,7 @@
 #include "cinder/app/AppBasic.h"
 #include "cinder/ImageIo.h"
+#include "cinder/Rand.h"
+#include "cinder/Camera.h"
 
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
@@ -41,13 +43,20 @@ struct CiApp : public AppBasic
                     float yd = (y - kCellCount * 0.5f + 0.5f) * 0.4;
                     float zd = (z - kCellCount * 0.5f + 0.5f) * 0.4;
                     mCells[z][y][x] = randInt(16);
-                    if (randFloat() > math<float>::sqrt(math<float>::(yd * yd + zd * zd)) - 0.8f)
+                    if (randFloat() > math<float>::sqrt(math<float>::sqrt(yd * yd + zd * zd)) - 0.8f)
                     {
                         mCells[z][y][x] = 0;
                     }
                 }
             }
         }
+    }
+
+    void resize( ResizeEvent event )
+    {
+        mCam.lookAt( Vec3f( 0.0f, 0.0f, 500.0f ), Vec3f::zero() );
+        mCam.setPerspective( 60, getWindowAspectRatio(), 1, 5000 );
+        gl::setMatrices( mCam );
     }
 
     void keyUp(KeyEvent event)
@@ -75,7 +84,7 @@ struct CiApp : public AppBasic
                 for (int x = 0; x < kCellCount; x++)
                 {
                     int idx = mCells[z][y][x];
-                    if (idx > 0)
+                    if (idx > 14)
                     {
                         gl::drawCube(Vec3f(x * CELL_SIZE, y * CELL_SIZE, z * CELL_SIZE), 
                             Vec3f(CELL_SIZE, CELL_SIZE, CELL_SIZE));
@@ -90,6 +99,7 @@ private:
     // opengl
     params::InterfaceGl mParams;
     gl::Texture         mWorldTex;
+    CameraPersp         mCam;
 
 private:
     // world

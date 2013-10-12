@@ -3,6 +3,17 @@
 #include <string>
 using std::string;
 
+#ifdef RICH_CINDER_FORMAT_ENABLED
+    #include "cinder/Vector.h"
+    #include "cinder/Quaternion.h"
+    #include "cinder/Color.h"
+
+    using ci::Vec3f;
+    using ci::Quatf;
+    using ci::Color;
+    using ci::ColorA;
+#endif
+
 #define CONFIG_FILE_NAME "MiniConfig.xml"
 
 #define GROUP_DEF(grp)

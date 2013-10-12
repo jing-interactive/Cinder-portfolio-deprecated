@@ -31,7 +31,7 @@ namespace
 
 void readConfig()
 {
-	fs::path configPath = getAssetPath("./")/CONFIG_FILE_NAME;
+	fs::path configPath = getAssetPath("./") / CONFIG_FILE_NAME;
 	try
 	{
 		XmlTree tree(loadFile(configPath));
@@ -61,7 +61,7 @@ void readConfig()
 
 void writeConfig()
 {
-	fs::path configPath = getAssetPath("./")/CONFIG_FILE_NAME;
+	fs::path configPath = getAssetPath("./") / CONFIG_FILE_NAME;
 	try
 	{
 		XmlTree tree(FILE_TAG, "");
@@ -113,13 +113,46 @@ void setupConfigUI(cinder::params::InterfaceGl* params)
     params->addButton("SAVE", writeConfig);
 }
 
+namespace
+{
+    const int kPODItemHeight = 20;
+    template <typename T>
+    int getItemHeight(const T&)
+    {
+        return kPODItemHeight;
+    }
+
+    template<> 
+    int getItemHeight(const Quatf&)
+    {
+        return 80;
+    }
+
+    template<> 
+    int getItemHeight(const Vec3f&)
+    {
+        return 120;
+    }
+
+    template<> 
+    int getItemHeight(const Color&)
+    {
+        return 80;
+    }
+
+    template<> 
+    int getItemHeight(const ColorA&)
+    {
+        return 80;
+    }
+}
+
 int getConfigUIHeight()
 {
-    const int kItemHeight = 20;
-    int height = kItemHeight * 2; // top + bottom
+    int height = kPODItemHeight * 2; // top + bottom
 
-#define GROUP_DEF(grp)                  height += kItemHeight;
-#define ITEM_DEF(type, var, default)    height += kItemHeight;
+#define GROUP_DEF(grp)                  height += kPODItemHeight;
+#define ITEM_DEF(type, var, default)    height += getItemHeight(var);
 #include "item.def"
 #undef ITEM_DEF
 #undef GROUP_DEF
