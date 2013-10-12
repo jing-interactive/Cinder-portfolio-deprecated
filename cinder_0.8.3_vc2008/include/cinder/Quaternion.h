@@ -736,11 +736,23 @@ public:
 	}
 
 	// Output
-	friend std::ostream& operator <<( std::ostream &oss, const Quaternion<T> &q )
+	friend std::ostream& operator<<( std::ostream &lhs, const Quaternion<T> &rhs )
 	{
-		oss << q.getAxis() << " @ " << q.getAngle() * ( (T)180 / M_PI ) << "deg";
-		return oss;
+		lhs << rhs.getAxis() << " @ " << rhs.getAngle() * ( (T)180 / M_PI ) << " deg";
+		return lhs;
 	}
+
+    friend std::istream& operator>>( std::istream &lhs, Quaternion<T> &rhs )
+    {
+        Vec3<T> axis;
+        float angle;
+        std::string dummy;
+
+        lhs >> axis >> dummy >> angle >> dummy;
+        rhs = Quaternion<T>(axis, toRadians(angle));
+
+        return lhs;
+    }
 
  private:
 	// From advanced Animation and Rendering

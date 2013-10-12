@@ -22,6 +22,7 @@
 
 #include "cinder/Color.h"
 #include "cinder/Vector.h"
+#include <string>
 
 namespace cinder {
 
@@ -147,6 +148,20 @@ std::ostream& operator<<( std::ostream &lhs, const ColorT<uint8_t> &rhs )
 	return lhs;
 }
 
+std::istream& operator>>( std::istream &lhs, ColorT<float> &rhs ) 
+{
+    std::string dummy;
+    lhs >> dummy >> rhs.r >> dummy >> rhs.g >> dummy >> rhs.b  >> dummy;
+    return lhs;
+}
+
+std::istream& operator>>( std::istream &lhs, ColorT<uint8_t> &rhs ) 
+{
+    std::string dummy;
+    lhs >> dummy >> rhs.r >> dummy >> rhs.g >> dummy >> rhs.b >> dummy;
+    return lhs;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // ColorAT
 template<typename T>
@@ -242,6 +257,20 @@ std::ostream& operator<<( std::ostream &lhs, const ColorAT<uint8_t> &rhs )
 {
 	lhs << "[" << static_cast<int>( rhs.r ) << "," << static_cast<int>( rhs.g ) << "," << static_cast<int>( rhs.b ) << "," << static_cast<int>( rhs.a ) << "]";
 	return lhs;
+}
+
+std::istream& operator>>( std::istream &lhs, ColorAT<float> &rhs ) 
+{
+    std::string dummy;
+    lhs >> dummy >> rhs.r >> dummy >> rhs.g >> dummy >> rhs.b  >> dummy >> rhs.a >> dummy;
+    return lhs;
+}
+
+std::istream& operator>>( std::istream &lhs, ColorAT<uint8_t> &rhs ) 
+{
+    std::string dummy;
+    lhs >> dummy >> rhs.r >> dummy >> rhs.g >> dummy >> rhs.b >> dummy >> rhs.a >> dummy;
+    return lhs;
 }
 
 /////////////////////////////////////////////////////////////////////////////

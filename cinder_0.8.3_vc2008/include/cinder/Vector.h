@@ -308,6 +308,13 @@ class Vec2
 		return lhs;
 	}
 
+    friend std::istream& operator>>( std::istream& lhs, Vec2<T>& rhs )
+    {
+        std::string dummy;
+        lhs >> dummy >> rhs.x >> dummy >> rhs.y >> dummy;
+        return lhs;
+    }
+
 	static Vec2<T> xAxis() { return Vec2<T>( 1, 0 ); }
 	static Vec2<T> yAxis() { return Vec2<T>( 0, 1 ); }
 
@@ -679,6 +686,13 @@ public:
 		lhs << "[" << rhs.x << "," << rhs.y << "," << rhs.z  << "]";
 		return lhs;
 	}
+
+    friend std::istream& operator>>( std::istream& lhs, Vec3<T>& rhs )
+    {
+        std::string dummy;
+        lhs >> dummy >> rhs.x >> dummy >> rhs.y >> dummy >> rhs.z >> dummy;
+        return lhs;
+    }
 
 	static Vec3<T> xAxis() { return Vec3<T>( 1, 0, 0 ); }
 	static Vec3<T> yAxis() { return Vec3<T>( 0, 1, 0 ); }
@@ -1245,6 +1259,13 @@ class Vec4
 		lhs << "[" << rhs.x << "," << rhs.y << "," << rhs.z << "," << rhs.w << "]";
 		return lhs;
 	}
+
+    friend std::istream& operator>>( std::istream& lhs, Vec4<T>& rhs )
+    {
+        std::string dummy;
+        lhs >> dummy >> rhs.x >> dummy >> rhs.y >> dummy >> rhs.z >> dummy >> rhs.w >> dummy;
+        return lhs;
+    }
 
 	static Vec4<T> xAxis() { return Vec4<T>( 1, 0, 0, 0 ); }
 	static Vec4<T> yAxis() { return Vec4<T>( 0, 1, 0, 0 ); }
