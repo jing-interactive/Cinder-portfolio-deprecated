@@ -1,13 +1,11 @@
-GROUP_DEF(Camera)
-ITEM_DEF(Vec3f, CAM_POS, Vec3f())
-ITEM_DEF(Quatf, CAM_DIR, Quatf())
-ITEM_DEF(float, CAM_FOV, 60.0f)
+GROUP_DEF(RealWorld)
+ITEM_DEF(float, ANIM_SPEED, 1.0f)
+ITEM_DEF(float, ANIM_WALL_SPEED, 1.0f)
 
-GROUP_DEF(Basic)
-ITEM_DEF(int, OSC_PORT, 3333)
-ITEM_DEF(int, WIN_WIDTH, 800)
-ITEM_DEF(int, WIN_HEIGHT, 600)
-
-GROUP_DEF(HUD)
-ITEM_DEF(float, SPHERE_RADIUS, 5.0f)
-ITEM_DEF(float, SPHERE_POS_RATIO, 0.1f)
+GROUP_DEF(VirtualWorld)
+ITEM_DEF(float, SPHERE_RADIUS, 0.9f)        // m
+ITEM_DEF(float, SPHERE_UNIT_RATIO, 0.01f)   // mm -> m
+ITEM_DEF(float, CEILING_HEIGHT, 100.0f)      // m
+ITEM_DEF(bool,  COORD_FRAME_VISIBLE, false)
+ITEM_DEF(float, WALL_SCALE_X, 0.15f)
+ITEM_DEF(float, WALL_SCALE_Y, 0.3f)

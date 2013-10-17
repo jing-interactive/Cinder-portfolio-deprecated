@@ -1,6 +1,7 @@
 #include "cinder/app/AppBasic.h"
 #include "cinder/ImageIo.h"
 #include "cinder/MayaCamUI.h"
+#include "cinder/Arcball.h"
 
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
@@ -9,6 +10,7 @@
 #include "cinder/gl/Vbo.h"
 #include "cinder/params/Params.h"
 
+#include "cinder/Utilities.h"
 #include "cinder/osc/OscListener.h"
 #include "../../../_common/MiniConfig.h"
 #include <fstream>
@@ -18,6 +20,65 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
+const float kCamFov = 60.0f;
+const int kOscPort = 3333;
+fs::directory_iterator end_iter;
+
+struct Led
+{
+    Led(const Vec3f& aPos, const Color& aClr = Color::white()) :
+        pos(aPos), clr(aClr){}
+    Vec3f pos;
+    Color clr;
+};
+
+struct Anim
+{
+    Anim()
+    {
+        reset();
+    }
+    string name;
+    float index;
+    vector<Surface> frames;
+    vector<gl::Texture> textures;
+
+    void reset()
+    {
+        index = 0;
+    }
+
+    void update(float speed)
+    {
+        index += speed;
+        if (index >= frames.size())
+        {
+            index = 0;
+        }
+    }
+
+    const Surface& getFrame() const
+    {
+        return frames[static_cast<int>(index)];
+    }
+
+    const gl::Texture& getTexture()
+    {
+        if (textures.size() != frames.size())
+        {
+            textures.resize(frames.size());
+        }
+        int id = static_cast<int>(index);
+
+        if (!textures[id])
+        {
+            textures[id] = gl::Texture(frames[id]);
+        }
+        return textures[id];
+    }
+
+};
+
 struct CiApp : public AppBasic 
 {
     void prepareSettings(Settings *settings)
@@ -25,49 +86,121 @@ struct CiApp : public AppBasic
         readConfig();
         
         settings->setWindowPos(0, 0);
-        settings->setWindowSize(WIN_WIDTH, WIN_HEIGHT);
+        settings->setWindowSize(800, 600);
     }
 
     void setup()
     {
         mParams = params::InterfaceGl("params", Vec2i(300, getConfigUIHeight()));
-        setupConfigUI(&mParams);
-        mParams.hide();
 
-        mListener.setup(OSC_PORT);
+        // parse "/assets/anim"
+        fs::path root = getAssetPath("anim");
+        for ( fs::directory_iterator dir_iter(root); dir_iter != end_iter; ++dir_iter)
+        {
+            if (fs::is_directory(*dir_iter) )
+            {
+                Anim anim;
+                if (!loadAnimFromDir(*dir_iter, anim))
+                    continue;
+                mAnims.push_back(anim);
+            }
+        }
+
+        mCurrentAnim = 0;
+        mNextAnim = 0;
+        if (!mAnims.empty())
+        {
+            vector<string> animNames;
+            for (int i=0; i<mAnims.size(); i++)
+            {
+                animNames.push_back(mAnims[i].name);
+            }
+            mParams.addParam("ANIMATION", animNames, &mNextAnim);
+        }
+
+        // parse "/assets/anim_wall"
+        // TODO: merge
+        root = getAssetPath("anim_wall");
+        for ( fs::directory_iterator dir_iter(root); dir_iter != end_iter; ++dir_iter)
+        {
+            if (fs::is_directory(*dir_iter) )
+            {
+                Anim anim;
+                if (!loadAnimFromDir(*dir_iter, anim))
+                    continue;
+                mAnimWalls.push_back(anim);
+            }
+        }
+
+        mCurrentAnimWall = 0;
+        mNextAnimWall = 0;
+        if (!mAnimWalls.empty())
+        {
+            vector<string> animNames;
+            for (int i=0; i<mAnimWalls.size(); i++)
+            {
+                animNames.push_back(mAnimWalls[i].name);
+            }
+            mParams.addParam("ANIMATION_WALL", animNames, &mNextAnimWall);
+        }
+
+        // MiniConfig.xml
+        setupConfigUI(&mParams);
+
+        // osc setup
+        mListener.setup(kOscPort);
         mListener.registerMessageReceived(this, &CiApp::onOscMessage);
 
+        // parse leds.txt
         ifstream ifs(getAssetPath("leds.txt").string().c_str());
         int id;
         float x, y, z;
 
+        Vec3f maxBound = Vec3f::zero();
         while (ifs >> id >> x >> z >> y)
         {
             Vec3f pos(x, y, z);
-            pos *= SPHERE_POS_RATIO;
-            mLedPositions.push_back(pos);
-            mMaxBound.x = max<float>(mMaxBound.x, pos.x);
-            mMaxBound.y = max<float>(mMaxBound.y, pos.y);
-            mMaxBound.z = max<float>(mMaxBound.z, pos.z);
+            pos *= SPHERE_UNIT_RATIO;
+            mLeds.push_back(Led(pos));
+
+            maxBound.x = max<float>(maxBound.x, pos.x);
+            maxBound.y = max<float>(maxBound.y, pos.y);
+            maxBound.z = max<float>(maxBound.z, pos.z);
         }
 
+        mAABB = AxisAlignedBox3f(Vec3f::zero(), maxBound);
+
+        // camera setup
         CameraPersp initialCam;
-        initialCam.setPerspective(CAM_FOV, getWindowAspectRatio(), 0.1f, 10000.0f);
-        initialCam.lookAt(Vec3f(mMaxBound.x / 2, mMaxBound.y * 0.3f, - mMaxBound.z * 0.1f), Vec3f(mMaxBound.x / 2, mMaxBound.y / 2, mMaxBound.z));
+        initialCam.setPerspective(kCamFov, getWindowAspectRatio(), 0.1f, 1000.0f);
+        initialCam.lookAt(Vec3f(- maxBound.x * 5.0f, maxBound.y * 0.7f, - maxBound.z * 0.5f), Vec3f::zero());
         mMayaCam.setCurrentCam(initialCam);
 
-        gl::enableDepthRead();
-        gl::enableDepthWrite();
+        mPrevSec = getElapsedSeconds();
+    }
+
+    void resize( ResizeEvent event )
+    {
+        App::resize( event );
+        mArcball.setWindowSize( getWindowSize() );
+        mArcball.setCenter( Vec2f( getWindowWidth() / 2.0f, getWindowHeight() / 2.0f ) );
+        mArcball.setRadius( 150 );
     }
 
     void mouseDown(MouseEvent event)
     {
-        mMayaCam.mouseDown(event.getPos());
+        if( event.isAltDown() )
+            mMayaCam.mouseDown( event.getPos() );
+        else
+            mArcball.mouseDown( event.getPos() );
     }
 
     void mouseDrag(MouseEvent event)
-    {
-        mMayaCam.mouseDrag(event.getPos(), event.isLeftDown(), event.isMiddleDown(), event.isRightDown());
+    {	
+        if( event.isAltDown() )
+            mMayaCam.mouseDrag( event.getPos(), event.isLeftDown(), event.isMiddleDown(), event.isRightDown() );
+        else
+            mArcball.mouseDrag( event.getPos() );
     }
 
     void onOscMessage(const osc::Message* msg)
@@ -82,35 +215,152 @@ struct CiApp : public AppBasic
 
     void keyUp(KeyEvent event)
     {
-        if (event.getCode() == KeyEvent::KEY_ESCAPE)
+        switch (event.getCode())
         {
-            quit();
+        case KeyEvent::KEY_ESCAPE:
+            {
+                quit();
+            }break;
+        case KeyEvent::KEY_SPACE:
+            {
+                mArcball.resetQuat();
+            }break;
+        case KeyEvent::KEY_h:
+            {
+                mParams.show(!mParams.isVisible());
+            }break;
         }
     }
 
     void update()
     {
-    
+        float delta = getElapsedSeconds() - mPrevSec;
+        mPrevSec = getElapsedSeconds();
+        if (mNextAnim != mCurrentAnim)
+        {
+            mAnims[mCurrentAnim].reset();
+            mCurrentAnim = mNextAnim;
+        }
+        mAnims[mCurrentAnim].update(delta * max<float>(ANIM_SPEED, 0));
+
+        const Surface& suf = mAnims[mCurrentAnim].getFrame();
+        Vec3f aabbSize = mAABB.getSize();
+        int32_t width = suf.getWidth();
+        int32_t height = suf.getHeight();
+
+        BOOST_FOREACH(Led& led, mLeds)
+        {
+            float cx = led.pos.z / aabbSize.z;
+            float cy = led.pos.x / aabbSize.x;
+            uint8_t red = *suf.getDataRed(Vec2i(width * cx, height * cy));
+            led.clr = Color::gray(red / 255.f);
+        }
+
+        //
+        if (mNextAnimWall != mCurrentAnimWall)
+        {
+            mAnimWalls[mCurrentAnimWall].reset();
+            mCurrentAnimWall = mNextAnimWall;
+        }
+        mAnimWalls[mCurrentAnimWall].update(delta * max<float>(ANIM_WALL_SPEED, 0));
     }
 
     void draw()
     {
-        gl::clear(ColorA::black());
+        gl::enableDepthRead();
+        gl::enableDepthWrite();
+
+        gl::clear(ColorA::gray(43 / 255.f));
         gl::setMatrices(mMayaCam.getCamera());
 
-        gl::color(Color::white());
-        std::for_each(mLedPositions.begin(), mLedPositions.end(),
-            std::bind(gl::drawSphere, _1, SPHERE_RADIUS, 12));
+        if (COORD_FRAME_VISIBLE)
+        {
+            gl::drawCoordinateFrame(50.0f);
+        }
+
+        gl::rotate( mArcball.getQuat() );
+        gl::pushModelView();
+        {
+            gl::translate(mAABB.getSize() * -0.5f);
+
+            gl::disableDepthWrite();
+            gl::color(Color::gray(76 / 255.f));
+            BOOST_FOREACH(const Led& led, mLeds)
+            {
+                gl::drawLine(led.pos, Vec3f(led.pos.x, CEILING_HEIGHT, led.pos.z));
+            }
+
+            gl::enableDepthWrite();
+            BOOST_FOREACH(const Led& led, mLeds)
+            {
+                gl::color(led.clr);
+                gl::drawSphere(led.pos, SPHERE_RADIUS);
+            }
+        }
+        gl::popModelView();
+
+        gl::pushModelView();
+        {
+            gl::Texture tex = mAnimWalls[mCurrentAnimWall].getTexture();
+            gl::color(Color::white());
+            gl::translate(Vec3f(0, 0, mAABB.getSize().z*0.5f));
+            gl::scale(-WALL_SCALE_X, -WALL_SCALE_Y);
+            gl::translate(-tex.getSize() * 0.5f);
+            gl::draw(tex);
+        }
+        gl::popModelView();
+
+        if (false)
+        {
+            gl::setMatricesWindow(getWindowSize());
+            gl::drawString(toString(mAnims[mCurrentAnim].index), Vec2f(10, 10));
+            gl::drawString(toString(mAnimWalls[mCurrentAnimWall].index), Vec2f(10, 30));
+        }
 
         mParams.draw();
+    }
+
+    bool loadAnimFromDir( fs::path dir, Anim& aAnim ) 
+    {
+        aAnim.name = dir.filename().string();
+        for ( fs::directory_iterator dir_iter(dir); dir_iter != end_iter; ++dir_iter)
+        {
+            if (!fs::is_regular_file(*dir_iter))
+                continue;
+            Surface suf = loadImage(*dir_iter);
+            if (suf)
+            {
+                aAnim.frames.push_back(suf);
+            }
+        }
+
+        if (aAnim.frames.empty())
+        {
+            return false;
+        }
+
+        return true;
     }
 
 private:
     params::InterfaceGl mParams;
     osc::Listener   mListener;
-    vector<Vec3f>   mLedPositions;
+    vector<Led>     mLeds;
     MayaCamUI		mMayaCam;
-    Vec3f           mMaxBound;
+    Arcball         mArcball;
+    AxisAlignedBox3f mAABB;
+
+    vector<Anim>    mAnims;
+    vector<Anim>    mAnimWalls;
+
+    int             mCurrentAnim;
+    int             mNextAnim;
+
+    // TODO: merge
+    int             mCurrentAnimWall;
+    int             mNextAnimWall;
+
+    float           mPrevSec;
 };
 
 CINDER_APP_BASIC(CiApp, RendererGl)
