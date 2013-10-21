@@ -1,11 +1,13 @@
 GROUP_DEF(RealWorld)
-ITEM_DEF(float, ANIM_SPEED, 1.0f)
+ITEM_DEF(float, ANIM_SPEED, 10.0f)
 ITEM_DEF(float, ANIM_WALL_SPEED, 1.0f)
 
 GROUP_DEF(VirtualWorld)
 ITEM_DEF(float, SPHERE_RADIUS, 0.9f)        // m
 ITEM_DEF(float, SPHERE_UNIT_RATIO, 0.01f)   // mm -> m
-ITEM_DEF(float, CEILING_HEIGHT, 100.0f)      // m
+ITEM_DEF(float, CEILING_HEIGHT, 104.0f)      // m
+ITEM_DEF(float, SPHERE_MIN_ALPHA, 0.03f)    // alpha of dark spheres
+
+GROUP_DEF(ButtonS)
 ITEM_DEF(bool,  COORD_FRAME_VISIBLE, false)
-ITEM_DEF(float, WALL_SCALE_X, 0.15f)
-ITEM_DEF(float, WALL_SCALE_Y, 0.3f)
+ITEM_DEF(bool,  ANIM_COUNT_VISIBLE, false)

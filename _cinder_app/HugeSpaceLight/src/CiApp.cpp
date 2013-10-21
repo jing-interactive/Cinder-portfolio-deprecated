@@ -22,14 +22,16 @@ using namespace std;
 
 const float kCamFov = 60.0f;
 const int kOscPort = 3333;
+const float kLedOffset = 245.0f;
+
 fs::directory_iterator end_iter;
 
 struct Led
 {
-    Led(const Vec3f& aPos, const Color& aClr = Color::white()) :
-        pos(aPos), clr(aClr){}
+    Led(const Vec3f& aPos, float aValue = 1.0f) :
+        pos(aPos), value(aValue){}
     Vec3f pos;
-    Color clr;
+    float value;
 };
 
 struct Anim
@@ -76,7 +78,6 @@ struct Anim
         }
         return textures[id];
     }
-
 };
 
 struct CiApp : public AppBasic 
@@ -157,18 +158,29 @@ struct CiApp : public AppBasic
         float x, y, z;
 
         Vec3f maxBound = Vec3f::zero();
+        Vec3f minBound = Vec3f(FLT_MAX, FLT_MAX, FLT_MAX);
+
+        int ledOffset = kLedOffset * SPHERE_UNIT_RATIO;
         while (ifs >> id >> x >> z >> y)
         {
             Vec3f pos(x, y, z);
             pos *= SPHERE_UNIT_RATIO;
             mLeds.push_back(Led(pos));
 
-            maxBound.x = max<float>(maxBound.x, pos.x);
+            minBound.x = min<float>(minBound.x, pos.x - ledOffset);
+            minBound.y = min<float>(minBound.y, pos.y);
+            minBound.z = min<float>(minBound.z, pos.z/* - ledOffset*/);
+
+            maxBound.x = max<float>(maxBound.x, pos.x + ledOffset);
             maxBound.y = max<float>(maxBound.y, pos.y);
-            maxBound.z = max<float>(maxBound.z, pos.z);
+            maxBound.z = max<float>(maxBound.z, pos.z + ledOffset);
         }
 
-        mAABB = AxisAlignedBox3f(Vec3f::zero(), maxBound);
+        mAABB = AxisAlignedBox3f(minBound, maxBound);
+        BOOST_FOREACH(Led& led, mLeds)
+        {
+            //led.pos -= minBound;
+        }
 
         // camera setup
         CameraPersp initialCam;
@@ -177,6 +189,46 @@ struct CiApp : public AppBasic
         mMayaCam.setCurrentCam(initialCam);
 
         mPrevSec = getElapsedSeconds();
+
+        // wall
+        {
+            gl::VboMesh::Layout layout;
+            layout.setStaticTexCoords2d();
+            layout.setStaticPositions();
+            //layout.setStaticColorsRGB();
+
+            const size_t kNumVertices = 4;
+            vector<Vec3f> positions(kNumVertices);
+            // CCW
+            // #3: -271.0, 10485.0 ---- #2: 4129.0, 10485.0
+            //
+            // #1: -271.0, -1452.0 ---- #0: 4129.0, -1452.0 
+            positions[0] = Vec3f(4129.0, -1452.0, 33626);
+            positions[1] = Vec3f(-271.0, -1452.0, 33626);
+            positions[2] = Vec3f(-271.0, 10485.0, 33626);
+            positions[3] = Vec3f(4129.0, 10485.0, 33626);
+            for (size_t i=0; i<kNumVertices; i++)
+            {
+                positions[i] *= SPHERE_UNIT_RATIO;
+            }
+
+            vector<Vec2f> texCoords(kNumVertices);
+            texCoords[0] = Vec2f(1, 1);
+            texCoords[1] = Vec2f(0, 1);
+            texCoords[2] = Vec2f(0, 0);
+            texCoords[3] = Vec2f(1, 0);
+
+            vector<Color> colors(kNumVertices);
+            colors[0] = Color(1, 0, 0);
+            colors[1] = Color(0, 1, 0);
+            colors[2] = Color(0, 0, 1);
+            colors[3] = Color(1, 1, 1);
+
+            mVboWall = gl::VboMesh(kNumVertices, 0, layout, GL_QUADS);
+            mVboWall.bufferPositions( positions );
+            mVboWall.bufferTexCoords2d( 0, texCoords );
+            //mVboWall.bufferColorsRGB(colors);
+        }
     }
 
     void resize( ResizeEvent event )
@@ -245,15 +297,17 @@ struct CiApp : public AppBasic
 
         const Surface& suf = mAnims[mCurrentAnim].getFrame();
         Vec3f aabbSize = mAABB.getSize();
+        Vec3f aabbMin = mAABB.getMin();
+
         int32_t width = suf.getWidth();
         int32_t height = suf.getHeight();
 
         BOOST_FOREACH(Led& led, mLeds)
         {
-            float cx = led.pos.z / aabbSize.z;
-            float cy = led.pos.x / aabbSize.x;
+            float cx = (led.pos.z/* - aabbMin.z*/) / aabbSize.z;
+            float cy = (led.pos.x/* - aabbMin.x*/) / aabbSize.x;
             uint8_t red = *suf.getDataRed(Vec2i(width * cx, height * cy));
-            led.clr = Color::gray(red / 255.f);
+            led.value = red / 255.f;
         }
 
         //
@@ -273,44 +327,45 @@ struct CiApp : public AppBasic
         gl::clear(ColorA::gray(43 / 255.f));
         gl::setMatrices(mMayaCam.getCamera());
 
+        gl::rotate( mArcball.getQuat() );
+
         if (COORD_FRAME_VISIBLE)
         {
             gl::drawCoordinateFrame(50.0f);
         }
 
-        gl::rotate( mArcball.getQuat() );
         gl::pushModelView();
         {
             gl::translate(mAABB.getSize() * -0.5f);
+            gl::scale(-1, 1, 1);
 
+            // lines
+            gl::enableAlphaBlending();
             gl::disableDepthWrite();
-            gl::color(Color::gray(76 / 255.f));
+            gl::color(ColorA::gray(76 / 255.f, 76 / 255.f));
             BOOST_FOREACH(const Led& led, mLeds)
             {
                 gl::drawLine(led.pos, Vec3f(led.pos.x, CEILING_HEIGHT, led.pos.z));
             }
 
+            // spheres
             gl::enableDepthWrite();
             BOOST_FOREACH(const Led& led, mLeds)
             {
-                gl::color(led.clr);
+                gl::color(ColorA::gray(1.0f, constrain<float>(led.value, SPHERE_MIN_ALPHA, 1.0f)));
                 gl::drawSphere(led.pos, SPHERE_RADIUS);
             }
-        }
-        gl::popModelView();
+            gl::disableAlphaBlending();
 
-        gl::pushModelView();
-        {
+            // wall
             gl::Texture tex = mAnimWalls[mCurrentAnimWall].getTexture();
-            gl::color(Color::white());
-            gl::translate(Vec3f(0, 0, mAABB.getSize().z*0.5f));
-            gl::scale(-WALL_SCALE_X, -WALL_SCALE_Y);
-            gl::translate(-tex.getSize() * 0.5f);
-            gl::draw(tex);
+            tex.enableAndBind();
+            gl::draw(mVboWall);
+            tex.disable();
         }
         gl::popModelView();
 
-        if (false)
+        if (ANIM_COUNT_VISIBLE)
         {
             gl::setMatricesWindow(getWindowSize());
             gl::drawString(toString(mAnims[mCurrentAnim].index), Vec2f(10, 10));
@@ -361,6 +416,8 @@ private:
     int             mNextAnimWall;
 
     float           mPrevSec;
+
+    gl::VboMesh     mVboWall;
 };
 
 CINDER_APP_BASIC(CiApp, RendererGl)
