@@ -304,14 +304,14 @@ class Vec2
 
 	friend std::ostream& operator<<( std::ostream& lhs, const Vec2<T>& rhs )
 	{
-		lhs << "[" << rhs.x << "," << rhs.y << "]";
+		lhs << rhs.x << " " << rhs.y;
 		return lhs;
 	}
 
     friend std::istream& operator>>( std::istream& lhs, Vec2<T>& rhs )
     {
         std::string dummy;
-        lhs >> dummy >> rhs.x >> dummy >> rhs.y >> dummy;
+        lhs >> rhs.x >> rhs.y >> dummy;
         return lhs;
     }
 
@@ -683,14 +683,13 @@ public:
 
 	friend std::ostream& operator<<( std::ostream& lhs, const Vec3<T> rhs )
 	{
-		lhs << "[" << rhs.x << "," << rhs.y << "," << rhs.z  << "]";
+		lhs << rhs.x << " " << rhs.y << " " << rhs.z;
 		return lhs;
 	}
 
     friend std::istream& operator>>( std::istream& lhs, Vec3<T>& rhs )
     {
-        std::string dummy;
-        lhs >> dummy >> rhs.x >> dummy >> rhs.y >> dummy >> rhs.z >> dummy;
+        lhs >> rhs.x >> rhs.y >> rhs.z;
         return lhs;
     }
 
@@ -1256,14 +1255,13 @@ class Vec4
 
 	friend std::ostream& operator<<( std::ostream& lhs, const Vec4<T>& rhs )
 	{
-		lhs << "[" << rhs.x << "," << rhs.y << "," << rhs.z << "," << rhs.w << "]";
+		lhs << rhs.x << " " << rhs.y << " " << rhs.z << " " << rhs.w;
 		return lhs;
 	}
 
     friend std::istream& operator>>( std::istream& lhs, Vec4<T>& rhs )
     {
-        std::string dummy;
-        lhs >> dummy >> rhs.x >> dummy >> rhs.y >> dummy >> rhs.z >> dummy >> rhs.w >> dummy;
+        lhs >> rhs.x >> rhs.y >> rhs.z >> rhs.w;
         return lhs;
     }
 

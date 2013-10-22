@@ -427,7 +427,11 @@ void Texture::update( const Surface &surface )
 #if ! defined( CINDER_GLES )
 	glPixelStorei( GL_UNPACK_ROW_LENGTH, surface.getRowBytes() / surface.getPixelInc() );
 #endif
+#if 0
 	glTexImage2D( mObj->mTarget, 0, getInternalFormat(), getWidth(), getHeight(), 0, dataFormat, type, surface.getData() );
+#else
+    glTexSubImage2D( mObj->mTarget, 0, 0, 0, getWidth(), getHeight(), dataFormat, type, surface.getData() );
+#endif
 #if ! defined( CINDER_GLES )
 	glPixelStorei( GL_UNPACK_ROW_LENGTH, 0 );
 #endif
@@ -446,8 +450,12 @@ void Texture::update( const Surface32f &surface )
 #if ! defined( CINDER_GLES )
 	glPixelStorei( GL_UNPACK_ROW_LENGTH, surface.getRowBytes() / ( surface.getPixelInc() * sizeof(float)) );
 #endif
+#if 0
 	// @TODO: type does not seem to be pulling out the right value.. 
 	glTexImage2D( mObj->mTarget, 0, getInternalFormat(), getWidth(), getHeight(), 0, dataFormat, GL_FLOAT, surface.getData() );
+#else
+    glTexSubImage2D( mObj->mTarget, 0, 0, 0, getWidth(), getHeight(), dataFormat, GL_FLOAT, surface.getData() );
+#endif
 #if ! defined( CINDER_GLES )
 	glPixelStorei( GL_UNPACK_ROW_LENGTH, 0 );
 #endif

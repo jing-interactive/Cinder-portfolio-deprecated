@@ -738,7 +738,7 @@ public:
 	// Output
 	friend std::ostream& operator<<( std::ostream &lhs, const Quaternion<T> &rhs )
 	{
-		lhs << rhs.getAxis() << " @ " << rhs.getAngle() * ( (T)180 / M_PI ) << " deg";
+		lhs << rhs.getAxis() << " " << toDegrees(rhs.getAngle());
 		return lhs;
 	}
 
@@ -746,9 +746,9 @@ public:
     {
         Vec3<T> axis;
         float angle;
-        std::string dummy;
 
-        lhs >> axis >> dummy >> angle >> dummy;
+        lhs >> axis;
+        lhs >> angle;
         rhs = Quaternion<T>(axis, toRadians(angle));
 
         return lhs;

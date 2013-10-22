@@ -104,13 +104,13 @@ void writeConfig()
 
 void setupConfigUI(cinder::params::InterfaceGl* params)
 {
-#define GROUP_DEF(grp)                  params->addSeparator();       
+    params->addButton("SAVE", writeConfig);
+#define GROUP_DEF(grp)                  params->addSeparator(#grp);       
 #define ITEM_DEF(type, var, default)    params->addParam(#var, &var);
 #include "item.def"
 #undef ITEM_DEF
 #undef GROUP_DEF
     params->addSeparator();
-    params->addButton("SAVE", writeConfig);
 }
 
 namespace
