@@ -2,6 +2,7 @@
 #include "cinder/ImageIo.h"
 #include "cinder/Camera.h"
 #include "cinder/Json.h"
+#include "cinder/Text.h"
 
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
@@ -24,9 +25,73 @@ typedef map<string, GLenum> NameEnumMap;
 
 struct Hero
 {
+    struct Technique
+    {
+        bool blendEnable;
+        bool cullFaceEnable;
+        bool depthMask;
+        bool depthTestEnable;
+    };
+
+    struct Material
+    {
+        const Technique* pTechnique;
+
+        // vector of Texture ref
+        // vector<KVPair> values;
+
+        void execute()
+        {
+            // textures.bind()
+            // set uniform parameters
+            // glEnable / glDisable
+        }
+    };
+
+    struct Index
+    {
+        gl::Vbo indexBuffer;
+
+        static const int mode = GL_TRIANGLES;
+        GLsizei count;
+        GLenum  type;
+        const GLvoid* indices;
+
+        void execute()
+        {
+            indexBuffer.bind();
+            glDrawElements(mode, count, type, indices);
+            indexBuffer.unbind();
+        }
+    };
+
+    struct MeshAttribute
+    {
+        gl::Vbo vextexBuffer;
+
+        GLuint index;
+        GLint size;
+        GLenum type;
+        GLboolean normalized;
+        GLsizei stride;
+        const GLvoid* pointer;
+
+        void execute()
+        {
+            vextexBuffer.bind();
+            glVertexAttribPointer(index, size, type, normalized, stride, pointer);
+            vextexBuffer.unbind();
+        }
+    };
+    map<string, DataSourceRef>              mBuffers;
+    map<string, gl::Vbo>                    mBufferViews;
     map<string, gl::Texture::Format>        mSamplers;
-    map<string, fs::path>                   mImages;
+    map<string, Surface>                    mImages;
     map<string, gl::Texture>                mTextures;
+    map<string, Technique>                  mTechniques;
+    map<string, Material>                   mMaterials;
+    map<string, Index>                      mIndices;
+    map<string, MeshAttribute>              mMeshAttributes;
 };
 
 struct CiApp : public AppBasic 
@@ -68,25 +133,25 @@ struct CiApp : public AppBasic
         JsonHandler parentF = bind(&CiApp::handleChildren, this, _1, childF);\
         mCategories.push_back(make_pair(name, parentF));\
         } while (0);
-        BIND_PAIR("buffers",        handleNothing);
-        BIND_PAIR("bufferViews",    handleNothing);
+        BIND_PAIR("buffers",        handleBuffer);
+        BIND_PAIR("bufferViews",    handleBufferView);
         BIND_PAIR("images",         handleImage);
-        BIND_PAIR("videos",         handleNothing);
+        BIND_PAIR("videos",         handleDefault);
         BIND_PAIR("samplers",       handleSampler);
         BIND_PAIR("textures",       handleTexture);
-        BIND_PAIR("shaders",        handleNothing);
-        BIND_PAIR("programs",       handleNothing);
-        BIND_PAIR("techniques",     handleNothing);
-        BIND_PAIR("materials",      handleNothing);
-        BIND_PAIR("indices",        handleNothing);
-        BIND_PAIR("attributes",     handleNothing);
-        BIND_PAIR("meshes",         handleNothing);
-        BIND_PAIR("cameras",        handleNothing);
-        BIND_PAIR("lights",         handleNothing);
-        BIND_PAIR("skins",          handleNothing);
-        BIND_PAIR("nodes",          handleNothing);
-        BIND_PAIR("scenes",         handleNothing);
-        BIND_PAIR("animations",     handleNothing);
+        BIND_PAIR("shaders",        handleDefault);
+        BIND_PAIR("programs",       handleDefault);
+        BIND_PAIR("techniques",     handleTechnique);
+        BIND_PAIR("materials",      handleMaterial);
+        BIND_PAIR("indices",        handleIndex);
+        BIND_PAIR("attributes",     handleMeshAttribute);
+        BIND_PAIR("meshes",         handleDefault);
+        BIND_PAIR("cameras",        handleDefault);
+        BIND_PAIR("lights",         handleDefault);
+        BIND_PAIR("skins",          handleDefault);
+        BIND_PAIR("nodes",          handleDefault);
+        BIND_PAIR("scenes",         handleDefault);
+        BIND_PAIR("animations",     handleDefault);
 #undef BIND_PAIR  
 
 #define ADD_ENUM(item) mGlNameMap[#item] = GL_##item
@@ -106,6 +171,12 @@ struct CiApp : public AppBasic
         // sampler filter
         ADD_ENUM(LINEAR);
         ADD_ENUM(LINEAR_MIPMAP_LINEAR);
+
+        // buffer target
+        ADD_ENUM(ARRAY_BUFFER);
+        ADD_ENUM(ELEMENT_ARRAY_BUFFER);
+
+        ADD_ENUM(UNSIGNED_SHORT);
 #undef ADD_ENUM
     }
 
@@ -124,6 +195,7 @@ struct CiApp : public AppBasic
             mCurrentHero = CURRENT_HERO;
             if (loadHero(mHeroNames[mCurrentHero]))
             {
+                CURRENT_TEXTURE = 0;
                 mParams.removeParam("CURRENT_TEXTURE");
                 mParams.addParam("CURRENT_TEXTURE", mTextureNames, &CURRENT_TEXTURE);
             }
@@ -156,7 +228,7 @@ private:
 
         if (!fs::exists(meshPath) ||
             !fs::exists(animPath) ||
-            !fs::exists(mtrlPath) )
+            !fs::exists(mtrlPath))
             return false;
 
         JsonTree heroJsonRoot = JsonTree(loadFile(meshPath));
@@ -181,7 +253,7 @@ private:
         return true;
     }
 
-    void handleNothing(const JsonTree& tree)
+    void handleDefault(const JsonTree& tree)
     {
     }
 
@@ -196,12 +268,54 @@ private:
         }
     }
 
+    //"abaddon.bin": {
+    //    "byteLength": 1185936,
+    //    "path": "abaddon.bin"
+    //}
+    void handleBuffer(const JsonTree& tree)
+    {
+        size_t byteLength = tree["byteLength"].getValue<size_t>();
+        string path = tree["path"].getValue();
+        DataSourceRef& dataSrc = loadFile(getAbsolutePath(path));
+        if (dataSrc->getBuffer().getDataSize() != byteLength)
+        {
+            console() << tree.getKey() << ": byteLength mismatch." << endl;
+        }
+
+        mHero.mBuffers[tree.getKey()] = dataSrc;
+    }
+
+    //"bufferView_37": {
+    //    "buffer": "abaddon.bin",
+    //    "byteLength": 1147680,
+    //    "byteOffset": 0,
+    //    "target": "ARRAY_BUFFER"
+    //},
+    void handleBufferView(const JsonTree& tree)
+    {
+        gl::Vbo vbo(getGlEnum(tree, "target"));
+        int path = tree["byteLength"].getValue<int>();
+        size_t byteLength = tree["byteLength"].getValue<size_t>();
+        size_t byteOffset = tree["byteOffset"].getValue<size_t>();
+
+        string bufferName = tree["buffer"].getValue();
+        DataSourceRef& dataSrc = mHero.mBuffers[bufferName];
+        const Buffer& buffer = dataSrc->getBuffer();
+
+        vbo.bufferData(byteLength, reinterpret_cast<const uint8_t*>(buffer.getData()) + byteOffset, GL_STATIC_DRAW);
+        vbo.unbind();
+
+        mHero.mBufferViews[tree.getKey()] = vbo;
+    }
+
     //"image_0": {
     //    "path": "textures/abaddon_body_color.png"
     //},
     void handleImage(const JsonTree& tree)
     {
-        mHero.mImages[tree.getKey()] = getAbsolutePath(tree.getChild("path").getValue());
+        fs::path imgPath = getAbsolutePath(tree["path"].getValue());
+
+        mHero.mImages[tree.getKey()] = loadImageSafe(imgPath);
     }
 
     //"sampler_0": {
@@ -212,12 +326,14 @@ private:
     //},
     void handleSampler(const JsonTree& tree)
     {
-        gl::Texture::Format& format = mHero.mSamplers[tree.getKey()];
+        gl::Texture::Format format;
         format.setMagFilter(getGlEnum(tree, "magFilter"));
         format.setMinFilter(getGlEnum(tree, "minFilter"));
         format.setWrapS(getGlEnum(tree, "wrapS"));
         format.setWrapT(getGlEnum(tree, "wrapT"));
         format.enableMipmapping();
+
+        mHero.mSamplers[tree.getKey()] = format;
     }
 
     //"Map #19": {
@@ -229,17 +345,134 @@ private:
     //},
     void handleTexture(const JsonTree& tree)
     {
-        fs::path imagePath = mHero.mImages[tree.getChild("source").getValue()];
-        Surface surf = loadImage(imagePath);
+        const Surface& image = mHero.mImages[tree["source"].getValue()];
 
-        gl::Texture::Format& format = mHero.mSamplers[tree.getChild("sampler").getValue()];
+        gl::Texture::Format& format = mHero.mSamplers[tree["sampler"].getValue()];
         format.setTarget(getGlEnum(tree, "target"));
         format.setInternalFormat(getGlEnum(tree, "internalFormat"));
 
-        mHero.mTextures[tree.getKey()] = gl::Texture(surf, format);
-
         mTextureNames.push_back(tree.getKey());
+        mHero.mTextures[tree.getKey()] = gl::Texture(image, format);
     }
+
+    //"technique_0": {
+    //    "parameters": {},
+    //    "pass": "defaultPass",
+    //    "passes": {
+    //        "defaultPass": {
+    //            "instanceProgram": {
+    //                "attributes": {},
+    //                "program": "",
+    //                "uniforms": {}
+    //            },
+    //            "states": {
+    //                "blendEnable": false,
+    //                "cullFaceEnable": false,
+    //                "depthMask": true,
+    //                "depthTestEnable": true
+    //            }
+    //        }
+    //    }
+    //},
+    void handleTechnique(const JsonTree& tree)
+    {
+        Hero::Technique tech;
+        string passName = tree["pass"].getValue();
+        const JsonTree& defaultPassTree = tree["passes"][passName];
+        tech.blendEnable = defaultPassTree["states"]["blendEnable"].getValue<bool>();
+        tech.blendEnable = defaultPassTree["states"]["cullFaceEnable"].getValue<bool>();
+        tech.blendEnable = defaultPassTree["states"]["depthMask"].getValue<bool>();
+        tech.blendEnable = defaultPassTree["states"]["depthTestEnable"].getValue<bool>();
+
+        mHero.mTechniques[tree.getKey()] = tech;
+    }
+
+    //"Material #151": {
+    //    "instanceTechnique": {
+    //        "technique": "technique_1",
+    //        "values": [
+    //        {
+    //            "parameter": "ambient",
+    //            "value": [
+    //                0.5879999995231628,
+    //                0.5879999995231628,
+    //                0.5879999995231628
+    //            ]
+    //        },
+    //        {
+    //            "parameter": "shiness",
+    //            "value": 2,
+    //        },
+    //    },
+    //    "name": "Material #151"
+    //},
+    void handleMaterial(const JsonTree& tree)
+    {
+        string techniqueName = tree["instanceTechnique"]["technique"].getValue();
+        const Hero::Technique& technique = mHero.mTechniques[techniqueName];
+        Hero::Material material;
+        material.pTechnique = &technique;
+
+        // TODO: parse values
+
+        mHero.mMaterials[tree.getKey()] = material;
+    }
+
+    //"indices_12": {
+    //    "bufferView": "bufferView_38",
+    //    "byteOffset": 13488,
+    //    "count": 840,
+    //    "type": "UNSIGNED_SHORT"
+    //},
+    void handleIndex(const JsonTree& tree)
+    {
+        Hero::Index index;
+        index.indexBuffer = mHero.mBufferViews[tree["bufferView"].getValue()];
+        index.count = tree["count"].getValue<GLsizei>();
+        index.indices = reinterpret_cast<const GLvoid*>(tree["byteOffset"].getValue<int>());
+        index.type = getGlEnum(tree, "type");
+
+        mHero.mIndices[tree.getKey()] = index;
+    }
+
+    //"attribute_21": {
+    //    "bufferView": "bufferView_37",
+    //    "byteOffset": 755064,
+    //    "byteStride": 8,
+    //    "count": 8526,
+    //    "max": [
+    //        1,
+    //        1,
+    //        1
+    //    ],
+    //    "min": [
+    //        0,
+    //        0,
+    //        0
+    //    ],
+    //    "type": "FLOAT_VEC2"
+    //},
+    void handleMeshAttribute(const JsonTree& tree)
+    {
+        Hero::MeshAttribute meshAttrb;
+        meshAttrb.vextexBuffer = mHero.mBufferViews[tree["bufferView"].getValue()];
+        //meshAttrb.index = ??
+        meshAttrb.pointer = reinterpret_cast<const GLvoid*>(tree["byteOffset"].getValue<int>());
+        meshAttrb.stride = tree["byteStride"].getValue<GLsizei>();
+
+        // FLOAT|FLOAT_VEC2|FLOAT_VEC3|FLOAT_VEC4
+        //meshAttrb.size = tree["byteStride"].getValue<GLsizei>();
+        meshAttrb.normalized = tree.hasChild("normalized") ? tree["normalized"].getValue<bool>() : false;
+
+        GLint size;
+        GLenum type;
+        GLboolean normalized;
+        GLsizei stride;
+
+        mHero.mMeshAttributes[tree.getKey()] = meshAttrb;
+    }
+
+private:
 
     fs::path getAbsolutePath(const string& relativePath)
     {
@@ -248,7 +481,7 @@ private:
 
     GLenum getGlEnum(const JsonTree& tree, const string& childKeyName)
     {
-        const string& childKeyValue = tree.getChild(childKeyName).getValue();
+        const string& childKeyValue = tree[childKeyName].getValue();
         return getGlEnum(childKeyValue);
     }
 
@@ -264,6 +497,20 @@ private:
         // report each unregistered enum for once
         mGlNameMap.insert(make_pair(name, GL_NONE));
         return GL_NONE;
+    }
+
+    Surface loadImageSafe(const fs::path& path)
+    {
+        Surface surf = loadImage(path);
+        if (surf)
+            return surf;
+
+        TextLayout layout;
+
+        layout.setFont(Font("Arial", 24));
+        layout.setColor(Color(1, 1, 1));
+        layout.addLine(path.string());
+        return layout.render(true);
     }
 
 private:
