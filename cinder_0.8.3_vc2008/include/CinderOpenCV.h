@@ -1,6 +1,8 @@
 #pragma once
 
-#include "opencv2/opencv.hpp"
+#include "opencv2/core.hpp"
+#include "opencv2/imgproc.hpp"
+#include "opencv2/highgui.hpp"
 
 #include "cinder/Cinder.h"
 #include "cinder/ImageIo.h"
@@ -148,7 +150,7 @@ inline ImageSourceRef fromOcv( cv::Mat &mat )
 
 inline cv::Scalar toOcv( const Color &color )
 {
-	return CV_RGB( color.r * 255, color.g * 255, color.b * 255 );
+    return cv::Scalar( color.b * 255, color.g * 255, color.r * 255);
 }
 
 inline Vec2f fromOcv( const cv::Point2f &point )
