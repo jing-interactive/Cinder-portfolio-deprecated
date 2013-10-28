@@ -3,6 +3,7 @@
 #include "cinder/Camera.h"
 #include "cinder/Json.h"
 #include "cinder/Text.h"
+#include "cinder/Utilities.h"
 
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
@@ -40,7 +41,7 @@ struct Hero
         // vector of Texture ref
         // vector<KVPair> values;
 
-        void execute()
+        void draw()
         {
             // textures.bind()
             // set uniform parameters
@@ -57,7 +58,7 @@ struct Hero
         GLenum  type;
         const GLvoid* indices;
 
-        void execute()
+        void draw()
         {
             indexBuffer.bind();
             glDrawElements(mode, count, type, indices);
@@ -69,20 +70,60 @@ struct Hero
     {
         gl::Vbo vextexBuffer;
 
-        GLuint index;
+        //GLuint index;
         GLint size;
         GLenum type;
         GLboolean normalized;
         GLsizei stride;
         const GLvoid* pointer;
 
-        void execute()
+        size_t count;   // The number of attributes referenced by this accessor
+
+        //void draw()
+        //{
+        //    vextexBuffer.bind();
+        //    glVertexAttribPointer(index, size, type, normalized, stride, pointer);
+        //    vextexBuffer.unbind();
+        //}
+    };
+
+    struct Node;
+
+    struct Skin
+    {
+        float bindShapeMatrix[16];
+        float inverseBindMatrices[16]; // TODO
+        vector<Node*> pJoints;
+        vector<Node*> pRoots;
+    };
+
+    struct Mesh
+    {
+        // TODO: array of struct?
+        Index*      pIndices;
+        Material*   pMaterial;
+        map<string,  MeshAttribute*> semantics;
+        Skin*       pSkin;
+    };
+
+    struct Node
+    {
+        vector<Node*> pChildren;
+        float   matrix[16];         // It is directly usable by uniformMatrix4fv with transpose equal to false
+        string  name;
+        vector<Mesh*> pMeshes;
+
+        void draw()
         {
-            vextexBuffer.bind();
-            glVertexAttribPointer(index, size, type, normalized, stride, pointer);
-            vextexBuffer.unbind();
+
         }
     };
+
+    struct Scene
+    {
+        vector<Node*> pNodes;
+    };
+
     map<string, DataSourceRef>              mBuffers;
     map<string, gl::Vbo>                    mBufferViews;
     map<string, gl::Texture::Format>        mSamplers;
@@ -92,6 +133,10 @@ struct Hero
     map<string, Material>                   mMaterials;
     map<string, Index>                      mIndices;
     map<string, MeshAttribute>              mMeshAttributes;
+    map<string, Mesh>                       mMeshes;
+    map<string, Skin>                       mSkins;
+    map<string, Node>                       mNodes;
+    map<string, Scene>                      mScenes;
 };
 
 struct CiApp : public AppBasic 
@@ -124,7 +169,7 @@ struct CiApp : public AppBasic
         mParams.removeParam("CURRENT_HERO");
     	mParams.addParam("CURRENT_HERO", mHeroNames, &CURRENT_HERO);
 
-        mCurrentTexture = -1;
+        mCurrentNode = -1;
 
         // std::functios
 #define BIND_PAIR(name, handler) do \
@@ -145,12 +190,12 @@ struct CiApp : public AppBasic
         BIND_PAIR("materials",      handleMaterial);
         BIND_PAIR("indices",        handleIndex);
         BIND_PAIR("attributes",     handleMeshAttribute);
-        BIND_PAIR("meshes",         handleDefault);
+        BIND_PAIR("meshes",         handleMesh);
         BIND_PAIR("cameras",        handleDefault);
         BIND_PAIR("lights",         handleDefault);
-        BIND_PAIR("skins",          handleDefault);
-        BIND_PAIR("nodes",          handleDefault);
-        BIND_PAIR("scenes",         handleDefault);
+        BIND_PAIR("skins",          handleSkin);
+        BIND_PAIR("nodes",          handleNode);
+        BIND_PAIR("scenes",         handleScene);
         BIND_PAIR("animations",     handleDefault);
 #undef BIND_PAIR  
 
@@ -195,15 +240,15 @@ struct CiApp : public AppBasic
             mCurrentHero = CURRENT_HERO;
             if (loadHero(mHeroNames[mCurrentHero]))
             {
-                CURRENT_TEXTURE = 0;
-                mParams.removeParam("CURRENT_TEXTURE");
-                mParams.addParam("CURRENT_TEXTURE", mTextureNames, &CURRENT_TEXTURE);
+                CURRENT_NODE = 0;
+                mParams.removeParam("CURRENT_NODE");
+                mParams.addParam("CURRENT_NODE", mNodeNames, &CURRENT_NODE);
             }
         }
 
-        if (mCurrentTexture != CURRENT_TEXTURE)
+        if (mCurrentNode != CURRENT_NODE)
         {
-            mCurrentTexture = CURRENT_TEXTURE;
+            mCurrentNode = CURRENT_NODE;
         }
     }
 
@@ -212,7 +257,9 @@ struct CiApp : public AppBasic
         gl::clear(ColorA::black());
         gl::setMatricesWindow(getWindowSize());
 
-        gl::draw(mHero.mTextures[mTextureNames[mCurrentTexture]], Vec2f(100, 100));
+        //gl::draw(mHero.mTextures[mNodeNames[mCurrentNode]], Vec2f(100, 100));
+
+        mHero.mNodes[mNodeNames[mCurrentNode]].draw();
 
         mParams.draw();
     }
@@ -234,9 +281,8 @@ private:
         JsonTree heroJsonRoot = JsonTree(loadFile(meshPath));
 
         mHero = Hero();
-        mTextureNames.clear();
+        mNodeNames.clear();
 
-        // TODO: exception safe
         BOOST_FOREACH(const NameHandlerPair& aPair, mCategories)
         {
             string name = aPair.first;
@@ -245,11 +291,10 @@ private:
 
             if (heroJsonRoot.hasChild(name))
             {
-               handler(heroJsonRoot.getChild(name)); 
+                handler(heroJsonRoot.getChild(name)); 
             }
             console() << endl;
         }
-
         return true;
     }
 
@@ -351,7 +396,6 @@ private:
         format.setTarget(getGlEnum(tree, "target"));
         format.setInternalFormat(getGlEnum(tree, "internalFormat"));
 
-        mTextureNames.push_back(tree.getKey());
         mHero.mTextures[tree.getKey()] = gl::Texture(image, format);
     }
 
@@ -452,24 +496,163 @@ private:
     //    ],
     //    "type": "FLOAT_VEC2"
     //},
+    // https://github.com/KhronosGroup/glTF/blob/master/specification/meshAttribute.schema.json
     void handleMeshAttribute(const JsonTree& tree)
     {
-        Hero::MeshAttribute meshAttrb;
-        meshAttrb.vextexBuffer = mHero.mBufferViews[tree["bufferView"].getValue()];
-        //meshAttrb.index = ??
-        meshAttrb.pointer = reinterpret_cast<const GLvoid*>(tree["byteOffset"].getValue<int>());
-        meshAttrb.stride = tree["byteStride"].getValue<GLsizei>();
+        Hero::MeshAttribute meshAttrib;
+        meshAttrib.vextexBuffer = mHero.mBufferViews[tree["bufferView"].getValue()];
 
         // FLOAT|FLOAT_VEC2|FLOAT_VEC3|FLOAT_VEC4
-        //meshAttrb.size = tree["byteStride"].getValue<GLsizei>();
-        meshAttrb.normalized = tree.hasChild("normalized") ? tree["normalized"].getValue<bool>() : false;
+        meshAttrib.type = getDataType(tree["type"].getValue());
+        meshAttrib.size = getDataSize(tree["type"].getValue());
+        meshAttrib.normalized = tree.hasChild("normalized") ? tree["normalized"].getValue<bool>() : false;
+        meshAttrib.stride = tree["byteStride"].getValue<GLsizei>();
+        meshAttrib.pointer = reinterpret_cast<const GLvoid*>(tree["byteOffset"].getValue<int>());
 
-        GLint size;
-        GLenum type;
-        GLboolean normalized;
-        GLsizei stride;
+        meshAttrib.count = tree["count"].getValue<size_t>();
 
-        mHero.mMeshAttributes[tree.getKey()] = meshAttrb;
+        mHero.mMeshAttributes[tree.getKey()] = meshAttrib;
+    }
+
+    //"abaddon_model_LOD0-mesh": {
+    //    "name": "abaddon_model_LOD0-mesh",
+    //    "primitives": [
+    //        {
+    //            "indices": "indices_6",
+    //            "material": "Material #107",
+    //            "semantics": {
+    //                "JOINT": "attribute_4",
+    //                "NORMAL": "attribute_2",
+    //                "POSITION": "attribute_1",
+    //                "TEXCOORD_0": "attribute_3",
+    //                "WEIGHT": "attribute_5"
+    //            },
+    //            "skin": "skin_0"
+    //        }
+    //    ]
+    //},
+    // https://github.com/KhronosGroup/glTF/blob/master/specification/mesh.schema.json
+    void handleMesh(const JsonTree& tree)
+    {
+        Hero::Mesh mesh;
+        
+        // TODO: supports multiple primitive?
+        const JsonTree& firstPrimitive = tree["primitives"].getChild(0);
+        mesh.pIndices = &mHero.mIndices[firstPrimitive["indices"].getValue()];
+        mesh.pMaterial = &mHero.mMaterials[firstPrimitive["material"].getValue()];
+
+        BOOST_FOREACH(const JsonTree& semantic, firstPrimitive["semantics"].getChildren())
+        {
+            mesh.semantics[semantic.getKey()] = &mHero.mMeshAttributes[semantic.getValue()];
+        }
+
+        mesh.pSkin = &mHero.mSkins[firstPrimitive["skin"].getValue()];
+
+        mHero.mMeshes[tree.getKey()] = mesh;
+    }
+
+    //"skin_4": {
+    //    "bindShapeMatrix": [],
+    //    "inverseBindMatrices": {},
+    //    "joints": [
+    //        "clavicle_R",
+    //        "clavicle_L"
+    //    ],
+    //    "roots": ["clavicle_R"]
+    //},
+    void handleSkin(const JsonTree& tree)
+    {
+        Hero::Skin skin;
+
+        // TODO: supports more fields
+        BOOST_FOREACH(const JsonTree& joint, tree["joints"].getChildren())
+        {
+            skin.pJoints.push_back(&mHero.mNodes[joint.getValue()]);
+        }
+
+        BOOST_FOREACH(const JsonTree& root, tree["roots"].getChildren())
+        {
+            skin.pRoots.push_back(&mHero.mNodes[root.getValue()]);
+        }
+
+        mHero.mSkins[tree.getKey()] = skin;
+    }
+
+    //"Cloth_R3C0": {
+    //    "children": [
+    //        "Cloth_R4C0"
+    //    ],
+    //    "matrix": [
+    //        0.9979693889617922,
+    //        -0.06097045540809615,
+    //        -0.018415801227092805,
+    //        0,
+    //        0.05910318021817573,
+    //        0.9942791120896233,
+    //        -0.088971725890471,
+    //        0,
+    //        0.023735097457632096,
+    //        0.08770264246253799,
+    //        0.995863846984111,
+    //        0,
+    //        29.407180786132805,
+    //        0,
+    //        -0.000007629394538355427,
+    //        1
+    //    ],
+    //    "name": "Cloth_R3C0"
+    //},
+    // https://github.com/KhronosGroup/glTF/blob/master/specification/node.schema.json
+    void handleNode(const JsonTree& tree)
+    {
+        Hero::Node node;
+
+        BOOST_FOREACH(const JsonTree& child, tree["children"].getChildren())
+        {
+            node.pChildren.push_back(&mHero.mNodes[child.getValue()]);
+        }
+
+        size_t i = 0;
+        BOOST_FOREACH(const JsonTree& number, tree["matrix"].getChildren())
+        {
+            node.matrix[i] = number.getValue<float>();
+            i++;
+        }
+
+        if (tree.hasChild("meshes"))
+        {
+            BOOST_FOREACH(const JsonTree& mesh, tree["meshes"].getChildren())
+            {
+                node.pMeshes.push_back(&mHero.mMeshes[mesh.getValue()]);
+            }
+        }
+
+        node.name = tree.getKey();
+
+        mHero.mNodes[tree.getKey()] = node;
+    }
+
+    //"scene_0": {
+    //    "nodes": [
+    //        "abaddon_model_LOD0",
+    //        "cape_model_LOD0",
+    //        "helmet_model_LOD0",
+    //        "mount_model_LOD0",
+    //        "shoulders_model_LOD0",
+    //        "weapon_model_LOD0"
+    //    ]
+    //}
+    void handleScene(const JsonTree& tree)
+    {
+        Hero::Scene scene;
+
+        BOOST_FOREACH(const JsonTree& node, tree["nodes"].getChildren())
+        {
+            scene.pNodes.push_back(&mHero.mNodes[node.getValue()]);
+            mNodeNames.push_back(node.getValue());
+        }
+
+        mHero.mScenes[tree.getKey()] = scene;
     }
 
 private:
@@ -499,6 +682,23 @@ private:
         return GL_NONE;
     }
 
+    // FLOAT_VEC2 -> GL_FLOAT
+    static GLenum getDataType(const string& name)
+    {
+        // GL_BYTE, GL_UNSIGNED_BYTE, GL_SHORT, GL_UNSIGNED_SHORT, GL_FIXED, or GL_FLOAT
+        // TODO:
+        return GL_FLOAT;
+    }
+
+    // FLOAT_VEC2 -> 2
+    static GLint getDataSize(const string& name)
+    {
+        if (name.find("4") != string::npos) return 4;
+        if (name.find("3") != string::npos) return 3;
+        if (name.find("2") != string::npos) return 2;
+        return 1;
+    }
+
     Surface loadImageSafe(const fs::path& path)
     {
         Surface surf = loadImage(path);
@@ -524,8 +724,8 @@ private:
     // params
     vector<string>          mHeroNames;
     int 		            mCurrentHero;
-    vector<string>          mTextureNames;
-    int                     mCurrentTexture;
+    vector<string>          mNodeNames;
+    int                     mCurrentNode;
 };
 
 CINDER_APP_BASIC(CiApp, RendererGl)
