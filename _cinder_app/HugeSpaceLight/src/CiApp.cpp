@@ -215,13 +215,13 @@ struct CiApp : public AppBasic
             const size_t kNumVertices = 4;
             vector<Vec3f> positions(kNumVertices);
             // CCW
-            // #3: -271.0, 10485.0 ---- #2: 4129.0, 10485.0
+            // #3: -271.0, 9748.0 ---- #2: 4129.0, 9748.0
             //
             // #1: -271.0, -1452.0 ---- #0: 4129.0, -1452.0 
             positions[0] = Vec3f(4129.0, -1452.0, 33626);
             positions[1] = Vec3f(-271.0, -1452.0, 33626);
-            positions[2] = Vec3f(-271.0, 10485.0, 33626);
-            positions[3] = Vec3f(4129.0, 10485.0, 33626);
+            positions[2] = Vec3f(-271.0, 9748.0, 33626);
+            positions[3] = Vec3f(4129.0, 9748.0, 33626);
             for (size_t i=0; i<kNumVertices; i++)
             {
                 positions[i] *= REAL_TO_VIRTUAL;
@@ -357,8 +357,10 @@ struct CiApp : public AppBasic
             float cy = (led.pos.x/* - aabbMin.x*/) / aabbSize.x;
             uint8_t value = *suf.getData(Vec2i(width * cx/* + 0.5f*/, height * cy/* + 0.5f*/));
 #else
-            float cx = 0.03018272050530115046244078502143f * led.pos.z / REAL_TO_VIRTUAL - 1.23681479810512068576584705617f;
-            float cy = 0.02980392156862745098039215686275f * led.pos.x / REAL_TO_VIRTUAL - 5.30196078431372549019607843139f;
+            // online solver
+            // http://www.bluebit.gr/matrix-calculator/linear_equations.aspx
+            float cx = 0.031065338510890f * led.pos.z / REAL_TO_VIRTUAL - 0.167989194664881f;
+            float cy = 0.031372549019608f * led.pos.x / REAL_TO_VIRTUAL - 5.686274509803920f;
             uint8_t value = *suf.getData(Vec2i(kW * cx, kH * cy));
 #endif
             led.value = value / 255.f;
