@@ -4,6 +4,7 @@
 #include "cinder/Json.h"
 #include "cinder/Text.h"
 #include "cinder/Utilities.h"
+#include "cinder/Arcball.h"
 
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
@@ -15,6 +16,7 @@
 #include "../../../_common/MiniConfig.h"
 
 #include <boost/foreach.hpp>
+#include <boost/tuple/tuple.hpp>
 
 using namespace ci;
 using namespace ci::app;
@@ -22,30 +24,102 @@ using namespace std;
 
 typedef function<void(const JsonTree&)> JsonHandler;
 typedef pair<string, JsonHandler> NameHandlerPair;
+typedef boost::tuple<string, GLint, gl::Texture> NameTextureTuple;
+typedef boost::tuple<string, GLint, vector<float>> UniformValueTuple;
 typedef map<string, GLenum> NameEnumMap;
 
 struct Hero
 {
     struct Technique
     {
+        string name;
         bool blendEnable;
         bool cullFaceEnable;
         bool depthMask;
         bool depthTestEnable;
+
+        void preDraw() const
+        {
+            if (blendEnable)
+            {
+                gl::enableAlphaBlending();
+            }
+            else
+            {
+                gl::disableAlphaBlending();
+            }
+
+            if (cullFaceEnable)
+            {
+                glEnable(GL_CULL_FACE);
+            }
+            else
+            {
+                glDisable(GL_CULL_FACE);
+            }
+
+            gl::enableDepthWrite(depthMask);
+            gl::enableDepthRead(depthTestEnable);
+        }
     };
 
     struct Material
     {
+        string name;
         const Technique* pTechnique;
 
         // vector of Texture ref
-        // vector<KVPair> values;
+        vector<NameTextureTuple> textures;
+        vector<UniformValueTuple> uniforms;
 
-        void draw()
+        void preDraw()
         {
-            // textures.bind()
-            // set uniform parameters
-            // glEnable / glDisable
+            size_t texSlot = 0;
+            BOOST_FOREACH(NameTextureTuple& tuple, textures)
+            {
+                tuple.get<2>().bind(texSlot);
+                glUniform1i(tuple.get<1>(), texSlot);
+                texSlot++;
+            }
+
+            BOOST_FOREACH(UniformValueTuple& tuple, uniforms)
+            {
+                const vector<float>& values = tuple.get<2>();
+                GLint loc = tuple.get<1>();
+
+                // TODO: support int / ushort values
+                switch (values.size())
+                {
+                case 4:
+                    {
+                        glUniform4f(loc, values[0], values[1], values[2], values[3]);
+                    }break;
+                case 3:
+                    {
+                        glUniform3f(loc, values[0], values[1], values[2]);
+                    }break;
+                case 2:
+                    {
+                        glUniform2f(loc, values[0], values[1]);
+                    }break;
+                case 1:
+                    {
+                        glUniform1f(loc, values[0]);
+                    }break;
+                default:
+                    {
+                        assert(0);
+                    }
+                }
+            }
+
+            pTechnique->preDraw();
+
+            texSlot = 0;
+            BOOST_FOREACH(NameTextureTuple& tuple, textures)
+            {
+                tuple.get<2>().unbind(texSlot++);
+            }
         }
     };
 
@@ -66,7 +140,7 @@ struct Hero
         }
     };
 
-    struct MeshAttribute
+    struct Attribute
     {
         gl::Vbo vextexBuffer;
 
@@ -78,13 +152,18 @@ struct Hero
         const GLvoid* pointer;
 
         size_t count;   // The number of attributes referenced by this accessor
+        // not used in glVertexAttribPointer
 
-        //void draw()
-        //{
-        //    vextexBuffer.bind();
-        //    glVertexAttribPointer(index, size, type, normalized, stride, pointer);
-        //    vextexBuffer.unbind();
-        //}
+        void preDraw(GLuint index)
+        {
+            vextexBuffer.bind();
+            glVertexAttribPointer(index, size, type, normalized, stride, pointer);
+        }
+
+        void postDraw()
+        {
+            vextexBuffer.unbind();
+        }
     };
 
     struct Node;
@@ -95,15 +174,52 @@ struct Hero
         float inverseBindMatrices[16]; // TODO
         vector<Node*> pJoints;
         vector<Node*> pRoots;
+
+        void preDraw()
+        {
+
+        }
     };
 
     struct Mesh
     {
-        // TODO: array of struct?
-        Index*      pIndices;
-        Material*   pMaterial;
-        map<string,  MeshAttribute*> semantics;
-        Skin*       pSkin;
+        string      name;
+        struct Primitive
+        {
+            typedef boost::tuple<string, GLint,  Attribute*> NameAttribTuple;
+
+            Index*      pIndexBuffer;
+            Material*   pMaterial;
+            vector<NameAttribTuple> pVertexBuffers;
+            Skin*       pSkin;
+
+            void draw()
+            {
+                pMaterial->preDraw();
+                BOOST_FOREACH(NameAttribTuple& tuple, pVertexBuffers)
+                {
+                    GLint loc = tuple.get<1>();
+                    tuple.get<2>()->preDraw(loc);
+                }
+
+                pSkin->preDraw();
+                pIndexBuffer->draw();
+
+                BOOST_FOREACH(NameAttribTuple& tuple, pVertexBuffers)
+                {
+                    tuple.get<2>()->postDraw();
+                }
+            }
+        };
+        vector<Primitive> primitives;
+
+        void draw()
+        {
+            BOOST_FOREACH(Primitive& prim, primitives)
+            {
+                prim.draw();
+            }
+        }
     };
 
     struct Node
@@ -115,7 +231,21 @@ struct Hero
 
         void draw()
         {
+            BOOST_FOREACH(Mesh* pMesh, pMeshes)
+            {
+                pMesh->draw();
+            }
 
+            if (pChildren.empty())
+                return;
+
+            gl::pushModelView();
+            glLoadMatrixf(matrix);
+            BOOST_FOREACH(Node* pChild, pChildren)
+            {
+                pChild->draw();
+            }
+            gl::popModelView();
         }
     };
 
@@ -132,11 +262,13 @@ struct Hero
     map<string, Technique>                  mTechniques;
     map<string, Material>                   mMaterials;
     map<string, Index>                      mIndices;
-    map<string, MeshAttribute>              mMeshAttributes;
+    map<string, Attribute>              mMeshAttributes;
     map<string, Mesh>                       mMeshes;
     map<string, Skin>                       mSkins;
     map<string, Node>                       mNodes;
     map<string, Scene>                      mScenes;
+
+    gl::GlslProg                            mShader;
 };
 
 struct CiApp : public AppBasic 
@@ -144,7 +276,7 @@ struct CiApp : public AppBasic
     void prepareSettings(Settings *settings)
     {
         readConfig();
-        
+
         settings->setWindowPos(0, 0);
         settings->setWindowSize(WIN_WIDTH, WIN_HEIGHT);
     }
@@ -161,13 +293,13 @@ struct CiApp : public AppBasic
         {
             if (fs::is_directory(*dir_iter))
             {
-				mHeroNames.push_back((*dir_iter).path().filename().string());
+                mHeroNames.push_back((*dir_iter).path().filename().string());
             }
-    	}
+        }
 
-    	mCurrentHero = -1;
+        mCurrentHero = -1;
         mParams.removeParam("CURRENT_HERO");
-    	mParams.addParam("CURRENT_HERO", mHeroNames, &CURRENT_HERO);
+        mParams.addParam("CURRENT_HERO", mHeroNames, &CURRENT_HERO);
 
         mCurrentNode = -1;
 
@@ -189,7 +321,7 @@ struct CiApp : public AppBasic
         BIND_PAIR("techniques",     handleTechnique);
         BIND_PAIR("materials",      handleMaterial);
         BIND_PAIR("indices",        handleIndex);
-        BIND_PAIR("attributes",     handleMeshAttribute);
+        BIND_PAIR("attributes",     handleAttribute);
         BIND_PAIR("meshes",         handleMesh);
         BIND_PAIR("cameras",        handleDefault);
         BIND_PAIR("lights",         handleDefault);
@@ -225,6 +357,23 @@ struct CiApp : public AppBasic
 #undef ADD_ENUM
     }
 
+    void resize(ResizeEvent event)
+    {
+        mArcball.setWindowSize(getWindowSize());
+        mArcball.setCenter(Vec2f(getWindowWidth() / 2.0f, getWindowHeight() / 2.0f));
+        mArcball.setRadius(150);
+    }
+
+    void mouseDown(MouseEvent event)
+    {
+        mArcball.mouseDown(event.getPos());
+    }
+
+    void mouseDrag(MouseEvent event)
+    {	
+        mArcball.mouseDrag(event.getPos());
+    }
+
     void keyUp(KeyEvent event)
     {
         if (event.getCode() == KeyEvent::KEY_ESCAPE)
@@ -255,9 +404,10 @@ struct CiApp : public AppBasic
     void draw()
     {
         gl::clear(ColorA::black());
-        gl::setMatricesWindow(getWindowSize());
+        gl::setMatricesWindowPersp(getWindowSize());
 
         //gl::draw(mHero.mTextures[mNodeNames[mCurrentNode]], Vec2f(100, 100));
+        gl::rotate(mArcball.getQuat());
 
         mHero.mNodes[mNodeNames[mCurrentNode]].draw();
 
@@ -421,6 +571,8 @@ private:
     void handleTechnique(const JsonTree& tree)
     {
         Hero::Technique tech;
+        tech.name = tree.getKey();
+
         string passName = tree["pass"].getValue();
         const JsonTree& defaultPassTree = tree["passes"][passName];
         tech.blendEnable = defaultPassTree["states"]["blendEnable"].getValue<bool>();
@@ -428,38 +580,71 @@ private:
         tech.blendEnable = defaultPassTree["states"]["depthMask"].getValue<bool>();
         tech.blendEnable = defaultPassTree["states"]["depthTestEnable"].getValue<bool>();
 
-        mHero.mTechniques[tree.getKey()] = tech;
+        mHero.mTechniques[tech.name] = tech;
     }
 
     //"Material #151": {
     //    "instanceTechnique": {
     //        "technique": "technique_1",
     //        "values": [
-    //        {
-    //            "parameter": "ambient",
-    //            "value": [
-    //                0.5879999995231628,
-    //                0.5879999995231628,
-    //                0.5879999995231628
-    //            ]
-    //        },
-    //        {
-    //            "parameter": "shiness",
-    //            "value": 2,
-    //        },
+    //           {
+    //               "parameter": "ambient",
+    //               "value": [
+    //                   0.5879999995231628,
+    //                   0.5879999995231628,
+    //                   0.5879999995231628
+    //               ]
+    //           },
+    //           {
+    //               "parameter": "diffuse",
+    //               "value": "Map #27",
+    //           },
+    //        ]  
     //    },
     //    "name": "Material #151"
     //},
     void handleMaterial(const JsonTree& tree)
     {
+        Hero::Material material;
+        material.name = tree.getKey();
+
         string techniqueName = tree["instanceTechnique"]["technique"].getValue();
         const Hero::Technique& technique = mHero.mTechniques[techniqueName];
-        Hero::Material material;
         material.pTechnique = &technique;
 
-        // TODO: parse values
+        BOOST_FOREACH(const JsonTree& value, tree["instanceTechnique"]["values"].getChildren())
+        {
+            string paramName = value["parameter"].getValue();
 
-        mHero.mMaterials[tree.getKey()] = material;
+            // HACK
+            GLint loc = 0;
+            string texName = value["value"].getValue();
+            gl::Texture tex = mHero.mTextures[texName];
+            if (tex)
+            {
+                material.textures.push_back(boost::make_tuple(paramName, loc++, tex));
+                continue;
+            }
+
+            // TODO: support more types
+            vector<float> floatArray;
+            if (value["value"].getChildren().empty())
+            {
+                float floatValue = fromString<float>(value["value"].getValue());
+                floatArray.push_back(floatValue);
+            }
+            else
+            {
+                BOOST_FOREACH(const JsonTree& floatItem, value["value"].getChildren())
+                {
+                    float floatValue = fromString<float>(floatItem.getValue());
+                    floatArray.push_back(floatValue);
+                }
+            }
+            material.uniforms.push_back(boost::make_tuple(paramName, loc++, floatArray));
+        }
+
+        mHero.mMaterials[material.name] = material;
     }
 
     //"indices_12": {
@@ -497,9 +682,9 @@ private:
     //    "type": "FLOAT_VEC2"
     //},
     // https://github.com/KhronosGroup/glTF/blob/master/specification/meshAttribute.schema.json
-    void handleMeshAttribute(const JsonTree& tree)
+    void handleAttribute(const JsonTree& tree)
     {
-        Hero::MeshAttribute meshAttrib;
+        Hero::Attribute meshAttrib;
         meshAttrib.vextexBuffer = mHero.mBufferViews[tree["bufferView"].getValue()];
 
         // FLOAT|FLOAT_VEC2|FLOAT_VEC3|FLOAT_VEC4
@@ -535,20 +720,28 @@ private:
     void handleMesh(const JsonTree& tree)
     {
         Hero::Mesh mesh;
-        
-        // TODO: supports multiple primitive?
-        const JsonTree& firstPrimitive = tree["primitives"].getChild(0);
-        mesh.pIndices = &mHero.mIndices[firstPrimitive["indices"].getValue()];
-        mesh.pMaterial = &mHero.mMaterials[firstPrimitive["material"].getValue()];
+        mesh.name = tree.getKey();
 
-        BOOST_FOREACH(const JsonTree& semantic, firstPrimitive["semantics"].getChildren())
+        BOOST_FOREACH(const JsonTree& primitive, tree["primitives"].getChildren())
         {
-            mesh.semantics[semantic.getKey()] = &mHero.mMeshAttributes[semantic.getValue()];
+            Hero::Mesh::Primitive prim;
+            prim.pIndexBuffer = &mHero.mIndices[primitive["indices"].getValue()];
+            prim.pMaterial = &mHero.mMaterials[primitive["material"].getValue()];
+
+            // HACK
+            GLint hackLoc = 0;
+
+            BOOST_FOREACH(const JsonTree& semantic, primitive["semantics"].getChildren())
+            {
+                prim.pVertexBuffers.push_back(boost::make_tuple(semantic.getKey(), hackLoc++, &mHero.mMeshAttributes[semantic.getValue()]));
+            }
+
+            prim.pSkin = &mHero.mSkins[primitive["skin"].getValue()];
+
+            mesh.primitives.push_back(prim);
         }
 
-        mesh.pSkin = &mHero.mSkins[firstPrimitive["skin"].getValue()];
-
-        mHero.mMeshes[tree.getKey()] = mesh;
+        mHero.mMeshes[mesh.name] = mesh;
     }
 
     //"skin_4": {
@@ -606,6 +799,7 @@ private:
     void handleNode(const JsonTree& tree)
     {
         Hero::Node node;
+        node.name = tree.getKey();
 
         BOOST_FOREACH(const JsonTree& child, tree["children"].getChildren())
         {
@@ -627,9 +821,7 @@ private:
             }
         }
 
-        node.name = tree.getKey();
-
-        mHero.mNodes[tree.getKey()] = node;
+        mHero.mNodes[node.name] = node;
     }
 
     //"scene_0": {
@@ -675,7 +867,7 @@ private:
         {
             return it->second;
         }
-        
+
         console() << "Unsupported enum: " << name << endl;
         // report each unregistered enum for once
         mGlNameMap.insert(make_pair(name, GL_NONE));
@@ -720,6 +912,8 @@ private:
     NameEnumMap             mGlNameMap;
 
     Hero                    mHero;
+
+    Arcball                 mArcball;
 
     // params
     vector<string>          mHeroNames;
