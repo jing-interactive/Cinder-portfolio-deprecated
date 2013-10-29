@@ -348,8 +348,8 @@ struct CiApp : public AppBasic
         int32_t width = suf.getWidth();
         int32_t height = suf.getHeight();
 
-        float kW = suf.getWidth() / 1007.0f;
-        float kH = suf.getHeight() / 120.0f;
+        float kW = suf.getWidth() / 1029.0f;
+        float kH = suf.getHeight() / 124.0f;
         BOOST_FOREACH(Led& led, mLeds)
         {
 #if 0
@@ -359,7 +359,13 @@ struct CiApp : public AppBasic
 #else
             // online solver
             // http://www.bluebit.gr/matrix-calculator/linear_equations.aspx
+
+            //3321  1  103
+            //32936 1  1023
             float cx = 0.031065338510890f * led.pos.z / REAL_TO_VIRTUAL - 0.167989194664881f;
+
+            //245  1  2
+            //4070 1  122
             float cy = 0.031372549019608f * led.pos.x / REAL_TO_VIRTUAL - 5.686274509803920f;
             uint8_t value = *suf.getData(Vec2i(kW * cx, kH * cy));
 #endif
