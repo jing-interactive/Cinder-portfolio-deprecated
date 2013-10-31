@@ -160,6 +160,12 @@ struct Hero
             glVertexAttribPointer(index, size, type, normalized, stride, pointer);
         }
 
+        void preDrawPosition()
+        {
+            vextexBuffer.bind();
+            glVertexPointer(size, type, stride, pointer);
+        }
+
         void postDraw()
         {
             vextexBuffer.unbind();
@@ -198,8 +204,15 @@ struct Hero
                 pMaterial->preDraw();
                 BOOST_FOREACH(NameAttribTuple& tuple, pVertexBuffers)
                 {
+#if 0
                     GLint loc = tuple.get<1>();
                     tuple.get<2>()->preDraw(loc);
+#else
+                    if (tuple.get<0>() == "POSITION")
+                    {
+                        tuple.get<2>()->preDrawPosition();
+                    }
+#endif
                 }
 
                 pSkin->preDraw();
@@ -407,7 +420,19 @@ struct CiApp : public AppBasic
         gl::setMatricesWindowPersp(getWindowSize());
 
         //gl::draw(mHero.mTextures[mNodeNames[mCurrentNode]], Vec2f(100, 100));
+        gl::translate(getWindowWidth() * 0.5f, getWindowHeight() * 0.5f, 0);
         gl::rotate(mArcball.getQuat());
+        gl::scale(HERO_SCALE, HERO_SCALE, HERO_SCALE);
+
+        if (HERO_WIREFRAME)
+        {
+            gl::enableWireframe();
+        }
+        else
+        {
+            gl::disableWireframe();
+        }
+        gl::drawCoordinateFrame();
 
         mHero.mNodes[mNodeNames[mCurrentNode]].draw();
 
