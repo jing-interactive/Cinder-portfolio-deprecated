@@ -6,7 +6,7 @@ GROUP_DEF(Hero)
 ITEM_DEF(string,    HEROES_PATH,        "e:\\__svn_pool\\dota2hero-gh-pages\\heroes\\")
 ITEM_DEF(int,       CURRENT_HERO,       0)
 ITEM_DEF(int,       CURRENT_NODE,       0)
-ITEM_DEF(float,     HERO_SCALE,         4.0f)
+ITEM_DEF(float,     HERO_SCALE,         1.0f)
 ITEM_DEF(bool,      HERO_WIREFRAME,     false)
 
 

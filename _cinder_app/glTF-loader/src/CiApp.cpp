@@ -22,6 +22,8 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
+#define ATTRIB_HACK
+
 typedef function<void(const JsonTree&)> JsonHandler;
 typedef pair<string, JsonHandler> NameHandlerPair;
 typedef boost::tuple<string, GLint, gl::Texture> NameTextureTuple;
@@ -160,16 +162,32 @@ struct Hero
             glVertexAttribPointer(index, size, type, normalized, stride, pointer);
         }
 
-        void preDrawPosition()
-        {
-            vextexBuffer.bind();
-            glVertexPointer(size, type, stride, pointer);
-        }
-
         void postDraw()
         {
             vextexBuffer.unbind();
         }
+
+        void preDrawClientSide(const string& semanticName)
+        {
+            vextexBuffer.bind();
+            if (semanticName == "POSITION")
+            {
+                glEnableClientState(GL_VERTEX_ARRAY);
+                glVertexPointer(size, type, stride, pointer);
+            }
+            else
+            if (semanticName == "NORMAL")
+            {
+                glEnableClientState(GL_NORMAL_ARRAY);
+                glNormalPointer(type, stride, pointer);
+            }
+            else
+            if (semanticName == "TEXCOORD_0")
+            {
+                glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                glTexCoordPointer(size, type, stride, pointer);
+            }
+        }   
     };
 
     struct Node;
@@ -204,14 +222,11 @@ struct Hero
                 pMaterial->preDraw();
                 BOOST_FOREACH(NameAttribTuple& tuple, pVertexBuffers)
                 {
-#if 0
+#ifndef ATTRIB_HACK
                     GLint loc = tuple.get<1>();
                     tuple.get<2>()->preDraw(loc);
 #else
-                    if (tuple.get<0>() == "POSITION")
-                    {
-                        tuple.get<2>()->preDrawPosition();
-                    }
+                    tuple.get<2>()->preDrawClientSide(tuple.get<0>());
 #endif
                 }
 
@@ -265,7 +280,24 @@ struct Hero
     struct Scene
     {
         vector<Node*> pNodes;
+
+        void draw()
+        {
+            BOOST_FOREACH(Node* pNode, pNodes)
+            {
+                pNode->draw();
+            }
+        }
     };
+
+    void draw()
+    {
+        typedef map<string, Scene> map_type;
+        BOOST_FOREACH(map_type::value_type& pair, mScenes)
+        {
+            pair.second.draw();
+        }
+    }
 
     map<string, DataSourceRef>              mBuffers;
     map<string, gl::Vbo>                    mBufferViews;
@@ -275,7 +307,7 @@ struct Hero
     map<string, Technique>                  mTechniques;
     map<string, Material>                   mMaterials;
     map<string, Index>                      mIndices;
-    map<string, Attribute>              mMeshAttributes;
+    map<string, Attribute>                  mAttributes;
     map<string, Mesh>                       mMeshes;
     map<string, Skin>                       mSkins;
     map<string, Node>                       mNodes;
@@ -417,12 +449,24 @@ struct CiApp : public AppBasic
     void draw()
     {
         gl::clear(ColorA::black());
-        gl::setMatricesWindowPersp(getWindowSize());
+        gl::setMatricesWindowPersp(getWindowSize(), 60.0f, 0.1f);
 
-        //gl::draw(mHero.mTextures[mNodeNames[mCurrentNode]], Vec2f(100, 100));
         gl::translate(getWindowWidth() * 0.5f, getWindowHeight() * 0.5f, 0);
         gl::rotate(mArcball.getQuat());
         gl::scale(HERO_SCALE, HERO_SCALE, HERO_SCALE);
+
+        gl::drawCoordinateFrame();
+
+        if (!HERO_WIREFRAME)
+        {
+            gl::enableWireframe();
+        }
+        else
+        {
+            gl::disableWireframe();
+        }
+        glEnable(GL_TEXTURE);
+        mHero.draw();
 
         if (HERO_WIREFRAME)
         {
@@ -432,8 +476,6 @@ struct CiApp : public AppBasic
         {
             gl::disableWireframe();
         }
-        gl::drawCoordinateFrame();
-
         mHero.mNodes[mNodeNames[mCurrentNode]].draw();
 
         mParams.draw();
@@ -721,7 +763,7 @@ private:
 
         meshAttrib.count = tree["count"].getValue<size_t>();
 
-        mHero.mMeshAttributes[tree.getKey()] = meshAttrib;
+        mHero.mAttributes[tree.getKey()] = meshAttrib;
     }
 
     //"abaddon_model_LOD0-mesh": {
@@ -758,7 +800,7 @@ private:
 
             BOOST_FOREACH(const JsonTree& semantic, primitive["semantics"].getChildren())
             {
-                prim.pVertexBuffers.push_back(boost::make_tuple(semantic.getKey(), hackLoc++, &mHero.mMeshAttributes[semantic.getValue()]));
+                prim.pVertexBuffers.push_back(boost::make_tuple(semantic.getKey(), hackLoc++, &mHero.mAttributes[semantic.getValue()]));
             }
 
             prim.pSkin = &mHero.mSkins[primitive["skin"].getValue()];

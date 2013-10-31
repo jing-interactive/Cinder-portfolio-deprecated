@@ -1,4 +1,8 @@
-#version 120
+attribute vec4 JOINT;
+attribute vec3 NORMAL;
+attribute vec3 POSITION;
+attribute vec2 TEXCOORD_0;
+attribute vec3 WEIGHT;
 
 void main()
 {
