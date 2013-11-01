@@ -6,6 +6,8 @@
 #include "cinder/Utilities.h"
 #include "cinder/Arcball.h"
 
+#include "cinder/ip/Flip.h"
+
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
 #include "cinder/gl/Fbo.h"
@@ -23,6 +25,7 @@ using namespace ci::app;
 using namespace std;
 
 #define ATTRIB_HACK
+#define TEXTURE_HACK
 
 typedef function<void(const JsonTree&)> JsonHandler;
 typedef pair<string, JsonHandler> NameHandlerPair;
@@ -79,11 +82,17 @@ struct Hero
             size_t texSlot = 0;
             BOOST_FOREACH(NameTextureTuple& tuple, textures)
             {
+                if (tuple.get<0>() != "diffuse")
+                    continue;
+
                 tuple.get<2>().bind(texSlot);
+#ifndef TEXTURE_HACK
                 glUniform1i(tuple.get<1>(), texSlot);
+#endif
                 texSlot++;
             }
 
+#ifndef TEXTURE_HACK
             BOOST_FOREACH(UniformValueTuple& tuple, uniforms)
             {
                 const vector<float>& values = tuple.get<2>();
@@ -114,10 +123,14 @@ struct Hero
                     }
                 }
             }
+#endif
 
             pTechnique->preDraw();
+        }
 
-            texSlot = 0;
+        void postDraw()
+        {
+            size_t texSlot = 0;
             BOOST_FOREACH(NameTextureTuple& tuple, textures)
             {
                 tuple.get<2>().unbind(texSlot++);
@@ -237,6 +250,7 @@ struct Hero
                 {
                     tuple.get<2>()->postDraw();
                 }
+                pMaterial->postDraw();
             }
         };
         vector<Primitive> primitives;
@@ -292,11 +306,13 @@ struct Hero
 
     void draw()
     {
+        glEnable(GL_TEXTURE_2D);
         typedef map<string, Scene> map_type;
         BOOST_FOREACH(map_type::value_type& pair, mScenes)
         {
             pair.second.draw();
         }
+        glDisable(GL_TEXTURE_2D);
     }
 
     map<string, DataSourceRef>              mBuffers;
@@ -449,25 +465,15 @@ struct CiApp : public AppBasic
     void draw()
     {
         gl::clear(ColorA::black());
-        gl::setMatricesWindowPersp(getWindowSize(), 60.0f, 0.1f);
+        CameraPersp cam( getWindowWidth(), getWindowHeight(), 60);
+        cam.lookAt(Vec3f(0, CAM_Y, CAM_Z), Vec3f::zero());
+        gl::setModelView(cam);
 
-        gl::translate(getWindowWidth() * 0.5f, getWindowHeight() * 0.5f, 0);
         gl::rotate(mArcball.getQuat());
-        gl::scale(HERO_SCALE, HERO_SCALE, HERO_SCALE);
-
+        
         gl::drawCoordinateFrame();
 
-        if (!HERO_WIREFRAME)
-        {
-            gl::enableWireframe();
-        }
-        else
-        {
-            gl::disableWireframe();
-        }
-        glEnable(GL_TEXTURE);
-        mHero.draw();
-
+        gl::color(Color::white());
         if (HERO_WIREFRAME)
         {
             gl::enableWireframe();
@@ -476,7 +482,7 @@ struct CiApp : public AppBasic
         {
             gl::disableWireframe();
         }
-        mHero.mNodes[mNodeNames[mCurrentNode]].draw();
+        mHero.draw();
 
         mParams.draw();
     }
@@ -613,7 +619,8 @@ private:
         format.setTarget(getGlEnum(tree, "target"));
         format.setInternalFormat(getGlEnum(tree, "internalFormat"));
 
-        mHero.mTextures[tree.getKey()] = gl::Texture(image, format);
+        gl::Texture tex = gl::Texture(image, format);
+        mHero.mTextures[tree.getKey()] = tex;
     }
 
     //"technique_0": {
@@ -962,7 +969,10 @@ private:
     {
         Surface surf = loadImage(path);
         if (surf)
+        {
+            ip::flipVertical(&surf); // flip vertically
             return surf;
+        }
 
         TextLayout layout;
 
