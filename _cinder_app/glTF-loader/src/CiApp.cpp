@@ -27,6 +27,8 @@ using namespace std;
 #define ATTRIB_HACK
 #define TEXTURE_HACK
 
+const string kAllNodeName = "ALL";
+
 typedef function<void(const JsonTree&)> JsonHandler;
 typedef pair<string, JsonHandler> NameHandlerPair;
 typedef boost::tuple<string, GLint, gl::Texture> NameTextureTuple;
@@ -267,7 +269,7 @@ struct Hero
     struct Node
     {
         vector<Node*> pChildren;
-        float   matrix[16];         // It is directly usable by uniformMatrix4fv with transpose equal to false
+        Matrix44f matrix;
         string  name;
         vector<Mesh*> pMeshes;
 
@@ -282,7 +284,7 @@ struct Hero
                 return;
 
             gl::pushModelView();
-            glLoadMatrixf(matrix);
+            glLoadMatrixf(matrix.m);
             BOOST_FOREACH(Node* pChild, pChildren)
             {
                 pChild->draw();
@@ -304,14 +306,22 @@ struct Hero
         }
     };
 
-    void draw()
+    void preDraw()
     {
         glEnable(GL_TEXTURE_2D);
+    }
+
+    void draw()
+    {
         typedef map<string, Scene> map_type;
         BOOST_FOREACH(map_type::value_type& pair, mScenes)
         {
             pair.second.draw();
         }
+    }
+
+    void postDraw()
+    {
         glDisable(GL_TEXTURE_2D);
     }
 
@@ -425,14 +435,21 @@ struct CiApp : public AppBasic
         mArcball.setRadius(150);
     }
 
+    Vec2i getMousePos(MouseEvent event)
+    {
+        Vec2i pos = event.getPos();
+        pos.y = getWindowHeight() - pos.y;
+        return pos;
+    }
+
     void mouseDown(MouseEvent event)
     {
-        mArcball.mouseDown(event.getPos());
+        mArcball.mouseDown(getMousePos(event));
     }
 
     void mouseDrag(MouseEvent event)
     {	
-        mArcball.mouseDrag(event.getPos());
+        mArcball.mouseDrag(getMousePos(event));
     }
 
     void keyUp(KeyEvent event)
@@ -466,7 +483,7 @@ struct CiApp : public AppBasic
     {
         gl::clear(ColorA::black());
         CameraPersp cam( getWindowWidth(), getWindowHeight(), 60);
-        cam.lookAt(Vec3f(0, CAM_Y, CAM_Z), Vec3f::zero());
+        cam.lookAt(Vec3f(0, CAM_Y, CAM_Z), Vec3f(0, CAM_Y, 0));
         gl::setModelView(cam);
 
         gl::rotate(mArcball.getQuat());
@@ -482,7 +499,17 @@ struct CiApp : public AppBasic
         {
             gl::disableWireframe();
         }
-        mHero.draw();
+
+        mHero.preDraw();
+        if (mCurrentNode == 0)
+        {
+            mHero.draw();
+        }
+        else
+        {
+            mHero.mNodes[mNodeNames[mCurrentNode]].draw();
+        }
+        mHero.postDraw();
 
         mParams.draw();
     }
@@ -883,7 +910,7 @@ private:
         size_t i = 0;
         BOOST_FOREACH(const JsonTree& number, tree["matrix"].getChildren())
         {
-            node.matrix[i] = number.getValue<float>();
+            node.matrix.m[i] = number.getValue<float>();
             i++;
         }
 
@@ -912,6 +939,7 @@ private:
     {
         Hero::Scene scene;
 
+        mNodeNames.push_back(kAllNodeName);
         BOOST_FOREACH(const JsonTree& node, tree["nodes"].getChildren())
         {
             scene.pNodes.push_back(&mHero.mNodes[node.getValue()]);
