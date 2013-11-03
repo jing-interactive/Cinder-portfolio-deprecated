@@ -180,6 +180,22 @@
 			>
 		</File>
 		<File
+			RelativePath="..\assets\dota2-hero.fs"
+			>
+		</File>
+		<File
+			RelativePath="..\assets\dota2-hero.vs"
+			>
+		</File>
+		<File
+			RelativePath="..\..\..\_common\GlslHotProg.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\..\_common\GlslHotProg.h"
+			>
+		</File>
+		<File
 			RelativePath="..\include\item.def"
 			>
 		</File>

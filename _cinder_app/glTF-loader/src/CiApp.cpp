@@ -16,6 +16,7 @@
 #include "cinder/params/Params.h"
 
 #include "../../../_common/MiniConfig.h"
+#include "../../../_common/GlslHotProg.h"
 
 #include <boost/foreach.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -24,16 +25,18 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-#define ATTRIB_HACK
-#define TEXTURE_HACK
-
 const string kAllNodeName = "ALL";
 
 typedef function<void(const JsonTree&)> JsonHandler;
 typedef pair<string, JsonHandler> NameHandlerPair;
-typedef boost::tuple<string, GLint, gl::Texture> NameTextureTuple;
-typedef boost::tuple<string, GLint, vector<float>> UniformValueTuple;
+typedef pair<string, gl::Texture> NameTexturePair;
+typedef pair<string, vector<float>> NameValuePair;
 typedef map<string, GLenum> NameEnumMap;
+
+namespace
+{
+    GlslHotProg    gShader;
+}
 
 struct Hero
 {
@@ -76,29 +79,26 @@ struct Hero
         const Technique* pTechnique;
 
         // vector of Texture ref
-        vector<NameTextureTuple> textures;
-        vector<UniformValueTuple> uniforms;
+        vector<NameTexturePair> textures;
+        vector<NameValuePair> uniforms;
 
         void preDraw()
         {
-            size_t texSlot = 0;
-            BOOST_FOREACH(NameTextureTuple& tuple, textures)
+            GLuint texSlot = 0;
+            BOOST_FOREACH(NameTexturePair& pair, textures)
             {
-                if (tuple.get<0>() != "diffuse")
-                    continue;
-
-                tuple.get<2>().bind(texSlot);
-#ifndef TEXTURE_HACK
-                glUniform1i(tuple.get<1>(), texSlot);
-#endif
+                pair.second.bind(texSlot);
+                GLint loc = gShader.getProg().getUniformLocation(pair.first);
+                glUniform1i(loc, texSlot);
                 texSlot++;
             }
 
-#ifndef TEXTURE_HACK
-            BOOST_FOREACH(UniformValueTuple& tuple, uniforms)
+            BOOST_FOREACH(NameValuePair& pair, uniforms)
             {
-                const vector<float>& values = tuple.get<2>();
-                GLint loc = tuple.get<1>();
+                const vector<float>& values = pair.second;
+                GLint loc = gShader.getProg().getUniformLocation(pair.first);
+                if (loc == -1)
+                    continue;
 
                 // TODO: support int / ushort values
                 switch (values.size())
@@ -125,17 +125,17 @@ struct Hero
                     }
                 }
             }
-#endif
 
             pTechnique->preDraw();
         }
 
         void postDraw()
         {
-            size_t texSlot = 0;
-            BOOST_FOREACH(NameTextureTuple& tuple, textures)
+            GLuint texSlot = 0;
+            BOOST_FOREACH(NameTexturePair& pair, textures)
             {
-                tuple.get<2>().unbind(texSlot++);
+                pair.second.unbind(texSlot);
+                texSlot++;
             }
         }
     };
@@ -173,36 +173,19 @@ struct Hero
 
         void preDraw(GLuint index)
         {
+            if (index == -1)
+                return;
+
             vextexBuffer.bind();
+            glEnableVertexAttribArray(index);
             glVertexAttribPointer(index, size, type, normalized, stride, pointer);
         }
 
-        void postDraw()
+        void postDraw(GLuint index)
         {
+            glDisableVertexAttribArray(index);
             vextexBuffer.unbind();
         }
-
-        void preDrawClientSide(const string& semanticName)
-        {
-            vextexBuffer.bind();
-            if (semanticName == "POSITION")
-            {
-                glEnableClientState(GL_VERTEX_ARRAY);
-                glVertexPointer(size, type, stride, pointer);
-            }
-            else
-            if (semanticName == "NORMAL")
-            {
-                glEnableClientState(GL_NORMAL_ARRAY);
-                glNormalPointer(type, stride, pointer);
-            }
-            else
-            if (semanticName == "TEXCOORD_0")
-            {
-                glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-                glTexCoordPointer(size, type, stride, pointer);
-            }
-        }   
     };
 
     struct Node;
@@ -225,32 +208,29 @@ struct Hero
         string      name;
         struct Primitive
         {
-            typedef boost::tuple<string, GLint,  Attribute*> NameAttribTuple;
+            typedef pair<string, Attribute*> NameAttribPair;
 
             Index*      pIndexBuffer;
             Material*   pMaterial;
-            vector<NameAttribTuple> pVertexBuffers;
+            vector<NameAttribPair> pVertexBuffers;
             Skin*       pSkin;
 
             void draw()
             {
                 pMaterial->preDraw();
-                BOOST_FOREACH(NameAttribTuple& tuple, pVertexBuffers)
+                BOOST_FOREACH(NameAttribPair& pair, pVertexBuffers)
                 {
-#ifndef ATTRIB_HACK
-                    GLint loc = tuple.get<1>();
-                    tuple.get<2>()->preDraw(loc);
-#else
-                    tuple.get<2>()->preDrawClientSide(tuple.get<0>());
-#endif
+                    GLint loc = gShader.getProg().getAttribLocation(pair.first);
+                    pair.second->preDraw(loc);
                 }
 
                 pSkin->preDraw();
                 pIndexBuffer->draw();
 
-                BOOST_FOREACH(NameAttribTuple& tuple, pVertexBuffers)
+                BOOST_FOREACH(NameAttribPair& pair, pVertexBuffers)
                 {
-                    tuple.get<2>()->postDraw();
+                    GLint loc = gShader.getProg().getAttribLocation(pair.first);
+                    pair.second->postDraw(loc);
                 }
                 pMaterial->postDraw();
             }
@@ -308,7 +288,6 @@ struct Hero
 
     void preDraw()
     {
-        glEnable(GL_TEXTURE_2D);
     }
 
     void draw()
@@ -322,7 +301,6 @@ struct Hero
 
     void postDraw()
     {
-        glDisable(GL_TEXTURE_2D);
     }
 
     map<string, DataSourceRef>              mBuffers;
@@ -338,8 +316,6 @@ struct Hero
     map<string, Skin>                       mSkins;
     map<string, Node>                       mNodes;
     map<string, Scene>                      mScenes;
-
-    gl::GlslProg                            mShader;
 };
 
 struct CiApp : public AppBasic 
@@ -354,6 +330,9 @@ struct CiApp : public AppBasic
 
     void setup()
     {
+        // TODO: bad design of GlslHotProg
+        gShader = GlslHotProg("dota2-hero.vs", "dota2-hero.fs");
+
         mParams = params::InterfaceGl("params", Vec2i(300, getConfigUIHeight()));
         setupConfigUI(&mParams);
 
@@ -462,7 +441,9 @@ struct CiApp : public AppBasic
 
     void update()
     {
-        if (mCurrentHero != CURRENT_HERO)
+        gShader.update();
+
+        if (gShader.getProg() && mCurrentHero != CURRENT_HERO)
         {
             mCurrentHero = CURRENT_HERO;
             if (loadHero(mHeroNames[mCurrentHero]))
@@ -490,6 +471,18 @@ struct CiApp : public AppBasic
         
         gl::drawCoordinateFrame();
 
+        if (gShader.getProg())
+        {
+            drawHero();
+        }
+
+        mParams.draw();
+    }
+
+private:
+
+    void drawHero()
+    {
         gl::color(Color::white());
         if (HERO_WIREFRAME)
         {
@@ -501,6 +494,7 @@ struct CiApp : public AppBasic
         }
 
         mHero.preDraw();
+        gShader.getProg().bind();
         if (mCurrentNode == 0)
         {
             mHero.draw();
@@ -510,11 +504,9 @@ struct CiApp : public AppBasic
             mHero.mNodes[mNodeNames[mCurrentNode]].draw();
         }
         mHero.postDraw();
-
-        mParams.draw();
+        gShader.getProg().unbind();
     }
 
-private:
     bool loadHero(const std::string& heroName)
     {
         fs::path heroRoot = mHeroesPath / heroName;
@@ -717,13 +709,11 @@ private:
         {
             string paramName = value["parameter"].getValue();
 
-            // HACK
-            GLint loc = 0;
             string texName = value["value"].getValue();
             gl::Texture tex = mHero.mTextures[texName];
             if (tex)
             {
-                material.textures.push_back(boost::make_tuple(paramName, loc++, tex));
+                material.textures.push_back(make_pair(paramName, tex));
                 continue;
             }
 
@@ -742,7 +732,7 @@ private:
                     floatArray.push_back(floatValue);
                 }
             }
-            material.uniforms.push_back(boost::make_tuple(paramName, loc++, floatArray));
+            material.uniforms.push_back(make_pair(paramName, floatArray));
         }
 
         mHero.mMaterials[material.name] = material;
@@ -829,12 +819,9 @@ private:
             prim.pIndexBuffer = &mHero.mIndices[primitive["indices"].getValue()];
             prim.pMaterial = &mHero.mMaterials[primitive["material"].getValue()];
 
-            // HACK
-            GLint hackLoc = 0;
-
             BOOST_FOREACH(const JsonTree& semantic, primitive["semantics"].getChildren())
             {
-                prim.pVertexBuffers.push_back(boost::make_tuple(semantic.getKey(), hackLoc++, &mHero.mAttributes[semantic.getValue()]));
+                prim.pVertexBuffers.push_back(make_pair(semantic.getKey(), &mHero.mAttributes[semantic.getValue()]));
             }
 
             prim.pSkin = &mHero.mSkins[primitive["skin"].getValue()];
