@@ -7,6 +7,7 @@
 
 #include "GlslHotProg.h"
 #include "cinder/app/AppBasic.h"
+#include "cinder/Utilities.h"
 
 using namespace ci;
 using namespace std;
@@ -23,7 +24,17 @@ bool GlslHotProg::loadFile()
 {   
     mLastVertTime   = fs::last_write_time( getAssetPath( mVertPath ) );
     mLastFragTime   = fs::last_write_time( getAssetPath( mFragPath ) );
-    mProg = gl::GlslProg( loadAsset( mVertPath ), loadAsset( mFragPath ) );
+    console() << "Refreshing shaders: " << mVertPath << ", " << mFragPath << endl;
+    try
+    {
+        sleep(500);
+        mProg = gl::GlslProg( loadAsset( mVertPath ), loadAsset( mFragPath ) );
+    }
+    catch (exception& e)
+    {
+        console() << e.what() << endl;
+        return false;
+    }
     
     return true;
 }
@@ -35,8 +46,10 @@ bool GlslHotProg::hasChanged()
 }
 
 bool GlslHotProg::update(){
-    try {
-        if( hasChanged() ){
+    try 
+    {
+        if( hasChanged() )
+        {
             return loadFile();
         }
     }
