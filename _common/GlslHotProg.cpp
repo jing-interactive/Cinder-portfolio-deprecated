@@ -6,7 +6,6 @@
 //
 
 #include "GlslHotProg.h"
-#include "Resources.h"
 #include "cinder/app/AppBasic.h"
 
 using namespace ci;
@@ -22,8 +21,8 @@ GlslHotProg::GlslHotProg( const char* vertPath, const char* fragPath )
 
 bool GlslHotProg::loadFile()
 {   
-    mLastVertTime   = ci::fs::last_write_time( getAssetPath( mVertPath ) );
-    mLastFragTime   = ci::fs::last_write_time( getAssetPath( mFragPath ) );
+    mLastVertTime   = fs::last_write_time( getAssetPath( mVertPath ) );
+    mLastFragTime   = fs::last_write_time( getAssetPath( mFragPath ) );
     mProg = gl::GlslProg( loadAsset( mVertPath ), loadAsset( mFragPath ) );
     
     return true;
@@ -31,7 +30,8 @@ bool GlslHotProg::loadFile()
 
 bool GlslHotProg::hasChanged()
 {
-    return ci::fs::last_write_time( getAssetPath( mVertPath ) ) > mLastVertTime || ci::fs::last_write_time( getAssetPath( mFragPath ) ) > mLastFragTime;
+    return fs::last_write_time( getAssetPath( mVertPath ) ) > mLastVertTime || 
+        fs::last_write_time( getAssetPath( mFragPath ) ) > mLastFragTime;
 }
 
 bool GlslHotProg::update(){

@@ -3,13 +3,11 @@
 //  GlslHotProg
 //
 //  Created by Joel Pryde on 6/14/12.
+//  Refined by vinjn.z
 //
 
 #include "cinder/cinder.h"
-#include "cinder/DataSource.h"
-#include "cinder/Function.h"
 #include "cinder/Filesystem.h"
-#include "cinder/gl/gl.h"
 #include "cinder/gl/GlslProg.h"
 
 class GlslHotProg 
@@ -35,6 +33,3 @@ public:
     //-----------------------------------------------------------------  
     ci::gl::GlslProg& getProg() { return mProg; }
 };
-
-
-        
