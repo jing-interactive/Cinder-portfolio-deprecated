@@ -286,6 +286,30 @@ struct Hero
         }
     };
 
+    struct AnimTrack
+    {
+        struct Entry
+        {
+            Vec3f pos;
+            Vec3f rot;
+        };
+
+        struct KeyFrame
+        {
+            vector<Entry> entries;
+        };
+
+        void draw()
+        {
+            // TODO
+        }
+
+        // mapping??
+
+        typedef pair<float, KeyFrame> frames;
+        string name;
+    };
+
     void preDraw()
     {
     }
@@ -316,6 +340,8 @@ struct Hero
     map<string, Skin>                       mSkins;
     map<string, Node>                       mNodes;
     map<string, Scene>                      mScenes;
+
+    map<string, AnimTrack>                  mAnimTracks;
 };
 
 struct CiApp : public AppBasic 
@@ -347,11 +373,12 @@ struct CiApp : public AppBasic
             }
         }
 
-        mCurrentHero = -1;
         mParams.removeParam("CURRENT_HERO");
         mParams.addParam("CURRENT_HERO", mHeroNames, &CURRENT_HERO);
 
+        mCurrentHero = -1;
         mCurrentNode = -1;
+        mCurrentAnim = -1;
 
         // std::functios
 #define BIND_PAIR(name, handler) do \
@@ -451,12 +478,21 @@ struct CiApp : public AppBasic
                 CURRENT_NODE = 0;
                 mParams.removeParam("CURRENT_NODE");
                 mParams.addParam("CURRENT_NODE", mNodeNames, &CURRENT_NODE);
+
+                CURRENT_ANIM = 0;
+                mParams.removeParam("CURRENT_ANIM");
+                mParams.addParam("CURRENT_ANIM", mAnimNames, &CURRENT_ANIM);
             }
         }
 
         if (mCurrentNode != CURRENT_NODE)
         {
             mCurrentNode = CURRENT_NODE;
+        }
+
+        if (mCurrentAnim != CURRENT_ANIM)
+        {
+            mCurrentAnim = CURRENT_ANIM;
         }
     }
 
@@ -520,6 +556,7 @@ private:
             !fs::exists(mtrlPath))
             return false;
 
+        // hero.json
         JsonTree heroJsonRoot = JsonTree(loadFile(meshPath));
 
         mHero = Hero();
@@ -537,6 +574,19 @@ private:
             }
             console() << endl;
         }
+
+        // animations.json
+        mAnimNames.clear();
+
+        JsonTree animJsonRoot = JsonTree(loadFile(animPath));
+        BOOST_FOREACH(const JsonTree& family, animJsonRoot.getChildren())
+        {
+            BOOST_FOREACH(const JsonTree& smd, family.getChildren())
+            {
+                handleAnimTrack(smd);
+            }
+        }
+
         return true;
     }
 
@@ -936,6 +986,21 @@ private:
         mHero.mScenes[tree.getKey()] = scene;
     }
 
+    // {
+    //     "name": "idle",
+    //     "path": "heroes/doom/smd/idle.smd"
+    // },
+    void handleAnimTrack(const JsonTree& tree)
+    {
+        string key = tree["name"].getValue();
+        mAnimNames.push_back(key);
+
+        Hero::AnimTrack anim;
+        // TODO: fill me...
+
+        mHero.mAnimTracks[key] = anim;
+    }
+
 private:
 
     fs::path getAbsolutePath(const string& relativePath)
@@ -1012,6 +1077,8 @@ private:
     int 		            mCurrentHero;
     vector<string>          mNodeNames;
     int                     mCurrentNode;
+    vector<string>          mAnimNames;
+    int                     mCurrentAnim;
 };
 
 CINDER_APP_BASIC(CiApp, RendererGl)
