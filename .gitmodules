@@ -19,3 +19,6 @@
 [submodule "cinder_0.8.3_vc2008/blocks/ciSharedMemory"]
 	path = cinder_0.8.3_vc2008/blocks/ciSharedMemory
 	url = https://github.com/vinjn/ciSharedMemory.git
+[submodule "cinder_0.8.3_vc2008/blocks/Cinder-OneDollar"]
+	path = cinder_0.8.3_vc2008/blocks/Cinder-OneDollar
+	url = git@github.com:vinjn/Cinder-OneDollar.git
