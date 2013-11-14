@@ -3,16 +3,22 @@
 	<title>hello</title>
 </head>
 <body>
-<script>
-	var os = require('os');
-	var fs = require('fs');
-	var sys = require('sys');
+	<img src="../assets/anim/global_guide/globe_guide.jpg">
+	<script type="text/javascript" src="js/three.js"></script>
+	<script>
+		var os = require('os');
+		var fs = require('fs');
+		var sys = require('sys');
+		var process = require('process');
 
-	fs.readFile('../assets/anim/global_guide/globe_guide.jpg', function(report){
-		document.write("shit" + report);
-	});
-	console.log("ddd");
+		document.write("shit1: " + process.cwd());
 
-</script>	
+		var images = {};
+
+		fs.readFile('../assets/anim/global_guide/globe_guide.jpg', function(err, data){
+			if (err) throw err;
+			// console.log("shit2: " + data);
+		});
+	</script>
 </body>
 </html>
