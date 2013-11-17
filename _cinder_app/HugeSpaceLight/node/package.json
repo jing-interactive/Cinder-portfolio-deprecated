@@ -5,6 +5,7 @@
 	"main": "index.html",
 	"dependencies": {
 	  "process":   "*",
-	  "osc-receiver": "*"
+	  "osc-receiver": "*",
+	  "node-image": "*"
 	}
 }

@@ -19,6 +19,14 @@
 			if (err) throw err;
 			// console.log("shit2: " + data);
 		});
+
+	    var scene = new THREE.Scene();
+    	var WIDTH = window.innerWidth,
+        HEIGHT = window.innerHeight;
+	    renderer = new THREE.WebGLRenderer({antialias:true});
+	    renderer.setSize(WIDTH, HEIGHT);
+	    document.body.appendChild(renderer.domElement);
+
 	</script>
 </body>
 </html>
