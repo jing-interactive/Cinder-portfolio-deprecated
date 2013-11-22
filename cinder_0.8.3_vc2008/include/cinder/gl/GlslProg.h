@@ -84,7 +84,8 @@ class GlslProg {
 		~Obj();
 		
 		GLuint						mHandle;
-		std::map<std::string,int>	mUniformLocs;
+        std::map<std::string,int>	mUniformLocs;
+        std::map<std::string,int>	mAttribLocs;
 	};
  
 	std::shared_ptr<Obj>	mObj;

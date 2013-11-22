@@ -11,10 +11,15 @@
 #include "cinder/params/Params.h"
 
 #include "cinder/Utilities.h"
+#include "cinder/Thread.h"
+
 #include "cinder/osc/OscListener.h"
 #include "../../../_common/MiniConfig.h"
 #include <fstream>
 #include <boost/foreach.hpp>
+
+#define ASIO_DISABLE_BOOST_REGEX 0
+#include "../../../_common/asio/asio.hpp"
 
 using namespace ci;
 using namespace ci::app;
@@ -321,6 +326,8 @@ struct CiApp : public AppBasic
 
     void update()
     {
+        mIoService.poll();
+
         const Vec3f axises[] = 
         {
             Vec3f::xAxis(),
@@ -352,11 +359,6 @@ struct CiApp : public AppBasic
         float kH = suf.getHeight() / 124.0f;
         BOOST_FOREACH(Led& led, mLeds)
         {
-#if 0
-            float cx = (led.pos.z/* - aabbMin.z*/) / aabbSize.z;
-            float cy = (led.pos.x/* - aabbMin.x*/) / aabbSize.x;
-            uint8_t value = *suf.getData(Vec2i(width * cx/* + 0.5f*/, height * cy/* + 0.5f*/));
-#else
             // online solver
             // http://www.bluebit.gr/matrix-calculator/linear_equations.aspx
 
@@ -368,7 +370,6 @@ struct CiApp : public AppBasic
             //4070 1  122
             float cy = 0.031372549019608f * led.pos.x / REAL_TO_VIRTUAL - 5.686274509803920f;
             uint8_t value = *suf.getData(Vec2i(kW * cx, kH * cy));
-#endif
             led.value = value / 255.f;
         }
 
@@ -463,19 +464,29 @@ struct CiApp : public AppBasic
         mParams.draw();
     }
 
+    void safeLoadImage(fs::path imagePath, Anim& aAnim)
+    {
+        Channel suf = loadImage(imagePath);
+        if (suf)
+        {
+            // TODO: orderd sequence
+            aAnim.frames.push_back(suf);
+        }
+        console() << imagePath << endl;
+    }
+
     bool loadAnimFromDir(fs::path dir, Anim& aAnim) 
     {
         aAnim.name = dir.filename().string();
-        for (fs::directory_iterator dir_iter(dir); dir_iter != end_iter; ++dir_iter)
+        for (fs::directory_iterator it(dir); it != end_iter; ++it)
         {
-            if (!fs::is_regular_file(*dir_iter))
+            if (!fs::is_regular_file(*it))
                 continue;
-            Channel suf = loadImage(*dir_iter);
-            if (suf)
-            {
-                aAnim.frames.push_back(suf);
-            }
+
+            mIoService.dispatch(bind(&CiApp::safeLoadImage, this, *it, aAnim));
         }
+
+        mIoService.run();
 
         if (aAnim.frames.empty())
         {
@@ -505,6 +516,8 @@ private:
     float           mPrevSec;
 
     gl::VboMesh     mVboWall;
+
+    asio::io_service mIoService;
 };
 
 CINDER_APP_BASIC(CiApp, RendererGl)

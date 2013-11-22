@@ -6,6 +6,8 @@
 #include "cinder/Utilities.h"
 #include "cinder/Arcball.h"
 
+#include "cinder/ip/Flip.h"
+
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
 #include "cinder/gl/Fbo.h"
@@ -14,6 +16,7 @@
 #include "cinder/params/Params.h"
 
 #include "../../../_common/MiniConfig.h"
+#include "../../../_common/GlslHotProg.h"
 
 #include <boost/foreach.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -22,13 +25,18 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-#define ATTRIB_HACK
+const string kAllNodeName = "ALL";
 
 typedef function<void(const JsonTree&)> JsonHandler;
 typedef pair<string, JsonHandler> NameHandlerPair;
-typedef boost::tuple<string, GLint, gl::Texture> NameTextureTuple;
-typedef boost::tuple<string, GLint, vector<float>> UniformValueTuple;
+typedef pair<string, gl::Texture> NameTexturePair;
+typedef pair<string, vector<float>> NameValuePair;
 typedef map<string, GLenum> NameEnumMap;
+
+namespace
+{
+    GlslHotProg    gShader;
+}
 
 struct Hero
 {
@@ -71,23 +79,26 @@ struct Hero
         const Technique* pTechnique;
 
         // vector of Texture ref
-        vector<NameTextureTuple> textures;
-        vector<UniformValueTuple> uniforms;
+        vector<NameTexturePair> textures;
+        vector<NameValuePair> uniforms;
 
         void preDraw()
         {
-            size_t texSlot = 0;
-            BOOST_FOREACH(NameTextureTuple& tuple, textures)
+            GLuint texSlot = 0;
+            BOOST_FOREACH(NameTexturePair& pair, textures)
             {
-                tuple.get<2>().bind(texSlot);
-                glUniform1i(tuple.get<1>(), texSlot);
+                pair.second.bind(texSlot);
+                GLint loc = gShader.getProg().getUniformLocation(pair.first);
+                glUniform1i(loc, texSlot);
                 texSlot++;
             }
 
-            BOOST_FOREACH(UniformValueTuple& tuple, uniforms)
+            BOOST_FOREACH(NameValuePair& pair, uniforms)
             {
-                const vector<float>& values = tuple.get<2>();
-                GLint loc = tuple.get<1>();
+                const vector<float>& values = pair.second;
+                GLint loc = gShader.getProg().getUniformLocation(pair.first);
+                if (loc == -1)
+                    continue;
 
                 // TODO: support int / ushort values
                 switch (values.size())
@@ -116,11 +127,15 @@ struct Hero
             }
 
             pTechnique->preDraw();
+        }
 
-            texSlot = 0;
-            BOOST_FOREACH(NameTextureTuple& tuple, textures)
+        void postDraw()
+        {
+            GLuint texSlot = 0;
+            BOOST_FOREACH(NameTexturePair& pair, textures)
             {
-                tuple.get<2>().unbind(texSlot++);
+                pair.second.unbind(texSlot);
+                texSlot++;
             }
         }
     };
@@ -158,36 +173,19 @@ struct Hero
 
         void preDraw(GLuint index)
         {
+            if (index == -1)
+                return;
+
             vextexBuffer.bind();
+            glEnableVertexAttribArray(index);
             glVertexAttribPointer(index, size, type, normalized, stride, pointer);
         }
 
-        void postDraw()
+        void postDraw(GLuint index)
         {
+            glDisableVertexAttribArray(index);
             vextexBuffer.unbind();
         }
-
-        void preDrawClientSide(const string& semanticName)
-        {
-            vextexBuffer.bind();
-            if (semanticName == "POSITION")
-            {
-                glEnableClientState(GL_VERTEX_ARRAY);
-                glVertexPointer(size, type, stride, pointer);
-            }
-            else
-            if (semanticName == "NORMAL")
-            {
-                glEnableClientState(GL_NORMAL_ARRAY);
-                glNormalPointer(type, stride, pointer);
-            }
-            else
-            if (semanticName == "TEXCOORD_0")
-            {
-                glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-                glTexCoordPointer(size, type, stride, pointer);
-            }
-        }   
     };
 
     struct Node;
@@ -210,33 +208,31 @@ struct Hero
         string      name;
         struct Primitive
         {
-            typedef boost::tuple<string, GLint,  Attribute*> NameAttribTuple;
+            typedef pair<string, Attribute*> NameAttribPair;
 
             Index*      pIndexBuffer;
             Material*   pMaterial;
-            vector<NameAttribTuple> pVertexBuffers;
+            vector<NameAttribPair> pVertexBuffers;
             Skin*       pSkin;
 
             void draw()
             {
                 pMaterial->preDraw();
-                BOOST_FOREACH(NameAttribTuple& tuple, pVertexBuffers)
+                BOOST_FOREACH(NameAttribPair& pair, pVertexBuffers)
                 {
-#ifndef ATTRIB_HACK
-                    GLint loc = tuple.get<1>();
-                    tuple.get<2>()->preDraw(loc);
-#else
-                    tuple.get<2>()->preDrawClientSide(tuple.get<0>());
-#endif
+                    GLint loc = gShader.getProg().getAttribLocation(pair.first);
+                    pair.second->preDraw(loc);
                 }
 
                 pSkin->preDraw();
                 pIndexBuffer->draw();
 
-                BOOST_FOREACH(NameAttribTuple& tuple, pVertexBuffers)
+                BOOST_FOREACH(NameAttribPair& pair, pVertexBuffers)
                 {
-                    tuple.get<2>()->postDraw();
+                    GLint loc = gShader.getProg().getAttribLocation(pair.first);
+                    pair.second->postDraw(loc);
                 }
+                pMaterial->postDraw();
             }
         };
         vector<Primitive> primitives;
@@ -253,7 +249,7 @@ struct Hero
     struct Node
     {
         vector<Node*> pChildren;
-        float   matrix[16];         // It is directly usable by uniformMatrix4fv with transpose equal to false
+        Matrix44f matrix;
         string  name;
         vector<Mesh*> pMeshes;
 
@@ -268,7 +264,7 @@ struct Hero
                 return;
 
             gl::pushModelView();
-            glLoadMatrixf(matrix);
+            glLoadMatrixf(matrix.m);
             BOOST_FOREACH(Node* pChild, pChildren)
             {
                 pChild->draw();
@@ -290,6 +286,34 @@ struct Hero
         }
     };
 
+    struct AnimTrack
+    {
+        struct Entry
+        {
+            Vec3f pos;
+            Vec3f rot;
+        };
+
+        struct KeyFrame
+        {
+            vector<Entry> entries;
+        };
+
+        void draw()
+        {
+            // TODO
+        }
+
+        // mapping??
+
+        typedef pair<float, KeyFrame> frames;
+        string name;
+    };
+
+    void preDraw()
+    {
+    }
+
     void draw()
     {
         typedef map<string, Scene> map_type;
@@ -297,6 +321,10 @@ struct Hero
         {
             pair.second.draw();
         }
+    }
+
+    void postDraw()
+    {
     }
 
     map<string, DataSourceRef>              mBuffers;
@@ -313,7 +341,7 @@ struct Hero
     map<string, Node>                       mNodes;
     map<string, Scene>                      mScenes;
 
-    gl::GlslProg                            mShader;
+    map<string, AnimTrack>                  mAnimTracks;
 };
 
 struct CiApp : public AppBasic 
@@ -328,6 +356,9 @@ struct CiApp : public AppBasic
 
     void setup()
     {
+        // TODO: bad design of GlslHotProg
+        gShader = GlslHotProg("dota2-hero.vs", "dota2-hero.fs");
+
         mParams = params::InterfaceGl("params", Vec2i(300, getConfigUIHeight()));
         setupConfigUI(&mParams);
 
@@ -342,11 +373,12 @@ struct CiApp : public AppBasic
             }
         }
 
-        mCurrentHero = -1;
         mParams.removeParam("CURRENT_HERO");
         mParams.addParam("CURRENT_HERO", mHeroNames, &CURRENT_HERO);
 
+        mCurrentHero = -1;
         mCurrentNode = -1;
+        mCurrentAnim = -1;
 
         // std::functios
 #define BIND_PAIR(name, handler) do \
@@ -409,14 +441,21 @@ struct CiApp : public AppBasic
         mArcball.setRadius(150);
     }
 
+    Vec2i getMousePos(MouseEvent event)
+    {
+        Vec2i pos = event.getPos();
+        pos.y = getWindowHeight() - pos.y;
+        return pos;
+    }
+
     void mouseDown(MouseEvent event)
     {
-        mArcball.mouseDown(event.getPos());
+        mArcball.mouseDown(getMousePos(event));
     }
 
     void mouseDrag(MouseEvent event)
     {	
-        mArcball.mouseDrag(event.getPos());
+        mArcball.mouseDrag(getMousePos(event));
     }
 
     void keyUp(KeyEvent event)
@@ -429,7 +468,9 @@ struct CiApp : public AppBasic
 
     void update()
     {
-        if (mCurrentHero != CURRENT_HERO)
+        gShader.update();
+
+        if (gShader.getProg() && mCurrentHero != CURRENT_HERO)
         {
             mCurrentHero = CURRENT_HERO;
             if (loadHero(mHeroNames[mCurrentHero]))
@@ -437,6 +478,10 @@ struct CiApp : public AppBasic
                 CURRENT_NODE = 0;
                 mParams.removeParam("CURRENT_NODE");
                 mParams.addParam("CURRENT_NODE", mNodeNames, &CURRENT_NODE);
+
+                CURRENT_ANIM = 0;
+                mParams.removeParam("CURRENT_ANIM");
+                mParams.addParam("CURRENT_ANIM", mAnimNames, &CURRENT_ANIM);
             }
         }
 
@@ -444,30 +489,37 @@ struct CiApp : public AppBasic
         {
             mCurrentNode = CURRENT_NODE;
         }
+
+        if (mCurrentAnim != CURRENT_ANIM)
+        {
+            mCurrentAnim = CURRENT_ANIM;
+        }
     }
 
     void draw()
     {
         gl::clear(ColorA::black());
-        gl::setMatricesWindowPersp(getWindowSize(), 60.0f, 0.1f);
+        CameraPersp cam( getWindowWidth(), getWindowHeight(), 60);
+        cam.lookAt(Vec3f(0, CAM_Y, CAM_Z), Vec3f(0, CAM_Y, 0));
+        gl::setModelView(cam);
 
-        gl::translate(getWindowWidth() * 0.5f, getWindowHeight() * 0.5f, 0);
         gl::rotate(mArcball.getQuat());
-        gl::scale(HERO_SCALE, HERO_SCALE, HERO_SCALE);
-
+        
         gl::drawCoordinateFrame();
 
-        if (!HERO_WIREFRAME)
+        if (gShader.getProg())
         {
-            gl::enableWireframe();
+            drawHero();
         }
-        else
-        {
-            gl::disableWireframe();
-        }
-        glEnable(GL_TEXTURE);
-        mHero.draw();
 
+        mParams.draw();
+    }
+
+private:
+
+    void drawHero()
+    {
+        gl::color(Color::white());
         if (HERO_WIREFRAME)
         {
             gl::enableWireframe();
@@ -476,12 +528,21 @@ struct CiApp : public AppBasic
         {
             gl::disableWireframe();
         }
-        mHero.mNodes[mNodeNames[mCurrentNode]].draw();
 
-        mParams.draw();
+        mHero.preDraw();
+        gShader.getProg().bind();
+        if (mCurrentNode == 0)
+        {
+            mHero.draw();
+        }
+        else
+        {
+            mHero.mNodes[mNodeNames[mCurrentNode]].draw();
+        }
+        mHero.postDraw();
+        gShader.getProg().unbind();
     }
 
-private:
     bool loadHero(const std::string& heroName)
     {
         fs::path heroRoot = mHeroesPath / heroName;
@@ -495,6 +556,7 @@ private:
             !fs::exists(mtrlPath))
             return false;
 
+        // hero.json
         JsonTree heroJsonRoot = JsonTree(loadFile(meshPath));
 
         mHero = Hero();
@@ -512,6 +574,19 @@ private:
             }
             console() << endl;
         }
+
+        // animations.json
+        mAnimNames.clear();
+
+        JsonTree animJsonRoot = JsonTree(loadFile(animPath));
+        BOOST_FOREACH(const JsonTree& family, animJsonRoot.getChildren())
+        {
+            BOOST_FOREACH(const JsonTree& smd, family.getChildren())
+            {
+                handleAnimTrack(smd);
+            }
+        }
+
         return true;
     }
 
@@ -613,7 +688,8 @@ private:
         format.setTarget(getGlEnum(tree, "target"));
         format.setInternalFormat(getGlEnum(tree, "internalFormat"));
 
-        mHero.mTextures[tree.getKey()] = gl::Texture(image, format);
+        gl::Texture tex = gl::Texture(image, format);
+        mHero.mTextures[tree.getKey()] = tex;
     }
 
     //"technique_0": {
@@ -683,13 +759,11 @@ private:
         {
             string paramName = value["parameter"].getValue();
 
-            // HACK
-            GLint loc = 0;
             string texName = value["value"].getValue();
             gl::Texture tex = mHero.mTextures[texName];
             if (tex)
             {
-                material.textures.push_back(boost::make_tuple(paramName, loc++, tex));
+                material.textures.push_back(make_pair(paramName, tex));
                 continue;
             }
 
@@ -708,7 +782,7 @@ private:
                     floatArray.push_back(floatValue);
                 }
             }
-            material.uniforms.push_back(boost::make_tuple(paramName, loc++, floatArray));
+            material.uniforms.push_back(make_pair(paramName, floatArray));
         }
 
         mHero.mMaterials[material.name] = material;
@@ -795,12 +869,9 @@ private:
             prim.pIndexBuffer = &mHero.mIndices[primitive["indices"].getValue()];
             prim.pMaterial = &mHero.mMaterials[primitive["material"].getValue()];
 
-            // HACK
-            GLint hackLoc = 0;
-
             BOOST_FOREACH(const JsonTree& semantic, primitive["semantics"].getChildren())
             {
-                prim.pVertexBuffers.push_back(boost::make_tuple(semantic.getKey(), hackLoc++, &mHero.mAttributes[semantic.getValue()]));
+                prim.pVertexBuffers.push_back(make_pair(semantic.getKey(), &mHero.mAttributes[semantic.getValue()]));
             }
 
             prim.pSkin = &mHero.mSkins[primitive["skin"].getValue()];
@@ -876,7 +947,7 @@ private:
         size_t i = 0;
         BOOST_FOREACH(const JsonTree& number, tree["matrix"].getChildren())
         {
-            node.matrix[i] = number.getValue<float>();
+            node.matrix.m[i] = number.getValue<float>();
             i++;
         }
 
@@ -905,6 +976,7 @@ private:
     {
         Hero::Scene scene;
 
+        mNodeNames.push_back(kAllNodeName);
         BOOST_FOREACH(const JsonTree& node, tree["nodes"].getChildren())
         {
             scene.pNodes.push_back(&mHero.mNodes[node.getValue()]);
@@ -912,6 +984,21 @@ private:
         }
 
         mHero.mScenes[tree.getKey()] = scene;
+    }
+
+    // {
+    //     "name": "idle",
+    //     "path": "heroes/doom/smd/idle.smd"
+    // },
+    void handleAnimTrack(const JsonTree& tree)
+    {
+        string key = tree["name"].getValue();
+        mAnimNames.push_back(key);
+
+        Hero::AnimTrack anim;
+        // TODO: fill me...
+
+        mHero.mAnimTracks[key] = anim;
     }
 
 private:
@@ -962,7 +1049,10 @@ private:
     {
         Surface surf = loadImage(path);
         if (surf)
+        {
+            ip::flipVertical(&surf); // flip vertically
             return surf;
+        }
 
         TextLayout layout;
 
@@ -987,6 +1077,8 @@ private:
     int 		            mCurrentHero;
     vector<string>          mNodeNames;
     int                     mCurrentNode;
+    vector<string>          mAnimNames;
+    int                     mCurrentAnim;
 };
 
 CINDER_APP_BASIC(CiApp, RendererGl)

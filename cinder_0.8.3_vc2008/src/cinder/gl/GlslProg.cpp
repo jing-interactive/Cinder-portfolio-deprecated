@@ -247,7 +247,18 @@ GLint GlslProg::getUniformLocation( const std::string &name )
 
 GLint GlslProg::getAttribLocation( const std::string &name )
 {
+#if 1
+    map<string,int>::const_iterator it = mObj->mAttribLocs.find( name );
+    if( it == mObj->mAttribLocs.end() ) {
+        GLint loc = glGetAttribLocation( mObj->mHandle, name.c_str() );
+        mObj->mAttribLocs[name] = loc;
+        return loc;
+    }
+    else
+        return it->second;
+#else
 	return glGetAttribLocation( mObj->mHandle, name.c_str() );
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////
