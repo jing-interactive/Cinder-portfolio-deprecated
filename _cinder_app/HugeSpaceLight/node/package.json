@@ -6,6 +6,6 @@
 	"dependencies": {
 	  "process":   "*",
 	  "osc-receiver": "*",
-	  "node-image": "*"
+	  "get-image-data": "*"
 	}
 }
