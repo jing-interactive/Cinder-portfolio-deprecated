@@ -26,6 +26,7 @@ using namespace ci::app;
 using namespace std;
 
 const string kAllNodeName = "ALL";
+const fs::directory_iterator kEndIt;
 
 typedef function<void(const JsonTree&)> JsonHandler;
 typedef pair<string, JsonHandler> NameHandlerPair;
@@ -288,25 +289,40 @@ struct Hero
 
     struct AnimTrack
     {
-        struct Entry
+        struct Transform
         {
             Vec3f pos;
             Vec3f rot;
         };
 
-        struct KeyFrame
+        AnimTrack()
         {
-            vector<Entry> entries;
-        };
-
-        void draw()
-        {
-            // TODO
+            animTime = 0;
         }
 
-        // mapping??
+        vector<int> parentIds; // parentIdOfJoint = parentIds[jointId]
+        vector<string> jointNames;
 
-        typedef pair<float, KeyFrame> frames;
+        typedef pair<float, vector<Transform>> SkeletonFrame;
+        vector<SkeletonFrame> skeletonFrames;
+
+        void update(float deltaTime, vector<SkeletonFrame>* finalFrame)
+        {
+            animTime += deltaTime;
+            size_t animIndex = 0;
+//             for (; animIndex<skeletonFrames.size(); animIndex++)
+//             {
+//                 if (animTime < skeletonFrames[i].first)
+//             }
+//             
+//             size_t idx = static_cast<size_t>(animTime);
+//             if (idx >= skeletonFrames.size())
+//             {
+//                 idx = 0;
+//             }
+        }
+
+        float animTime;
         string name;
     };
 
@@ -363,13 +379,12 @@ struct CiApp : public AppBasic
         setupConfigUI(&mParams);
 
         // parse dota2hero-gh-pages/heroes
-        mHeroesPath = fs::path(HEROES_PATH);
-        fs::directory_iterator end_iter;
-        for (fs::directory_iterator dir_iter(mHeroesPath); dir_iter != end_iter; ++dir_iter)
+        mHeroesFolder = fs::path(HEROES_PATH);
+        for (fs::directory_iterator it(mHeroesFolder); it != kEndIt; ++it)
         {
-            if (fs::is_directory(*dir_iter))
+            if (fs::is_directory(*it))
             {
-                mHeroNames.push_back((*dir_iter).path().filename().string());
+                mHeroNames.push_back((*it).path().filename().string());
             }
         }
 
@@ -377,8 +392,6 @@ struct CiApp : public AppBasic
         mParams.addParam("CURRENT_HERO", mHeroNames, &CURRENT_HERO);
 
         mCurrentHero = -1;
-        mCurrentNode = -1;
-        mCurrentAnim = -1;
 
         // std::functios
 #define BIND_PAIR(name, handler) do \
@@ -475,10 +488,12 @@ struct CiApp : public AppBasic
             mCurrentHero = CURRENT_HERO;
             if (loadHero(mHeroNames[mCurrentHero]))
             {
+                mCurrentNode = -1;
                 CURRENT_NODE = 0;
                 mParams.removeParam("CURRENT_NODE");
                 mParams.addParam("CURRENT_NODE", mNodeNames, &CURRENT_NODE);
 
+                mCurrentAnim = -1;
                 CURRENT_ANIM = 0;
                 mParams.removeParam("CURRENT_ANIM");
                 mParams.addParam("CURRENT_ANIM", mAnimNames, &CURRENT_ANIM);
@@ -493,6 +508,7 @@ struct CiApp : public AppBasic
         if (mCurrentAnim != CURRENT_ANIM)
         {
             mCurrentAnim = CURRENT_ANIM;
+            loadAnimTrack(mAnimNames[mCurrentAnim]);
         }
     }
 
@@ -545,16 +561,20 @@ private:
 
     bool loadHero(const std::string& heroName)
     {
-        fs::path heroRoot = mHeroesPath / heroName;
+        fs::path heroRoot = mHeroesFolder / heroName;
 
         fs::path meshPath = heroRoot / (heroName+".json");
-        fs::path animPath = heroRoot / "animations.json";
         fs::path mtrlPath = heroRoot / "materials.json";
+        fs::path smdFolder = heroRoot / "smd";
 
         if (!fs::exists(meshPath) ||
-            !fs::exists(animPath) ||
-            !fs::exists(mtrlPath))
+            !fs::exists(mtrlPath) ||
+            !fs::exists(smdFolder)
+            )
+        {
+            console() << "Folder incomplete." << endl;
             return false;
+        }
 
         // hero.json
         JsonTree heroJsonRoot = JsonTree(loadFile(meshPath));
@@ -578,13 +598,9 @@ private:
         // animations.json
         mAnimNames.clear();
 
-        JsonTree animJsonRoot = JsonTree(loadFile(animPath));
-        BOOST_FOREACH(const JsonTree& family, animJsonRoot.getChildren())
+        for (fs::directory_iterator it(smdFolder); it != kEndIt; ++it)
         {
-            BOOST_FOREACH(const JsonTree& smd, family.getChildren())
-            {
-                handleAnimTrack(smd);
-            }
+           mAnimNames.push_back((*it).path().filename().string());
         }
 
         return true;
@@ -986,26 +1002,72 @@ private:
         mHero.mScenes[tree.getKey()] = scene;
     }
 
-    // {
-    //     "name": "idle",
-    //     "path": "heroes/doom/smd/idle.smd"
-    // },
-    void handleAnimTrack(const JsonTree& tree)
+    void loadAnimTrack(const string& name)
     {
-        string key = tree["name"].getValue();
-        mAnimNames.push_back(key);
+        if (mHero.mAnimTracks.find(name) != mHero.mAnimTracks.end())
+        {
+            return;
+        }
 
         Hero::AnimTrack anim;
-        // TODO: fill me...
+        anim.name = name;
 
-        mHero.mAnimTracks[key] = anim;
+        stringstream ss;
+        ss << mHeroesFolder.generic_string() << "/" << mHeroNames[mCurrentHero] << "/smd/" << name;
+        ifstream ifs(ss.str().c_str());
+
+        string line;
+
+        getline(ifs, line); // version 1
+        getline(ifs, line); // nodes
+        getline(ifs, line); // 0 "root" -1
+        while (line != "end")
+        {
+            int id, parentId;
+            string jointName; 
+            stringstream(line) >> id >> jointName >> parentId;
+            anim.parentIds.push_back(parentId);
+            anim.jointNames.push_back(jointName);
+
+            getline(ifs, line);
+        }
+
+        getline(ifs, line); // skeleton
+        getline(ifs, line); // time 0
+        Hero::AnimTrack::SkeletonFrame skelFrame;
+        string dummy;
+        while (line != "end")
+        {
+            if (line.find("time") != string::npos)
+            {
+                if (!skelFrame.second.empty())
+                {
+                    anim.skeletonFrames.push_back(skelFrame);
+                }
+                skelFrame = Hero::AnimTrack::SkeletonFrame();
+                stringstream(line) >> dummy >> skelFrame.first;
+            }
+            else
+            {
+                Hero::AnimTrack::Transform xform;
+                stringstream(line) >> dummy >> xform.pos.x >> xform.pos.y >> xform.pos.z
+                                    >> xform.rot.x >> xform.rot.y >> xform.rot.z;
+                skelFrame.second.push_back(xform);
+            }
+
+            getline(ifs, line);
+        }
+
+        anim.skeletonFrames.push_back(skelFrame);
+
+        mHero.mAnimTracks[name] = anim;
     }
 
 private:
 
-    fs::path getAbsolutePath(const string& relativePath)
+    fs::path getAbsolutePath(const string& relativePath) const
     {
-        return mHeroesPath / mHeroNames[mCurrentHero] / relativePath;
+        return mHeroesFolder / mHeroNames[mCurrentHero] / relativePath;
     }
 
     GLenum getGlEnum(const JsonTree& tree, const string& childKeyName)
@@ -1023,8 +1085,6 @@ private:
         }
 
         console() << "Unsupported enum: " << name << endl;
-        // report each unregistered enum for once
-        mGlNameMap.insert(make_pair(name, GL_NONE));
         return GL_NONE;
     }
 
@@ -1045,7 +1105,7 @@ private:
         return 1;
     }
 
-    Surface loadImageSafe(const fs::path& path)
+    static Surface loadImageSafe(const fs::path& path)
     {
         Surface surf = loadImage(path);
         if (surf)
@@ -1063,7 +1123,7 @@ private:
     }
 
 private:
-    fs::path                mHeroesPath;
+    fs::path                mHeroesFolder;
     params::InterfaceGl     mParams;
     vector<NameHandlerPair> mCategories;
     NameEnumMap             mGlNameMap;
