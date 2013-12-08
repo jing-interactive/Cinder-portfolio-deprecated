@@ -49,7 +49,7 @@ class JsonTree {
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  private:
+  public:
 	
 	//! \cond
 	typedef enum 
@@ -243,6 +243,12 @@ class JsonTree {
 
 	//! Returns the value of the node.
 	const std::string&				getValue() const { return mValue; }
+
+    //! Get type of Node
+    NodeType                        getNodeType() const {return mNodeType;}
+
+    //! Get type of Value
+    ValueType                       getValueType() const {return mValueType;}
 
 private:
 
