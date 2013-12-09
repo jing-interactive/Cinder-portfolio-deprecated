@@ -1,7 +1,7 @@
 // https://github.com/num3ric/Cinder-Skinning/blob/master/resources/skinning_vert_normals.glsl
 const int MAXBONES = 128;
 
-uniform vec4 uBoneMatrices[MAXBONES];
+uniform mat4 uBoneMatrices[MAXBONES];
 
 attribute vec3 POSITION;
 attribute vec3 NORMAL;
