@@ -265,7 +265,7 @@ struct Hero
                 return;
 
             gl::pushModelView();
-            glLoadMatrixf(matrix.m);
+            glMultMatrixf(matrix.m);
             BOOST_FOREACH(Node* pChild, pChildren)
             {
                 pChild->draw();
@@ -289,40 +289,68 @@ struct Hero
 
     struct AnimTrack
     {
-        struct Transform
+        struct JointFrame
         {
             Vec3f pos;
             Vec3f rot;
+            Matrix44f mat;
         };
 
-        AnimTrack()
+        void interpolate(float timePos, vector<Matrix44f>& finalTransforms)
         {
-            animTime = 0;
+            size_t index = 0; // TODO
+            const vector<JointFrame>& frames = skeletonFrames[index].second;
+
+            for (size_t i=0; i<boneOffsets.size(); i++)
+            {
+                finalTransforms[i] = frames[i].mat;
+            }
         }
 
         vector<int> parentIds; // parentIdOfJoint = parentIds[jointId]
         vector<string> jointNames;
+        vector<Matrix44f> boneOffsets;
 
-        typedef pair<float, vector<Transform>> SkeletonFrame;
+        typedef pair<float, vector<JointFrame>> SkeletonFrame;
         vector<SkeletonFrame> skeletonFrames;
 
-        void update(float deltaTime, vector<SkeletonFrame>* finalFrame)
+        void update(float timePos, vector<Matrix44f>& finalTransforms)
         {
-            animTime += deltaTime;
             size_t animIndex = 0;
-//             for (; animIndex<skeletonFrames.size(); animIndex++)
-//             {
-//                 if (animTime < skeletonFrames[i].first)
-//             }
-//             
-//             size_t idx = static_cast<size_t>(animTime);
-//             if (idx >= skeletonFrames.size())
-//             {
-//                 idx = 0;
-//             }
+            finalTransforms.resize(jointNames.size());
+
+            size_t numBones = boneOffsets.size();
+
+            vector<Matrix44f> toParentTransforms(numBones);
+
+            // Interpolate all the bones of this clip at the given time instance.
+            // auto clip = mAnimations.find(clipName);
+            interpolate(timePos, toParentTransforms);
+
+            //
+            // Traverse the hierarchy and transform all the bones to the root space.
+            //
+
+            vector<Matrix44f> toRootTransforms(numBones);
+
+            // The root bone has index 0.  The root bone has no parent, so its toRootTransform
+            // is just its local bone transform.
+            toRootTransforms[0] = toParentTransforms[0];
+
+            // Now find the toRootTransform of the children.
+            for (size_t i = 1; i < numBones; ++i)
+            {
+                int parentId = parentIds[i];
+                toRootTransforms[i] = toParentTransforms[i] * toRootTransforms[parentId];
+            }
+
+            // Premultiply by the bone offset transform to get the final transform.
+            for (size_t i = 0; i < numBones; ++i)
+            {
+                finalTransforms[i] = boneOffsets[i] * toRootTransforms[i];
+            }
         }
 
-        float animTime;
         string name;
     };
 
@@ -332,8 +360,8 @@ struct Hero
 
     void draw()
     {
-        typedef map<string, Scene> map_type;
-        BOOST_FOREACH(map_type::value_type& pair, mScenes)
+        typedef map<string, Scene> MapT;
+        BOOST_FOREACH(MapT::value_type& pair, mScenes)
         {
             pair.second.draw();
         }
@@ -345,7 +373,7 @@ struct Hero
 
     map<string, DataSourceRef>              mBuffers;
     map<string, gl::Vbo>                    mBufferViews;
-    map<string, gl::Texture::Format>        mSamplers;
+    map<string, gl::Texture::Format>        mSamplers; // TODO: sampler object
     map<string, Surface>                    mImages;
     map<string, gl::Texture>                mTextures;
     map<string, Technique>                  mTechniques;
@@ -393,7 +421,7 @@ struct CiApp : public AppBasic
 
         mCurrentHero = -1;
 
-        // std::functios
+        // functios
 #define BIND_PAIR(name, handler) do \
         {\
         JsonHandler childF = bind(&CiApp::handler, this, _1);\
@@ -547,6 +575,11 @@ private:
 
         mHero.preDraw();
         gShader.getProg().bind();
+
+        vector<Matrix44f> finalTransforms; // MAXBONES = 128?
+        mHero.mAnimTracks[mAnimNames[mCurrentAnim]].update(0, finalTransforms);
+        gShader.getProg().uniform("uBoneMatrices", &finalTransforms[0], finalTransforms.size());
+
         if (mCurrentNode == 0)
         {
             mHero.draw();
@@ -559,7 +592,7 @@ private:
         gShader.getProg().unbind();
     }
 
-    bool loadHero(const std::string& heroName)
+    bool loadHero(const string& heroName)
     {
         fs::path heroRoot = mHeroesFolder / heroName;
 
@@ -1032,6 +1065,8 @@ private:
             getline(ifs, line);
         }
 
+        anim.boneOffsets.resize(anim.parentIds.size()); // TODO: fill me
+
         getline(ifs, line); // skeleton
         getline(ifs, line); // time 0
         Hero::AnimTrack::SkeletonFrame skelFrame;
@@ -1049,10 +1084,11 @@ private:
             }
             else
             {
-                Hero::AnimTrack::Transform xform;
-                stringstream(line) >> dummy >> xform.pos.x >> xform.pos.y >> xform.pos.z
-                                    >> xform.rot.x >> xform.rot.y >> xform.rot.z;
-                skelFrame.second.push_back(xform);
+                Hero::AnimTrack::JointFrame frame;
+                stringstream(line) >> dummy >> frame.pos.x >> frame.pos.y >> frame.pos.z
+                                    >> frame.rot.x >> frame.rot.y >> frame.rot.z;
+                frame.mat = Matrix44f::createTranslation(frame.pos) * Matrix44f::createRotation(frame.rot);
+                skelFrame.second.push_back(frame);
             }
 
             getline(ifs, line);
