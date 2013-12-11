@@ -28,8 +28,9 @@ using namespace std;
 const float kCamFov = 60.0f;
 const int kOscPort = 3333;
 const float kLedOffset = 225.0f;
+const int kThreadCount = 10;
 
-fs::directory_iterator end_iter;
+fs::directory_iterator kEndIt;
 
 size_t gIdCount = 0;
 struct Led
@@ -92,6 +93,10 @@ private:
 
 struct CiApp : public AppBasic 
 {
+    CiApp(): mWork(mIoService)
+    {
+    }
+
     void prepareSettings(Settings *settings)
     {
         readConfig();
@@ -106,12 +111,17 @@ struct CiApp : public AppBasic
 
         mCurrentCamDistance = -1;
 
+        for (int i = 0; i < kThreadCount; ++i)
+        {
+            mThreads.create_thread(bind(&asio::io_service::run, &mIoService));
+        }
+
         // MiniConfig.xml
         setupConfigUI(&mParams);
 
         // parse "/assets/anim"
         fs::path root = getAssetPath("anim");
-        for (fs::directory_iterator dir_iter(root); dir_iter != end_iter; ++dir_iter)
+        for (fs::directory_iterator dir_iter(root); dir_iter != kEndIt; ++dir_iter)
         {
             if (fs::is_directory(*dir_iter) || fs::is_symlink(*dir_iter))
             {
@@ -137,7 +147,7 @@ struct CiApp : public AppBasic
         // parse "/assets/anim_wall"
         // TODO: merge
         root = getAssetPath("anim_wall");
-        for (fs::directory_iterator dir_iter(root); dir_iter != end_iter; ++dir_iter)
+        for (fs::directory_iterator dir_iter(root); dir_iter != kEndIt; ++dir_iter)
         {
             if (fs::is_directory(*dir_iter))
             {
@@ -161,7 +171,7 @@ struct CiApp : public AppBasic
         }
 
         mParams.addSeparator();
-        mParams.addButton("RESET_ROTATION", std::bind(&CiApp::resetArcball, this));
+        mParams.addButton("RESET_ROTATION", bind(&CiApp::resetArcball, this));
 
         {
             vector<string> axisNames;
@@ -248,6 +258,19 @@ struct CiApp : public AppBasic
             mVboWall.bufferPositions(positions);
             mVboWall.bufferTexCoords2d(0, texCoords);
             //mVboWall.bufferColorsRGB(colors);
+        }
+    }
+
+    void shutdown()
+    {
+        mIoService.stop();
+        try
+        {
+            mThreads.join_all();
+        }
+        catch (...)
+        {
+
         }
     }
 
@@ -464,34 +487,47 @@ struct CiApp : public AppBasic
         mParams.draw();
     }
 
-    void safeLoadImage(fs::path imagePath, Anim& aAnim)
+    void safeLoadImage(fs::path imagePath, Anim& aAnim, size_t index)
     {
-        Channel suf = loadImage(imagePath);
-        if (suf)
+        try
         {
-            // TODO: orderd sequence
-            aAnim.frames.push_back(suf);
+            aAnim.frames[index] = loadImage(imagePath);
         }
-        console() << imagePath << endl;
+        catch (std::exception& e)
+        {
+#ifdef _DEBUG
+            console() << e.what() << endl;
+#endif
+        }
+#ifdef _DEBUG
+        //console() << imagePath << endl;
+#endif
     }
 
     bool loadAnimFromDir(fs::path dir, Anim& aAnim) 
     {
+        double startTime = getElapsedSeconds();
+
         aAnim.name = dir.filename().string();
-        for (fs::directory_iterator it(dir); it != end_iter; ++it)
+
+        int fileCount = distance(fs::directory_iterator(dir), kEndIt);
+        aAnim.frames.resize(fileCount);
+
+        size_t index = 0;
+        for (fs::directory_iterator it(dir); it != kEndIt; ++it, ++index)
         {
             if (!fs::is_regular_file(*it))
                 continue;
 
-            mIoService.dispatch(bind(&CiApp::safeLoadImage, this, *it, aAnim));
+            mIoService.post(bind(&CiApp::safeLoadImage, this, *it, aAnim, index));
         }
-
-        mIoService.run();
 
         if (aAnim.frames.empty())
         {
             return false;
         }
+
+        console() << dir << ": " << getElapsedSeconds() - startTime;
 
         return true;
     }
@@ -518,6 +554,8 @@ private:
     gl::VboMesh     mVboWall;
 
     asio::io_service mIoService;
+    asio::io_service::work mWork;
+    boost::thread_group mThreads;
 };
 
 CINDER_APP_BASIC(CiApp, RendererGl)
