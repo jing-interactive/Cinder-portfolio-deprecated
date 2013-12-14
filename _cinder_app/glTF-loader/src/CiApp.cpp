@@ -296,14 +296,14 @@ struct Hero
             Matrix44f mat;
         };
 
-        void interpolate(float timePos, vector<Matrix44f>& finalTransforms)
+        void interpolate(float timePos, vector<Matrix44f>& localTransforms)
         {
             size_t index = 0; // TODO
             const vector<JointFrame>& frames = skeletonFrames[index].second;
 
             for (size_t i=0; i<boneOffsets.size(); i++)
             {
-                finalTransforms[i] = frames[i].mat;
+                localTransforms[i] = frames[i].mat;
             }
         }
 
@@ -341,13 +341,13 @@ struct Hero
             for (size_t i = 1; i < numBones; ++i)
             {
                 int parentId = parentIds[i];
-                toRootTransforms[i] = toParentTransforms[i] * toRootTransforms[parentId];
+                toRootTransforms[i] = toRootTransforms[parentId] * toParentTransforms[i];
             }
 
-            // Premultiply by the bone offset transform to get the final transform.
+            // Post-multiply by the bone offset transform to get the final transform.
             for (size_t i = 0; i < numBones; ++i)
             {
-                finalTransforms[i] = boneOffsets[i] * toRootTransforms[i];
+                finalTransforms[i] = toRootTransforms[i] * boneOffsets[i];
             }
         }
 
