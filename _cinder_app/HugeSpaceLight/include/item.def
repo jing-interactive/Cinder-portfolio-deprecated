@@ -1,7 +1,6 @@
 GROUP_DEF(RealWorld)
 ITEM_DEF(float, ANIM_SPEED, 10.0f)
 ITEM_DEF(int, ANIMATION, 0)
-ITEM_DEF(int, ANIMATION_WALL, 0)
 
 GROUP_DEF(VirtualWorld)
 ITEM_DEF(float, SPHERE_RADIUS, 0.9f)        // m

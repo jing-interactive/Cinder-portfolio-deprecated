@@ -17,6 +17,7 @@
 #include "../../../_common/MiniConfig.h"
 #include <fstream>
 #include <boost/foreach.hpp>
+#include <boost/make_shared.hpp>
 
 #define ASIO_DISABLE_BOOST_REGEX 0
 #include "../../../_common/asio/asio.hpp"
@@ -42,6 +43,7 @@ struct Led
     size_t id;
 };
 
+typedef shared_ptr<struct Anim> AnimPtr;
 struct Anim
 {
     Anim()
@@ -119,55 +121,39 @@ struct CiApp : public AppBasic
         // MiniConfig.xml
         setupConfigUI(&mParams);
 
-        // parse "/assets/anim"
-        fs::path root = getAssetPath("anim");
-        for (fs::directory_iterator dir_iter(root); dir_iter != kEndIt; ++dir_iter)
-        {
-            if (fs::is_directory(*dir_iter) || fs::is_symlink(*dir_iter))
-            {
-                Anim anim;
-                if (!loadAnimFromDir(*dir_iter, anim))
-                    continue;
-                mAnims.push_back(anim);
-            }
-        }
-
         mCurrentAnim = 0;
-        if (!mAnims.empty())
-        {
-            vector<string> animNames;
-            for (int i=0; i<mAnims.size(); i++)
-            {
-                animNames.push_back(mAnims[i].name);
-            }
-            mParams.removeParam("ANIMATION");
-            mParams.addParam("ANIMATION", animNames, &ANIMATION);
-        }
 
-        // parse "/assets/anim_wall"
-        // TODO: merge
-        root = getAssetPath("anim_wall");
-        for (fs::directory_iterator dir_iter(root); dir_iter != kEndIt; ++dir_iter)
+        for (int id=0; id<2; id++)
         {
-            if (fs::is_directory(*dir_iter))
+            // parse "/assets/anim"
+            // parse "/assets/anim_wall"
+            const char* kAnimFolderNames[] = 
             {
-                Anim anim;
-                if (!loadAnimFromDir(*dir_iter, anim))
-                    continue;
-                mAnimWalls.push_back(anim);
+                "anim",
+                "anim_wall"
+            };
+            fs::path root = getAssetPath(kAnimFolderNames[id]);
+            for (fs::directory_iterator it(root); it != kEndIt; ++it)
+            {
+                if (fs::is_directory(*it) || fs::is_symlink(*it))
+                {
+                    AnimPtr anim = boost::make_shared<Anim>();
+                    if (!loadAnimFromDir(*it, anim))
+                        continue;
+                    mAnims[id].push_back(anim);
+                }
             }
-        }
 
-        mCurrentAnimWall = 0;
-        if (!mAnimWalls.empty())
-        {
-            vector<string> animNames;
-            for (int i=0; i<mAnimWalls.size(); i++)
+            if (id == 0 && !mAnims[id].empty())
             {
-                animNames.push_back(mAnimWalls[i].name);
+                vector<string> animNames;
+                for (size_t i=0; i<mAnims[id].size(); i++)
+                {
+                    animNames.push_back(mAnims[id][i]->name);
+                }
+                mParams.removeParam("ANIMATION");
+                mParams.addParam("ANIMATION", animNames, &ANIMATION);
             }
-            mParams.removeParam("ANIMATION_WALL");
-            mParams.addParam("ANIMATION_WALL", animNames, &ANIMATION_WALL);
         }
 
         mParams.addSeparator();
@@ -361,17 +347,20 @@ struct CiApp : public AppBasic
 
         float delta = getElapsedSeconds() - mPrevSec;
         mPrevSec = getElapsedSeconds();
-        if ((ANIMATION != mCurrentAnim) || (ANIMATION_WALL != mCurrentAnimWall))
+        if (ANIMATION != mCurrentAnim)
         {
-            mAnims[mCurrentAnim].reset();
+            for (size_t i=0; i<2; i++)
+            {
+                mAnims[i][mCurrentAnim]->reset();
+            }
             mCurrentAnim = ANIMATION;
-            mAnimWalls[mCurrentAnimWall].reset();
-            mCurrentAnimWall = ANIMATION_WALL;
         }
-        mAnims[mCurrentAnim].update(delta * max<float>(ANIM_SPEED, 0));
-        mAnimWalls[mCurrentAnimWall].update(delta * max<float>(ANIM_SPEED, 0));
+        for (size_t i=0; i<2; i++)
+        {
+            mAnims[i][mCurrentAnim]->update(delta * max<float>(ANIM_SPEED, 0));
+        }
 
-        const Channel& suf = mAnims[mCurrentAnim].getFrame();
+        const Channel& suf = mAnims[0][mCurrentAnim]->getFrame();
         Vec3f aabbSize = mAABB.getSize();
         Vec3f aabbMin = mAABB.getMin();
 
@@ -458,7 +447,7 @@ struct CiApp : public AppBasic
             gl::disableAlphaBlending();
 
             // wall
-            gl::Texture tex = mAnimWalls[mCurrentAnimWall].getTexture();
+            gl::Texture tex = mAnims[1][mCurrentAnim]->getTexture();
             tex.enableAndBind();
             gl::draw(mVboWall);
             tex.disable();
@@ -470,8 +459,7 @@ struct CiApp : public AppBasic
         gl::setMatricesWindow(getWindowSize());
         if (ANIM_COUNT_VISIBLE)
         {
-            gl::drawString(toString(mAnims[mCurrentAnim].index), Vec2f(10, 10));
-            gl::drawString(toString(mAnimWalls[mCurrentAnimWall].index), Vec2f(10, 30));
+            gl::drawString(toString(mAnims[0][mCurrentAnim]->index), Vec2f(10, 10));
         }
 
         if (REFERENCE_VISIBLE)
@@ -480,18 +468,18 @@ struct CiApp : public AppBasic
             const Rectf kRefGlobeArea(28, 687 + kOffY, 28 + 636, 687 + 90 + kOffY);
             const Rectf kRefWallArea(689, 631 + kOffY, 689 + 84, 631 + 209 + kOffY);
 
-            gl::draw(mAnims[mCurrentAnim].getTexture(), kRefGlobeArea);
-            gl::draw(mAnimWalls[mCurrentAnimWall].getTexture(), kRefWallArea);
+            gl::draw(mAnims[0][mCurrentAnim]->getTexture(), kRefGlobeArea);
+            gl::draw(mAnims[1][mCurrentAnim]->getTexture(), kRefWallArea);
         }
 
         mParams.draw();
     }
 
-    void safeLoadImage(fs::path imagePath, Anim& aAnim, size_t index)
+    void safeLoadImage(fs::path imagePath, AnimPtr animPtr, size_t index)
     {
         try
         {
-            aAnim.frames[index] = loadImage(imagePath);
+            animPtr->frames[index] = loadImage(imagePath);
         }
         catch (std::exception& e)
         {
@@ -504,14 +492,14 @@ struct CiApp : public AppBasic
 #endif
     }
 
-    bool loadAnimFromDir(fs::path dir, Anim& aAnim) 
+    bool loadAnimFromDir(fs::path dir, AnimPtr animPtr) 
     {
         double startTime = getElapsedSeconds();
 
-        aAnim.name = dir.filename().string();
+        animPtr->name = dir.filename().string();
 
         int fileCount = distance(fs::directory_iterator(dir), kEndIt);
-        aAnim.frames.resize(fileCount);
+        animPtr->frames.resize(fileCount);
 
         size_t index = 0;
         for (fs::directory_iterator it(dir); it != kEndIt; ++it, ++index)
@@ -519,10 +507,10 @@ struct CiApp : public AppBasic
             if (!fs::is_regular_file(*it))
                 continue;
 
-            mIoService.post(bind(&CiApp::safeLoadImage, this, *it, aAnim, index));
+            mIoService.post(boost::bind(&CiApp::safeLoadImage, this, *it, animPtr, index));
         }
 
-        if (aAnim.frames.empty())
+        if (animPtr->frames.empty())
         {
             return false;
         }
@@ -541,13 +529,9 @@ private:
     Arcball         mArcball;
     AxisAlignedBox3f mAABB;
 
-    vector<Anim>    mAnims;
-    vector<Anim>    mAnimWalls;
+    vector<AnimPtr>    mAnims[2];
 
     int             mCurrentAnim;
-
-    // TODO: merge
-    int             mCurrentAnimWall;
 
     float           mPrevSec;
 
