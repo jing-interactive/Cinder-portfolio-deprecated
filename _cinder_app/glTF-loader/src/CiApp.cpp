@@ -287,67 +287,75 @@ struct Hero
         }
     };
 
+    struct Joint
+    {
+        string name;
+        int parentId;
+        Matrix44f invBindPose;
+    };
+
+    struct Skelton
+    {
+        vector<Joint> joints;
+    };
+
     struct AnimTrack
     {
-        struct JointFrame
+        struct JointPose
         {
             Vec3f pos;
             Vec3f rot;
-            Matrix44f mat;
+            // Vec3f scale;
         };
 
-        void interpolate(float timePos, vector<Matrix44f>& localTransforms)
+        void interpolate(float timePos, const Skelton& skeleton, vector<Matrix44f>& localTransforms)
         {
-            size_t index = 0; // TODO
-            const vector<JointFrame>& frames = skeletonFrames[index].second;
+            size_t index = timePos; // TODO
+            index %= skeletonPoses.size();
+            const vector<JointPose>& poses = skeletonPoses[index].jointPoses;
 
-            for (size_t i=0; i<boneOffsets.size(); i++)
+            for (size_t i=0; i<skeleton.joints.size(); i++)
             {
-                localTransforms[i] = frames[i].mat;
+                localTransforms[i] = Matrix44f::createTranslation(poses[i].pos) * Matrix44f::createRotation(poses[i].rot);
             }
         }
 
-        vector<int> parentIds; // parentIdOfJoint = parentIds[jointId]
-        vector<string> jointNames;
-        vector<Matrix44f> boneOffsets;
-
-        typedef pair<float, vector<JointFrame>> SkeletonFrame;
-        vector<SkeletonFrame> skeletonFrames;
-
-        void update(float timePos, vector<Matrix44f>& finalTransforms)
+        struct SkeletonPose
         {
-            size_t animIndex = 0;
-            finalTransforms.resize(jointNames.size());
+            float time;
+            vector<JointPose> jointPoses;  
+        };
+        vector<SkeletonPose> skeletonPoses;
 
-            size_t numBones = boneOffsets.size();
+        void update(float timePos, const Skelton& skeleton, vector<Matrix44f>& boneMatrices)
+        {
+            boneMatrices.resize(skeleton.joints.size());
 
-            vector<Matrix44f> toParentTransforms(numBones);
+            vector<Matrix44f> toParentTransforms(skeleton.joints.size());
 
             // Interpolate all the bones of this clip at the given time instance.
-            // auto clip = mAnimations.find(clipName);
-            interpolate(timePos, toParentTransforms);
+            interpolate(timePos, skeleton, toParentTransforms);
 
             //
             // Traverse the hierarchy and transform all the bones to the root space.
             //
-
-            vector<Matrix44f> toRootTransforms(numBones);
+            vector<Matrix44f> toRootTransforms(skeleton.joints.size());
 
             // The root bone has index 0.  The root bone has no parent, so its toRootTransform
             // is just its local bone transform.
             toRootTransforms[0] = toParentTransforms[0];
 
             // Now find the toRootTransform of the children.
-            for (size_t i = 1; i < numBones; ++i)
+            for (size_t i = 1; i < skeleton.joints.size(); ++i)
             {
-                int parentId = parentIds[i];
+                int parentId = skeleton.joints[i].parentId;
                 toRootTransforms[i] = toRootTransforms[parentId] * toParentTransforms[i];
             }
 
             // Post-multiply by the bone offset transform to get the final transform.
-            for (size_t i = 0; i < numBones; ++i)
+            for (size_t i = 0; i < skeleton.joints.size(); ++i)
             {
-                finalTransforms[i] = toRootTransforms[i] * boneOffsets[i];
+                boneMatrices[i] = toRootTransforms[i] * skeleton.joints[i].invBindPose;
             }
         }
 
@@ -386,6 +394,7 @@ struct Hero
     map<string, Scene>                      mScenes;
 
     map<string, AnimTrack>                  mAnimTracks;
+    Skelton                                 mSkeleton;
 };
 
 struct CiApp : public AppBasic 
@@ -576,9 +585,9 @@ private:
         mHero.preDraw();
         gShader.getProg().bind();
 
-        vector<Matrix44f> finalTransforms; // MAXBONES = 128?
-        mHero.mAnimTracks[mAnimNames[mCurrentAnim]].update(0, finalTransforms);
-        gShader.getProg().uniform("uBoneMatrices", &finalTransforms[0], finalTransforms.size());
+        vector<Matrix44f> boneMatrices; // MAXBONES = 128?
+        mHero.mAnimTracks[mAnimNames[mCurrentAnim]].update(getElapsedSeconds(), mHero.mSkeleton, boneMatrices);
+        gShader.getProg().uniform("uBoneMatrices", &boneMatrices[0], boneMatrices.size());
 
         if (mCurrentNode == 0)
         {
@@ -1042,6 +1051,8 @@ private:
             return;
         }
 
+        mHero.mSkeleton.joints.clear();
+
         Hero::AnimTrack anim;
         anim.name = name;
 
@@ -1049,6 +1060,7 @@ private:
         ss << mHeroesFolder.generic_string() << "/" << mHeroNames[mCurrentHero] << "/smd/" << name;
         ifstream ifs(ss.str().c_str());
 
+        string dummy;
         string line;
 
         getline(ifs, line); // version 1
@@ -1056,45 +1068,56 @@ private:
         getline(ifs, line); // 0 "root" -1
         while (line != "end")
         {
-            int id, parentId;
-            string jointName; 
-            stringstream(line) >> id >> jointName >> parentId;
-            anim.parentIds.push_back(parentId);
-            anim.jointNames.push_back(jointName);
-
+            // TODO: skeleton is unique for every hero, so only needs to be initialized once
+            Hero::Joint joint;
+            stringstream(line) >> dummy >> joint.name >> joint.parentId;
+            mHero.mSkeleton.joints.push_back(joint);
             getline(ifs, line);
         }
 
-        anim.boneOffsets.resize(anim.parentIds.size()); // TODO: fill me
+        for (size_t i=0; i<mHero.mSkeleton.joints.size(); i++)
+        {
+            Hero::Joint& joint = mHero.mSkeleton.joints[i];
+            const Hero::Node& node = mHero.mNodes[joint.name];
+            Matrix44f inv = node.matrix.inverted();
+
+            if (i == 0)
+            {
+                joint.invBindPose = inv;
+            }
+            else
+            {
+                Hero::Joint& parent = mHero.mSkeleton.joints[joint.parentId];
+                joint.invBindPose = inv * parent.invBindPose;
+            }
+        }
 
         getline(ifs, line); // skeleton
         getline(ifs, line); // time 0
-        Hero::AnimTrack::SkeletonFrame skelFrame;
-        string dummy;
+        Hero::AnimTrack::SkeletonPose skelPose;
         while (line != "end")
         {
             if (line.find("time") != string::npos)
             {
-                if (!skelFrame.second.empty())
+                if (!skelPose.jointPoses.empty())
                 {
-                    anim.skeletonFrames.push_back(skelFrame);
+                    anim.skeletonPoses.push_back(skelPose);
                 }
-                skelFrame = Hero::AnimTrack::SkeletonFrame();
-                stringstream(line) >> dummy >> skelFrame.first;
+                skelPose = Hero::AnimTrack::SkeletonPose();
+                stringstream(line) >> dummy >> skelPose.time;
             }
             else
             {
-                Hero::AnimTrack::JointFrame frame;
-                stringstream(line) >> dummy >> frame.pos.x >> frame.pos.y >> frame.pos.z
-                                    >> frame.rot.x >> frame.rot.y >> frame.rot.z;
-                frame.mat = Matrix44f::createTranslation(frame.pos) * Matrix44f::createRotation(frame.rot);
-                skelFrame.second.push_back(frame);
+                Hero::AnimTrack::JointPose Pose;
+                stringstream(line) >> dummy >> Pose.pos.x >> Pose.pos.y >> Pose.pos.z
+                                    >> Pose.rot.x >> Pose.rot.y >> Pose.rot.z;
+                skelPose.jointPoses.push_back(Pose);
             }
 
             getline(ifs, line);
         }
 
-        anim.skeletonFrames.push_back(skelFrame);
+        anim.skeletonPoses.push_back(skelPose);
 
         mHero.mAnimTracks[name] = anim;
     }
