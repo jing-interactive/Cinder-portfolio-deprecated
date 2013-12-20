@@ -46,10 +46,10 @@
 #include "cinder/AxisAlignedBox.h"
 
 #if defined( CINDER_MSW )
-	#include <windows.h>
-	#undef min
-	#undef max
-	#include <gl/gl.h>
+	//#include <windows.h>
+	//#undef min
+	//#undef max
+	//#include <gl/gl.h>
 #elif defined( CINDER_COCOA_TOUCH )
 	#include <OpenGLES/ES1/gl.h>
 	#include <OpenGLES/ES1/glext.h>
