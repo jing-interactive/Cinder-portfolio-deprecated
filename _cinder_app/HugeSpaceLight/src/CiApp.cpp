@@ -14,6 +14,7 @@
 #include "cinder/Thread.h"
 
 #include "cinder/osc/OscListener.h"
+#include "cinder/osc/OscSender.h"
 #include "../../../_common/MiniConfig.h"
 #include <fstream>
 #include <boost/foreach.hpp>

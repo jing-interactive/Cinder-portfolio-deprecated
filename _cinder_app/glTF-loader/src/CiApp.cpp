@@ -586,7 +586,7 @@ private:
         gShader.getProg().bind();
 
         vector<Matrix44f> boneMatrices; // MAXBONES = 128?
-        mHero.mAnimTracks[mAnimNames[mCurrentAnim]].update(getElapsedSeconds(), mHero.mSkeleton, boneMatrices);
+        mHero.mAnimTracks[mAnimNames[mCurrentAnim]].update(getElapsedSeconds() * FRAME_PER_SEC, mHero.mSkeleton, boneMatrices);
         gShader.getProg().uniform("uBoneMatrices", &boneMatrices[0], boneMatrices.size());
 
         if (mCurrentNode == 0)
