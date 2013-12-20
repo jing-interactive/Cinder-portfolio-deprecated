@@ -10,6 +10,7 @@
 @goto end
 
 :do_build
-@%vcbuild_path% /MP vc9\CiApp.vcproj Release
+@%vcbuild_path% /MP vc9\cinder.vcproj Release
+@%vcbuild_path% /MP vc9\cinder.vcproj Debug
 
 :end
