@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="Ws2_32.lib wldap32.lib libpng.lib shlwapi.lib OpenGL32.lib zlib.lib pixman-1.lib wmvcore.lib Strmiids.lib Msimg32.lib"
+				AdditionalDependencies="Ws2_32.lib wldap32.lib libpng.lib shlwapi.lib zlib.lib pixman-1.lib wmvcore.lib Strmiids.lib Msimg32.lib"
 				OutputFile="..\lib\cinder_d.lib"
 				AdditionalLibraryDirectories="..\lib\msw;..\lib\OpenCV"
 				IgnoreAllDefaultLibraries="true"
@@ -135,7 +135,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="Ws2_32.lib wldap32.lib libpng.lib shlwapi.lib OpenGL32.lib zlib.lib pixman-1.lib wmvcore.lib Strmiids.lib Msimg32.lib"
+				AdditionalDependencies="Ws2_32.lib wldap32.lib libpng.lib shlwapi.lib zlib.lib pixman-1.lib wmvcore.lib Strmiids.lib Msimg32.lib"
 				OutputFile="..\lib\cinder.lib"
 				AdditionalLibraryDirectories="..\lib\msw;..\lib\OpenCV"
 				IgnoreAllDefaultLibraries="true"
@@ -525,7 +525,6 @@
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
-						ExcludedFromBuild="true"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -541,7 +540,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\cinder\gl\GLee.c"
+					RelativePath="..\src\cinder\gl\glew.c"
 					>
 				</File>
 				<File
@@ -1283,7 +1282,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\include\cinder\gl\GLee.h"
+					RelativePath="..\include\cinder\gl\glew.h"
 					>
 				</File>
 				<File

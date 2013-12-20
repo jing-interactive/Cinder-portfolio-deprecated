@@ -28,7 +28,8 @@
 	#include <OpenGL/gl.h>
 	#include <OpenGL/glext.h>
 #elif defined( CINDER_MSW )
-	#include "cinder/gl/GLee.h"
+	#include "cinder/gl/glew.h"
+    #include "cinder/gl/wglew.h"
 #else
 	#define CINDER_GLES
 	#define CINDER_GLES1
@@ -352,8 +353,8 @@ struct SaveFramebufferBinding {
 };
 
 #if defined( CINDER_MSW )
-//! Initializes the GLee library. This is generally called automatically by the application and is only necessary if you need to use GLee before your app's setup() method is called.
-void initializeGlee();
+//! Initializes the Glew library. This is generally called automatically by the application and is only necessary if you need to use Glew before your app's setup() method is called.
+void initializeGlew();
 #endif
 
 class Exception : public cinder::Exception {
@@ -378,7 +379,7 @@ inline void glColor4f( const cinder::ColorA &c ) { glColor4f( c.r, c.g, c.b, c.a
 inline void glTexCoord2f( const cinder::Vec2f &v ) { glTexCoord2f( v.x, v.y ); }
 inline void glTexCoord3f( const cinder::Vec3f &v ) { glTexCoord3f( v.x, v.y, v.z ); }
 inline void glTexCoord4f( const cinder::Vec4f &v ) { glTexCoord4f( v.x, v.y, v.z, v.w ); }
-// This style of definition conflicts with GLee
+// This style of definition conflicts with Glew
 //inline void glMultiTexCoord2f( GLenum target, const cinder::Vec2f &v ) { glMultiTexCoord2f( target, v.x, v.y ); }
 //inline void glMultiTexCoord3f( GLenum target, const cinder::Vec3f &v ) { glMultiTexCoord3f( target, v.x, v.y, v.z ); }
 //inline void glMultiTexCoord4f( GLenum target, const cinder::Vec4f &v ) { glMultiTexCoord4f( target, v.x, v.y, v.z, v.w ); }

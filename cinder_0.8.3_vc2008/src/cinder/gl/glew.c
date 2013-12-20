@@ -29,12 +29,12 @@
 ** THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <GL/glew.h>
+#include "cinder/gl/glew.h"
 
 #if defined(_WIN32)
-#  include <GL/wglew.h>
+#  include "cinder/gl/wglew.h"
 #elif !defined(__ANDROID__) && !defined(__native_client__) && (!defined(__APPLE__) || defined(GLEW_APPLE_GLX))
-#  include <GL/glxew.h>
+#  include "cinder/gl/glxew.h"
 #endif
 
 /*
