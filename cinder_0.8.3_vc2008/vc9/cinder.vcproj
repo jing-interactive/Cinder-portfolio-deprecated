@@ -180,6 +180,14 @@
 			<File
 				RelativePath="..\src\cinder\Base64.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\cinder\BSpline.cpp"
@@ -216,6 +224,14 @@
 			<File
 				RelativePath="..\src\cinder\Clipboard.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\cinder\Color.cpp"
@@ -264,13 +280,6 @@
 			<File
 				RelativePath="..\src\cinder\Json.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\cinder\Matrix.cpp"
@@ -371,10 +380,26 @@
 			<File
 				RelativePath="..\src\cinder\Url.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\cinder\UrlImplWinInet.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\cinder\Utilities.cpp"
@@ -406,6 +431,14 @@
 				<File
 					RelativePath="..\src\cinder\app\AppImplMswRendererGdi.cpp"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\src\cinder\app\AppImplMswRendererGl.cpp"
@@ -414,10 +447,26 @@
 				<File
 					RelativePath="..\src\cinder\app\AppImplMswScreenSaver.cpp"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\src\cinder\app\AppScreenSaver.cpp"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\src\cinder\app\KeyEvent.cpp"
@@ -458,6 +507,14 @@
 				<File
 					RelativePath="..\src\cinder\cairo\Cairo.cpp"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
 				</File>
 			</Filter>
 			<Filter
@@ -466,6 +523,14 @@
 				<File
 					RelativePath="..\src\cinder\gl\DisplayList.cpp"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\src\cinder\gl\Fbo.cpp"
@@ -502,6 +567,14 @@
 				<File
 					RelativePath="..\src\cinder\gl\TileRender.cpp"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\src\cinder\gl\VBO.cpp"
@@ -790,6 +863,14 @@
 				<File
 					RelativePath="..\src\cinder\svg\Svg.cpp"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
 				</File>
 			</Filter>
 			<Filter
