@@ -28,8 +28,8 @@
 	#include <OpenGL/gl.h>
 	#include <OpenGL/glext.h>
 #elif defined( CINDER_MSW )
-	#include "cinder/gl/glew.h"
-    #include "cinder/gl/wglew.h"
+	#include "glew/glew.h"
+    #include "glew/wglew.h"
 #else
 	#define CINDER_GLES
 	#define CINDER_GLES1
