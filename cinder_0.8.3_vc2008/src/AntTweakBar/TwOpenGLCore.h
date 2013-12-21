@@ -1,7 +1,7 @@
 //  ---------------------------------------------------------------------------
 //
-//  @file       TwOpenGL.h
-//  @brief      OpenGL graph functions
+//  @file       TwOpenGLCore.h
+//  @brief      OpenGL Core graph functions
 //  @author     Philippe Decaudin
 //  @license    This file is part of the AntTweakBar library.
 //              For conditions of distribution and use, see License.txt
@@ -11,14 +11,14 @@
 //  ---------------------------------------------------------------------------
 
 
-#if !defined ANT_TW_OPENGL_INCLUDED
-#define ANT_TW_OPENGL_INCLUDED
+#if !defined ANT_TW_OPENGL_CORE_INCLUDED
+#define ANT_TW_OPENGL_CORE_INCLUDED
 
 #include "TwGraph.h"
 
 //  ---------------------------------------------------------------------------
 
-class CTwGraphOpenGL : public ITwGraph
+class CTwGraphOpenGLCore : public ITwGraph
 {
 public:
     virtual int         Init();
@@ -46,40 +46,62 @@ protected:
     bool                m_Drawing;
     GLuint              m_FontTexID;
     const CTexFont *    m_FontTex;
+    
     GLfloat             m_PrevLineWidth;
-    GLint               m_PrevTexEnv;
-    GLint               m_PrevPolygonMode[2];
-    GLint               m_MaxClipPlanes;
+    GLint               m_PrevActiveTexture;
     GLint               m_PrevTexture;
-    GLint               m_PrevArrayBufferARB;
-    GLint               m_PrevElementArrayBufferARB;
-    GLboolean           m_PrevVertexProgramARB;
-    GLboolean           m_PrevFragmentProgramARB;
-    GLuint              m_PrevProgramObjectARB;
-    GLboolean           m_PrevTexture3D;
-    enum EMaxTextures   { MAX_TEXTURES = 128 };
-    GLboolean           m_PrevActiveTexture1D[MAX_TEXTURES];
-    GLboolean           m_PrevActiveTexture2D[MAX_TEXTURES];
-    GLboolean           m_PrevActiveTexture3D[MAX_TEXTURES];
-    GLboolean           m_PrevClientTexCoordArray[MAX_TEXTURES];
-    GLint               m_PrevActiveTextureARB;
-    GLint               m_PrevClientActiveTextureARB;
-    bool                m_SupportTexRect;
-    GLboolean           m_PrevTexRectARB;
-    GLint               m_PrevBlendEquation;
-    GLint               m_PrevBlendEquationRGB;
-    GLint               m_PrevBlendEquationAlpha;
-    GLint               m_PrevBlendSrcRGB;
-    GLint               m_PrevBlendDstRGB;
-    GLint               m_PrevBlendSrcAlpha;
-    GLint               m_PrevBlendDstAlpha;
-    GLuint              m_PrevVertexArray;
-    GLint               m_ViewportInit[4];
-    GLfloat             m_ProjMatrixInit[16];
-    enum EMaxVtxAttribs { MAX_VERTEX_ATTRIBS = 128 };
-    GLint               m_PrevEnabledVertexAttrib[MAX_VERTEX_ATTRIBS];
+    GLint               m_PrevVArray;
+    GLboolean           m_PrevLineSmooth;
+    GLboolean           m_PrevCullFace;
+    GLboolean           m_PrevDepthTest;
+    GLboolean           m_PrevBlend;
+    GLint               m_PrevSrcBlend;
+    GLint               m_PrevDstBlend;
+    GLboolean           m_PrevScissorTest;
+    GLint               m_PrevScissorBox[4];
+    GLint               m_PrevViewport[4];
+    GLuint              m_PrevProgramObject;
+
+    GLuint              m_LineRectVS;
+    GLuint              m_LineRectFS;
+    GLuint              m_LineRectProgram;
+    GLuint              m_LineRectVArray;
+    GLuint              m_LineRectVertices;
+    GLuint              m_LineRectColors;
+    GLuint              m_TriVS;
+    GLuint              m_TriFS;
+    GLuint              m_TriProgram;
+    GLuint              m_TriUniVS;
+    GLuint              m_TriUniFS;
+    GLuint              m_TriUniProgram;
+    GLuint              m_TriTexVS;
+    GLuint              m_TriTexFS;
+    GLuint              m_TriTexProgram;
+    GLuint              m_TriTexUniVS;
+    GLuint              m_TriTexUniFS;
+    GLuint              m_TriTexUniProgram;
+    GLuint              m_TriVArray;
+    GLuint              m_TriVertices;
+    GLuint              m_TriUVs;
+    GLuint              m_TriColors;
+    GLint               m_TriLocationOffset;
+    GLint               m_TriLocationWndSize;
+    GLint               m_TriUniLocationOffset;
+    GLint               m_TriUniLocationWndSize;
+    GLint               m_TriUniLocationColor;
+    GLint               m_TriTexLocationOffset;
+    GLint               m_TriTexLocationWndSize;
+    GLint               m_TriTexLocationTexture;
+    GLint               m_TriTexUniLocationOffset;
+    GLint               m_TriTexUniLocationWndSize;
+    GLint               m_TriTexUniLocationColor;
+    GLint               m_TriTexUniLocationTexture;
+    size_t              m_TriBufferSize;
+
     int                 m_WndWidth;
     int                 m_WndHeight;
+    int                 m_OffsetX;
+    int                 m_OffsetY;
 
     struct Vec2         { GLfloat x, y; Vec2(){} Vec2(GLfloat _X, GLfloat _Y):x(_X),y(_Y){} Vec2(int _X, int _Y):x(GLfloat(_X)),y(GLfloat(_Y)){} };
     struct CTextObj
@@ -90,9 +112,10 @@ protected:
         std::vector<color32>m_Colors;
         std::vector<color32>m_BgColors;
     };
+    void                ResizeTriBuffers(size_t _NewSize);
 };
 
 //  ---------------------------------------------------------------------------
 
 
-#endif // !defined ANT_TW_OPENGL_INCLUDED
+#endif // !defined ANT_TW_OPENGL_CORE_INCLUDED

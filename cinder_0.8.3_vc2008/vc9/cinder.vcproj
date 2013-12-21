@@ -404,38 +404,10 @@
 			<File
 				RelativePath="..\src\cinder\Url.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\cinder\UrlImplWinInet.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\cinder\Utilities.cpp"
@@ -467,20 +439,6 @@
 				<File
 					RelativePath="..\src\cinder\app\AppImplMswRendererGdi.cpp"
 					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\src\cinder\app\AppImplMswRendererGl.cpp"
@@ -589,13 +547,6 @@
 				<File
 					RelativePath="..\src\cinder\gl\DisplayList.cpp"
 					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\src\cinder\gl\Fbo.cpp"
@@ -708,20 +659,6 @@
 				<File
 					RelativePath="..\src\cinder\msw\CinderMswGdiPlus.cpp"
 					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\src\cinder\msw\StackWalker.cpp"
@@ -753,6 +690,14 @@
 				</File>
 				<File
 					RelativePath="..\src\AntTweakBar\LoadOGL.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\AntTweakBar\LoadOGLCore.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\AntTweakBar\LoadOGLCore.h"
 					>
 				</File>
 				<File
@@ -801,6 +746,14 @@
 				</File>
 				<File
 					RelativePath="..\src\AntTweakBar\TwOpenGL.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\AntTweakBar\TwOpenGLCore.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\AntTweakBar\TwOpenGLCore.h"
 					>
 				</File>
 				<File
