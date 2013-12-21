@@ -133,7 +133,7 @@ void TW_CALL implStdStringToClient( std::string& destinationClientString, const 
 class AntMgr {
   public:
 	AntMgr() {
-		if( ! TwInit( TW_OPENGL_CORE, NULL ) ) {
+		if( ! TwInit( TW_OPENGL, NULL ) ) {
 			throw Exception();
 		}
 		

@@ -224,6 +224,12 @@ bool AppImplMswRendererGl::initializeInternal( HWND wnd, HDC dc )
 		return false;								
 	}
 
+    if (glewInit() != GLEW_OK) 
+    {
+        console() << "GLEW failes to init." << std::endl;
+        return false;
+    }
+
 	if( ( ! sMultisampleSupported ) && ( mRenderer->getAntiAliasing() > RendererGl::AA_NONE ) )  {
 		int level = initMultisample( pfd, mRenderer->getAntiAliasing(), dc );
 		mRenderer->setAntiAliasing( RendererGl::AA_NONE + level );
@@ -249,7 +255,7 @@ bool AppImplMswRendererGl::initializeInternal( HWND wnd, HDC dc )
 int AppImplMswRendererGl::initMultisample( PIXELFORMATDESCRIPTOR pfd, int requestedLevelIdx, HDC dc )
 {
 	// this is an array that corresponds to AppSettings::AA_NONE through AA_MSAA_16
-	if( ( ! WGL_ARB_multisample ) || ( ! wglChoosePixelFormatARB ) ) {
+	if( ( ! WGLEW_ARB_multisample ) || ( ! wglChoosePixelFormatARB ) ) {
 		sMultisampleSupported = false;
 		return 0;
 	}
