@@ -9,7 +9,6 @@
 
 
 #include "TwPrecomp.h"
-#include "LoadOGL.h"
 #include "TwOpenGL.h"
 #include "TwMgr.h"
 
@@ -22,121 +21,12 @@ GLuint g_SmallFontTexID = 0;
 GLuint g_NormalFontTexID = 0;
 GLuint g_LargeFontTexID = 0;
 
-//  ---------------------------------------------------------------------------
-//  Extensions
-
-typedef void (APIENTRY * PFNGLBindBufferARB)(GLenum target, GLuint buffer);
-typedef void (APIENTRY * PFNGLBindProgramARB)(GLenum target, GLuint program);
-typedef GLuint (APIENTRY * PFNGLGetHandleARB)(GLenum pname);
-typedef void (APIENTRY * PFNGLUseProgramObjectARB)(GLuint programObj);
-typedef void (APIENTRY * PFNGLTexImage3D)(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
-typedef void (APIENTRY * PFNGLActiveTextureARB)(GLenum texture);
-typedef void (APIENTRY * PFNGLClientActiveTextureARB)(GLenum texture);
-typedef void (APIENTRY * PFNGLBlendEquation)(GLenum mode);
-typedef void (APIENTRY * PFNGLBlendEquationSeparate)(GLenum srcMode, GLenum dstMode);
-typedef void (APIENTRY * PFNGLBlendFuncSeparate)(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha);
-typedef void (APIENTRY * PFNGLBindVertexArray)(GLuint array);
-typedef void (APIENTRY * PFNGLEnableVertexAttribArray) (GLuint index);
-typedef void (APIENTRY * PFNGLDisableVertexAttribArray) (GLuint index);
-typedef void (APIENTRY * PFNGLGetVertexAttribiv) (GLuint, GLenum, GLint*);
-PFNGLBindBufferARB _glBindBufferARB = NULL;
-PFNGLBindProgramARB _glBindProgramARB = NULL;
-PFNGLGetHandleARB _glGetHandleARB = NULL;
-PFNGLUseProgramObjectARB _glUseProgramObjectARB = NULL;
-PFNGLTexImage3D _glTexImage3D = NULL;
-PFNGLActiveTextureARB _glActiveTextureARB = NULL;
-PFNGLClientActiveTextureARB _glClientActiveTextureARB = NULL;
-PFNGLBlendEquation _glBlendEquation = NULL;
-PFNGLBlendEquationSeparate _glBlendEquationSeparate = NULL;
-PFNGLBlendFuncSeparate _glBlendFuncSeparate = NULL;
-PFNGLBindVertexArray _glBindVertexArray = NULL;
-PFNGLEnableVertexAttribArray _glEnableVertexAttribArray = NULL;
-PFNGLDisableVertexAttribArray _glDisableVertexAttribArray = NULL;
-PFNGLGetVertexAttribiv _glGetVertexAttribiv = NULL;
-#ifndef GL_ARRAY_BUFFER_ARB
-#   define GL_ARRAY_BUFFER_ARB 0x8892
-#endif
-#ifndef GL_ELEMENT_ARRAY_BUFFER_ARB
-#   define GL_ELEMENT_ARRAY_BUFFER_ARB 0x8893
-#endif
-#ifndef GL_ARRAY_BUFFER_BINDING_ARB
-#   define GL_ARRAY_BUFFER_BINDING_ARB 0x8894
-#endif
-#ifndef GL_ELEMENT_ARRAY_BUFFER_BINDING_ARB
-#   define GL_ELEMENT_ARRAY_BUFFER_BINDING_ARB 0x8895
-#endif
-#ifndef GL_VERTEX_PROGRAM_ARB
-#   define GL_VERTEX_PROGRAM_ARB 0x8620
-#endif
-#ifndef GL_FRAGMENT_PROGRAM_ARB
-#   define GL_FRAGMENT_PROGRAM_ARB 0x8804
-#endif
-#ifndef GL_PROGRAM_OBJECT_ARB
-#   define GL_PROGRAM_OBJECT_ARB 0x8B40
-#endif
-#ifndef GL_TEXTURE_3D
-#   define GL_TEXTURE_3D 0x806F
-#endif
-#ifndef GL_TEXTURE0_ARB
-#   define GL_TEXTURE0_ARB 0x84C0
-#endif
-#ifndef GL_ACTIVE_TEXTURE_ARB
-#   define GL_ACTIVE_TEXTURE_ARB 0x84E0
-#endif
-#ifndef GL_CLIENT_ACTIVE_TEXTURE_ARB
-#   define GL_CLIENT_ACTIVE_TEXTURE_ARB 0x84E1
-#endif
-#ifndef GL_MAX_TEXTURE_UNITS_ARB
-#   define GL_MAX_TEXTURE_UNITS_ARB 0x84E2
-#endif
-#ifndef GL_MAX_TEXTURE_COORDS
-#   define GL_MAX_TEXTURE_COORDS 0x8871
-#endif
-#ifndef GL_TEXTURE_RECTANGLE_ARB
-#   define GL_TEXTURE_RECTANGLE_ARB 0x84F5
-#endif
-#ifndef GL_FUNC_ADD
-#   define GL_FUNC_ADD 0x8006
-#endif
-#ifndef GL_BLEND_EQUATION
-#   define GL_BLEND_EQUATION 0x8009
-#endif
-#ifndef GL_BLEND_EQUATION_RGB
-#   define GL_BLEND_EQUATION_RGB GL_BLEND_EQUATION
-#endif
-#ifndef GL_BLEND_EQUATION_ALPHA
-#   define GL_BLEND_EQUATION_ALPHA 0x883D
-#endif
-#ifndef GL_BLEND_SRC_RGB
-#   define GL_BLEND_SRC_RGB 0x80C9
-#endif
-#ifndef GL_BLEND_DST_RGB
-#   define GL_BLEND_DST_RGB 0x80C8
-#endif
-#ifndef GL_BLEND_SRC_ALPHA
-#   define GL_BLEND_SRC_ALPHA 0x80CB
-#endif
-#ifndef GL_BLEND_DST_ALPHA
-#   define GL_BLEND_DST_ALPHA 0x80CA
-#endif
-#ifndef GL_VERTEX_ARRAY_BINDING
-#   define GL_VERTEX_ARRAY_BINDING 0x85B5
-#endif
-#ifndef GL_MAX_VERTEX_ATTRIBS
-#    define GL_MAX_VERTEX_ATTRIBS 0x8869
-#endif
-#ifndef GL_VERTEX_ATTRIB_ARRAY_ENABLED
-#    define GL_VERTEX_ATTRIB_ARRAY_ENABLED 0x8622
-#endif
-
-//  ---------------------------------------------------------------------------
-
 #ifdef _DEBUG
     static void CheckGLError(const char *file, int line, const char *func)
     {
         int err=0;
         char msg[256];
-        while( (err=_glGetError())!=0 )
+        while( (err=glGetError())!=0 )
         {
             sprintf(msg, "%s(%d) : [%s] GL_ERROR=0x%x\n", file, line, func, err);
             #ifdef ANT_WINDOWS
@@ -159,30 +49,30 @@ PFNGLGetVertexAttribiv _glGetVertexAttribiv = NULL;
 static GLuint BindFont(const CTexFont *_Font)
 {
     GLuint TexID = 0;
-    _glGenTextures(1, &TexID);
-    _glBindTexture(GL_TEXTURE_2D, TexID);
-    _glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_FALSE);
-    _glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
-    _glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    _glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
-    _glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
-    _glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    _glPixelTransferf(GL_ALPHA_SCALE, 1);
-    _glPixelTransferf(GL_ALPHA_BIAS, 0);
-    _glPixelTransferf(GL_RED_BIAS, 1);
-    _glPixelTransferf(GL_GREEN_BIAS, 1);
-    _glPixelTransferf(GL_BLUE_BIAS, 1);
-    _glTexImage2D(GL_TEXTURE_2D, 0, 4, _Font->m_TexWidth, _Font->m_TexHeight, 0, GL_ALPHA, GL_UNSIGNED_BYTE, _Font->m_TexBytes);
-    _glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    _glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    _glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-    _glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-    _glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    _glBindTexture(GL_TEXTURE_2D, 0);
-    _glPixelTransferf(GL_ALPHA_BIAS, 0);
-    _glPixelTransferf(GL_RED_BIAS, 0);
-    _glPixelTransferf(GL_GREEN_BIAS, 0);
-    _glPixelTransferf(GL_BLUE_BIAS, 0);
+    glGenTextures(1, &TexID);
+    glBindTexture(GL_TEXTURE_2D, TexID);
+    glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_FALSE);
+    glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelTransferf(GL_ALPHA_SCALE, 1);
+    glPixelTransferf(GL_ALPHA_BIAS, 0);
+    glPixelTransferf(GL_RED_BIAS, 1);
+    glPixelTransferf(GL_GREEN_BIAS, 1);
+    glPixelTransferf(GL_BLUE_BIAS, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, _Font->m_TexWidth, _Font->m_TexHeight, 0, GL_ALPHA, GL_UNSIGNED_BYTE, _Font->m_TexBytes);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glPixelTransferf(GL_ALPHA_BIAS, 0);
+    glPixelTransferf(GL_RED_BIAS, 0);
+    glPixelTransferf(GL_GREEN_BIAS, 0);
+    glPixelTransferf(GL_BLUE_BIAS, 0);
 
     return TexID;
 }
@@ -190,7 +80,7 @@ static GLuint BindFont(const CTexFont *_Font)
 static void UnbindFont(GLuint _FontTexID)
 {
     if( _FontTexID>0 )
-        _glDeleteTextures(1, &_FontTexID);
+        glDeleteTextures(1, &_FontTexID);
 }
 
 //  ---------------------------------------------------------------------------
@@ -202,27 +92,12 @@ int CTwGraphOpenGL::Init()
     m_FontTex = NULL;
     m_MaxClipPlanes = -1;
 
-    if( LoadOpenGL()==0 )
+    if( glewInit() != GLEW_OK )
     {
         g_TwMgr->SetLastError(g_ErrCantLoadOGL);
         return 0;
     }
 
-    // Get extensions
-    _glBindBufferARB = reinterpret_cast<PFNGLBindBufferARB>(_glGetProcAddress("glBindBufferARB"));
-    _glBindProgramARB = reinterpret_cast<PFNGLBindProgramARB>(_glGetProcAddress("glBindProgramARB"));
-    _glGetHandleARB = reinterpret_cast<PFNGLGetHandleARB>(_glGetProcAddress("glGetHandleARB"));
-    _glUseProgramObjectARB = reinterpret_cast<PFNGLUseProgramObjectARB>(_glGetProcAddress("glUseProgramObjectARB"));
-    _glTexImage3D = reinterpret_cast<PFNGLTexImage3D>(_glGetProcAddress("glTexImage3D"));
-    _glActiveTextureARB = reinterpret_cast<PFNGLActiveTextureARB>(_glGetProcAddress("glActiveTextureARB"));
-    _glClientActiveTextureARB = reinterpret_cast<PFNGLClientActiveTextureARB>(_glGetProcAddress("glClientActiveTextureARB"));
-    _glBlendEquation = reinterpret_cast<PFNGLBlendEquation>(_glGetProcAddress("glBlendEquation"));
-    _glBlendEquationSeparate = reinterpret_cast<PFNGLBlendEquationSeparate>(_glGetProcAddress("glBlendEquationSeparate"));
-    _glBlendFuncSeparate = reinterpret_cast<PFNGLBlendFuncSeparate>(_glGetProcAddress("glBlendFuncSeparate"));
-    _glBindVertexArray = reinterpret_cast<PFNGLBindVertexArray>(_glGetProcAddress("glBindVertexArray"));
-    _glEnableVertexAttribArray = reinterpret_cast<PFNGLEnableVertexAttribArray>(_glGetProcAddress("glEnableVertexAttribArray"));
-    _glDisableVertexAttribArray = reinterpret_cast<PFNGLDisableVertexAttribArray>(_glGetProcAddress("glDisableVertexAttribArray"));
-    _glGetVertexAttribiv = reinterpret_cast<PFNGLGetVertexAttribiv>(_glGetProcAddress("glGetVertexAttribiv"));
 
     m_SupportTexRect = false; // updated in BeginDraw
 
@@ -238,11 +113,11 @@ int CTwGraphOpenGL::Shut()
     UnbindFont(m_FontTexID);
 
     int Res = 1;
-    if( UnloadOpenGL()==0 )
-    {
-        g_TwMgr->SetLastError(g_ErrCantUnloadOGL);
-        Res = 0;
-    }
+    //if( UnloadOpenGL()==0 )
+    //{
+    //    g_TwMgr->SetLastError(g_ErrCantUnloadOGL);
+    //    Res = 0;
+    //}
 
     return Res;
 }
@@ -262,22 +137,22 @@ void CTwGraphOpenGL::BeginDraw(int _WndWidth, int _WndHeight)
     static bool s_SupportTexRectChecked = false;
     if (!s_SupportTexRectChecked) 
     {
-        const char *ext = (const char *)_glGetString(GL_EXTENSIONS);
+        const char *ext = (const char *)glGetString(GL_EXTENSIONS);
         if( ext!=0 && strlen(ext)>0 )
             m_SupportTexRect = (strstr(ext, "GL_ARB_texture_rectangle")!=NULL);
         s_SupportTexRectChecked = true;
     }
 //#endif
 
-    _glPushAttrib(GL_ALL_ATTRIB_BITS);
-    _glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
 
-    if( _glActiveTextureARB )
+    if( glActiveTextureARB )
     {
-        _glGetIntegerv(GL_ACTIVE_TEXTURE_ARB, &m_PrevActiveTextureARB);
-        _glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE_ARB, &m_PrevClientActiveTextureARB);
+        glGetIntegerv(GL_ACTIVE_TEXTURE_ARB, &m_PrevActiveTextureARB);
+        glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE_ARB, &m_PrevClientActiveTextureARB);
         GLint maxTexUnits = 1;
-        _glGetIntegerv(GL_MAX_TEXTURE_COORDS, &maxTexUnits); // was GL_MAX_TEXTURE_UNITS_ARB
+        glGetIntegerv(GL_MAX_TEXTURE_COORDS, &maxTexUnits); // was GL_MAX_TEXTURE_UNITS_ARB
         if( maxTexUnits<1 ) 
             maxTexUnits = 1;
         else if( maxTexUnits > MAX_TEXTURES )
@@ -285,35 +160,35 @@ void CTwGraphOpenGL::BeginDraw(int _WndWidth, int _WndHeight)
         GLint i;
         for( i=0; i<maxTexUnits; ++i )
         {
-            _glActiveTextureARB(GL_TEXTURE0_ARB+i);
-            m_PrevActiveTexture1D[i] = _glIsEnabled(GL_TEXTURE_1D);
-            m_PrevActiveTexture2D[i] = _glIsEnabled(GL_TEXTURE_2D);
-            m_PrevActiveTexture3D[i] = _glIsEnabled(GL_TEXTURE_3D);
-            _glDisable(GL_TEXTURE_1D);
-            _glDisable(GL_TEXTURE_2D);
-            _glDisable(GL_TEXTURE_3D);
+            glActiveTextureARB(GL_TEXTURE0_ARB+i);
+            m_PrevActiveTexture1D[i] = glIsEnabled(GL_TEXTURE_1D);
+            m_PrevActiveTexture2D[i] = glIsEnabled(GL_TEXTURE_2D);
+            m_PrevActiveTexture3D[i] = glIsEnabled(GL_TEXTURE_3D);
+            glDisable(GL_TEXTURE_1D);
+            glDisable(GL_TEXTURE_2D);
+            glDisable(GL_TEXTURE_3D);
         }
-        _glActiveTextureARB(GL_TEXTURE0_ARB);
+        glActiveTextureARB(GL_TEXTURE0_ARB);
 
         for( i=0; i<maxTexUnits; i++ )
         {
-            _glClientActiveTextureARB(GL_TEXTURE0_ARB+i);
-            m_PrevClientTexCoordArray[i] = _glIsEnabled(GL_TEXTURE_COORD_ARRAY);
-            _glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+            glClientActiveTextureARB(GL_TEXTURE0_ARB+i);
+            m_PrevClientTexCoordArray[i] = glIsEnabled(GL_TEXTURE_COORD_ARRAY);
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         }
-        _glClientActiveTextureARB(GL_TEXTURE0_ARB);
+        glClientActiveTextureARB(GL_TEXTURE0_ARB);
     }
 
-    _glMatrixMode(GL_TEXTURE);
-    _glPushMatrix();
-    _glLoadIdentity();
-    _glMatrixMode(GL_MODELVIEW);
-    _glPushMatrix();
-    _glLoadIdentity();
-    _glMatrixMode(GL_PROJECTION);
-    _glPushMatrix();
+    glMatrixMode(GL_TEXTURE);
+    glPushMatrix();
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
     GLint Vp[4];
-    _glGetIntegerv(GL_VIEWPORT, Vp);
+    glGetIntegerv(GL_VIEWPORT, Vp);
     /*
     if( _WndWidth>0 && _WndHeight>0 )
     {
@@ -321,11 +196,11 @@ void CTwGraphOpenGL::BeginDraw(int _WndWidth, int _WndHeight)
         Vp[1] = 0;
         Vp[2] = _WndWidth;
         Vp[3] = _WndHeight;
-        _glViewport(Vp[0], Vp[1], Vp[2], Vp[3]);
+        glViewport(Vp[0], Vp[1], Vp[2], Vp[3]);
     }
-    _glLoadIdentity();
+    glLoadIdentity();
     //_glOrtho(Vp[0], Vp[0]+Vp[2]-1, Vp[1]+Vp[3]-1, Vp[1], -1, 1); // Doesn't work
-    _glOrtho(Vp[0], Vp[0]+Vp[2], Vp[1]+Vp[3], Vp[1], -1, 1);
+    glOrtho(Vp[0], Vp[0]+Vp[2], Vp[1]+Vp[3], Vp[1], -1, 1);
     */
     if( _WndWidth>0 && _WndHeight>0 )
     {
@@ -333,120 +208,120 @@ void CTwGraphOpenGL::BeginDraw(int _WndWidth, int _WndHeight)
         Vp[1] = 0;
         Vp[2] = _WndWidth-1;
         Vp[3] = _WndHeight-1;
-        _glViewport(Vp[0], Vp[1], Vp[2], Vp[3]);
+        glViewport(Vp[0], Vp[1], Vp[2], Vp[3]);
     }
-    _glLoadIdentity();
-    _glOrtho(Vp[0], Vp[0]+Vp[2], Vp[1]+Vp[3], Vp[1], -1, 1);
-    _glGetIntegerv(GL_VIEWPORT, m_ViewportInit);
-    _glGetFloatv(GL_PROJECTION_MATRIX, m_ProjMatrixInit);
+    glLoadIdentity();
+    glOrtho(Vp[0], Vp[0]+Vp[2], Vp[1]+Vp[3], Vp[1], -1, 1);
+    glGetIntegerv(GL_VIEWPORT, m_ViewportInit);
+    glGetFloatv(GL_PROJECTION_MATRIX, m_ProjMatrixInit);
 
-    _glGetFloatv(GL_LINE_WIDTH, &m_PrevLineWidth);
-    _glDisable(GL_POLYGON_STIPPLE);
-    _glLineWidth(1);
-    _glDisable(GL_LINE_SMOOTH);
-    _glDisable(GL_LINE_STIPPLE);
-    _glDisable(GL_CULL_FACE);
-    _glDisable(GL_DEPTH_TEST);
-    _glDisable(GL_LIGHTING);
-    _glEnable(GL_BLEND);
-    _glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    _glGetTexEnviv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &m_PrevTexEnv);
-    _glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    _glGetIntegerv(GL_POLYGON_MODE, m_PrevPolygonMode);
-    _glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    _glDisable(GL_ALPHA_TEST);
+    glGetFloatv(GL_LINE_WIDTH, &m_PrevLineWidth);
+    glDisable(GL_POLYGON_STIPPLE);
+    glLineWidth(1);
+    glDisable(GL_LINE_SMOOTH);
+    glDisable(GL_LINE_STIPPLE);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glGetTexEnviv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &m_PrevTexEnv);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glGetIntegerv(GL_POLYGON_MODE, m_PrevPolygonMode);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDisable(GL_ALPHA_TEST);
     //_glEnable(GL_ALPHA_TEST);
     //_glAlphaFunc(GL_GREATER, 0);
-    _glDisable(GL_FOG);
-    _glDisable(GL_LOGIC_OP);
-    _glDisable(GL_SCISSOR_TEST);
+    glDisable(GL_FOG);
+    glDisable(GL_LOGIC_OP);
+    glDisable(GL_SCISSOR_TEST);
     if( m_MaxClipPlanes<0 )
     {
-        _glGetIntegerv(GL_MAX_CLIP_PLANES, &m_MaxClipPlanes);
+        glGetIntegerv(GL_MAX_CLIP_PLANES, &m_MaxClipPlanes);
         if( m_MaxClipPlanes<0 || m_MaxClipPlanes>255 )
             m_MaxClipPlanes = 6;
     }
     for( GLint i=0; i<m_MaxClipPlanes; ++i )
-        _glDisable(GL_CLIP_PLANE0+i);
+        glDisable(GL_CLIP_PLANE0+i);
     m_PrevTexture = 0;
-    _glGetIntegerv(GL_TEXTURE_BINDING_2D, &m_PrevTexture);
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &m_PrevTexture);
 
-    _glDisableClientState(GL_VERTEX_ARRAY);
-    _glDisableClientState(GL_NORMAL_ARRAY);
-    _glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    _glDisableClientState(GL_INDEX_ARRAY);
-    _glDisableClientState(GL_COLOR_ARRAY);
-    _glDisableClientState(GL_EDGE_FLAG_ARRAY);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    glDisableClientState(GL_INDEX_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+    glDisableClientState(GL_EDGE_FLAG_ARRAY);
 
-    if( _glBindVertexArray!=NULL )
+    if( glBindVertexArray!=NULL )
     {
         m_PrevVertexArray = 0;
-        _glGetIntegerv(GL_VERTEX_ARRAY_BINDING, (GLint*)&m_PrevVertexArray);
-        _glBindVertexArray(0);
+        glGetIntegerv(GL_VERTEX_ARRAY_BINDING, (GLint*)&m_PrevVertexArray);
+        glBindVertexArray(0);
     }
-    if( _glBindBufferARB!=NULL )
+    if( glBindBufferARB!=NULL )
     {
         m_PrevArrayBufferARB = m_PrevElementArrayBufferARB = 0;
-        _glGetIntegerv(GL_ARRAY_BUFFER_BINDING_ARB, &m_PrevArrayBufferARB);
-        _glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING_ARB, &m_PrevElementArrayBufferARB);
-        _glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        _glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+        glGetIntegerv(GL_ARRAY_BUFFER_BINDING_ARB, &m_PrevArrayBufferARB);
+        glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING_ARB, &m_PrevElementArrayBufferARB);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
     }
-    if( _glBindProgramARB!=NULL )
+    if( glBindProgramARB!=NULL )
     {
-        m_PrevVertexProgramARB = _glIsEnabled(GL_VERTEX_PROGRAM_ARB);
-        m_PrevFragmentProgramARB = _glIsEnabled(GL_FRAGMENT_PROGRAM_ARB);
-        _glDisable(GL_VERTEX_PROGRAM_ARB);
-        _glDisable(GL_FRAGMENT_PROGRAM_ARB);
+        m_PrevVertexProgramARB = glIsEnabled(GL_VERTEX_PROGRAM_ARB);
+        m_PrevFragmentProgramARB = glIsEnabled(GL_FRAGMENT_PROGRAM_ARB);
+        glDisable(GL_VERTEX_PROGRAM_ARB);
+        glDisable(GL_FRAGMENT_PROGRAM_ARB);
     }
-    if( _glGetHandleARB!=NULL && _glUseProgramObjectARB!=NULL )
+    if( glGetHandleARB!=NULL && glUseProgramObjectARB!=NULL )
     {
-        m_PrevProgramObjectARB = _glGetHandleARB(GL_PROGRAM_OBJECT_ARB);
-        _glUseProgramObjectARB(0);
+        m_PrevProgramObjectARB = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);
+        glUseProgramObjectARB(0);
     }
-    _glDisable(GL_TEXTURE_1D);
-    _glDisable(GL_TEXTURE_2D);
-    if( _glTexImage3D!=NULL )
+    glDisable(GL_TEXTURE_1D);
+    glDisable(GL_TEXTURE_2D);
+    if( glTexImage3D!=NULL )
     {
-        m_PrevTexture3D = _glIsEnabled(GL_TEXTURE_3D);
-        _glDisable(GL_TEXTURE_3D);
+        m_PrevTexture3D = glIsEnabled(GL_TEXTURE_3D);
+        glDisable(GL_TEXTURE_3D);
     }
 
     if( m_SupportTexRect )
     {
-        m_PrevTexRectARB = _glIsEnabled(GL_TEXTURE_RECTANGLE_ARB);
-        _glDisable(GL_TEXTURE_RECTANGLE_ARB);
+        m_PrevTexRectARB = glIsEnabled(GL_TEXTURE_RECTANGLE_ARB);
+        glDisable(GL_TEXTURE_RECTANGLE_ARB);
     }
-    if( _glBlendEquationSeparate!=NULL )
+    if( glBlendEquationSeparate!=NULL )
     {
-        _glGetIntegerv(GL_BLEND_EQUATION_RGB, &m_PrevBlendEquationRGB);
-        _glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &m_PrevBlendEquationAlpha);
-        _glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+        glGetIntegerv(GL_BLEND_EQUATION_RGB, &m_PrevBlendEquationRGB);
+        glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &m_PrevBlendEquationAlpha);
+        glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
     }
-    if( _glBlendFuncSeparate!=NULL )
+    if( glBlendFuncSeparate!=NULL )
     {
-        _glGetIntegerv(GL_BLEND_SRC_RGB, &m_PrevBlendSrcRGB);
-        _glGetIntegerv(GL_BLEND_DST_RGB, &m_PrevBlendDstRGB);
-        _glGetIntegerv(GL_BLEND_SRC_ALPHA, &m_PrevBlendSrcAlpha);
-        _glGetIntegerv(GL_BLEND_DST_ALPHA, &m_PrevBlendDstAlpha);
-        _glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glGetIntegerv(GL_BLEND_SRC_RGB, &m_PrevBlendSrcRGB);
+        glGetIntegerv(GL_BLEND_DST_RGB, &m_PrevBlendDstRGB);
+        glGetIntegerv(GL_BLEND_SRC_ALPHA, &m_PrevBlendSrcAlpha);
+        glGetIntegerv(GL_BLEND_DST_ALPHA, &m_PrevBlendDstAlpha);
+        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
-    if( _glBlendEquation!=NULL )
+    if( glBlendEquation!=NULL )
     {
-        _glGetIntegerv(GL_BLEND_EQUATION, &m_PrevBlendEquation);
-        _glBlendEquation(GL_FUNC_ADD);
+        glGetIntegerv(GL_BLEND_EQUATION, &m_PrevBlendEquation);
+        glBlendEquation(GL_FUNC_ADD);
     }
-    if( _glDisableVertexAttribArray!=NULL )
+    if( glDisableVertexAttribArray!=NULL )
     {
         GLint maxVertexAttribs;
-        _glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
+        glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
         if(maxVertexAttribs>MAX_VERTEX_ATTRIBS)
             maxVertexAttribs=MAX_VERTEX_ATTRIBS;
        
         for(int i=0; i<maxVertexAttribs; i++)
         {
-            _glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &m_PrevEnabledVertexAttrib[i]);
-            _glDisableVertexAttribArray(i);
+            glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &m_PrevEnabledVertexAttrib[i]);
+            glDisableVertexAttribArray(i);
         }
     }
 
@@ -460,51 +335,51 @@ void CTwGraphOpenGL::EndDraw()
     assert(m_Drawing==true);
     m_Drawing = false;
 
-    _glBindTexture(GL_TEXTURE_2D, m_PrevTexture);
-    if( _glBindVertexArray!=NULL )
-        _glBindVertexArray(m_PrevVertexArray);
-    if( _glBindBufferARB!=NULL )
+    glBindTexture(GL_TEXTURE_2D, m_PrevTexture);
+    if( glBindVertexArray!=NULL )
+        glBindVertexArray(m_PrevVertexArray);
+    if( glBindBufferARB!=NULL )
     {
-        _glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_PrevArrayBufferARB);
-        _glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, m_PrevElementArrayBufferARB);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_PrevArrayBufferARB);
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, m_PrevElementArrayBufferARB);
     }
-    if( _glBindProgramARB!=NULL )
+    if( glBindProgramARB!=NULL )
     {
         if( m_PrevVertexProgramARB )
-            _glEnable(GL_VERTEX_PROGRAM_ARB);
+            glEnable(GL_VERTEX_PROGRAM_ARB);
         if( m_PrevFragmentProgramARB )
-            _glEnable(GL_FRAGMENT_PROGRAM_ARB);
+            glEnable(GL_FRAGMENT_PROGRAM_ARB);
     }
-    if( _glGetHandleARB!=NULL && _glUseProgramObjectARB!=NULL )
-        _glUseProgramObjectARB(m_PrevProgramObjectARB);
-    if( _glTexImage3D!=NULL && m_PrevTexture3D )
-        _glEnable(GL_TEXTURE_3D);
+    if( glGetHandleARB!=NULL && glUseProgramObjectARB!=NULL )
+        glUseProgramObjectARB(m_PrevProgramObjectARB);
+    if( glTexImage3D!=NULL && m_PrevTexture3D )
+        glEnable(GL_TEXTURE_3D);
     if( m_SupportTexRect && m_PrevTexRectARB )
-        _glEnable(GL_TEXTURE_RECTANGLE_ARB);
-    if( _glBlendEquation!=NULL )
-        _glBlendEquation(m_PrevBlendEquation);
-    if( _glBlendEquationSeparate!=NULL )
-        _glBlendEquationSeparate(m_PrevBlendEquationRGB, m_PrevBlendEquationAlpha);
-    if( _glBlendFuncSeparate!=NULL )
-        _glBlendFuncSeparate(m_PrevBlendSrcRGB, m_PrevBlendDstRGB, m_PrevBlendSrcAlpha, m_PrevBlendDstAlpha);
+        glEnable(GL_TEXTURE_RECTANGLE_ARB);
+    if( glBlendEquation!=NULL )
+        glBlendEquation(m_PrevBlendEquation);
+    if( glBlendEquationSeparate!=NULL )
+        glBlendEquationSeparate(m_PrevBlendEquationRGB, m_PrevBlendEquationAlpha);
+    if( glBlendFuncSeparate!=NULL )
+        glBlendFuncSeparate(m_PrevBlendSrcRGB, m_PrevBlendDstRGB, m_PrevBlendSrcAlpha, m_PrevBlendDstAlpha);
     
-    _glPolygonMode(GL_FRONT, m_PrevPolygonMode[0]);
-    _glPolygonMode(GL_BACK, m_PrevPolygonMode[1]);
-    _glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, m_PrevTexEnv);
-    _glLineWidth(m_PrevLineWidth);
-    _glMatrixMode(GL_PROJECTION);
-    _glPopMatrix();
-    _glMatrixMode(GL_MODELVIEW);
-    _glPopMatrix();
-    _glMatrixMode(GL_TEXTURE);
-    _glPopMatrix();
-    _glPopClientAttrib();
-    _glPopAttrib();
+    glPolygonMode(GL_FRONT, m_PrevPolygonMode[0]);
+    glPolygonMode(GL_BACK, m_PrevPolygonMode[1]);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, m_PrevTexEnv);
+    glLineWidth(m_PrevLineWidth);
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+    glMatrixMode(GL_TEXTURE);
+    glPopMatrix();
+    glPopClientAttrib();
+    glPopAttrib();
 
-    if( _glActiveTextureARB )
+    if( glActiveTextureARB )
     {
         GLint maxTexUnits = 1;
-        _glGetIntegerv(GL_MAX_TEXTURE_COORDS, &maxTexUnits); // was GL_MAX_TEXTURE_UNITS_ARB
+        glGetIntegerv(GL_MAX_TEXTURE_COORDS, &maxTexUnits); // was GL_MAX_TEXTURE_UNITS_ARB
         if( maxTexUnits<1 ) 
             maxTexUnits = 1;
         else if( maxTexUnits > MAX_TEXTURES )
@@ -512,35 +387,35 @@ void CTwGraphOpenGL::EndDraw()
         GLint i;
         for( i=0; i<maxTexUnits; ++i )
         {
-            _glActiveTextureARB(GL_TEXTURE0_ARB+i);
+            glActiveTextureARB(GL_TEXTURE0_ARB+i);
             if( m_PrevActiveTexture1D[i] )
-                _glEnable(GL_TEXTURE_1D);
+                glEnable(GL_TEXTURE_1D);
             if( m_PrevActiveTexture2D[i] )
-                _glEnable(GL_TEXTURE_2D);
+                glEnable(GL_TEXTURE_2D);
             if( m_PrevActiveTexture3D[i] )
-                _glEnable(GL_TEXTURE_3D);
+                glEnable(GL_TEXTURE_3D);
         }
-        _glActiveTextureARB(m_PrevActiveTextureARB);
+        glActiveTextureARB(m_PrevActiveTextureARB);
 
         for( i=0; i<maxTexUnits; ++i )
         {
-            _glClientActiveTextureARB(GL_TEXTURE0_ARB+i);
+            glClientActiveTextureARB(GL_TEXTURE0_ARB+i);
             if( m_PrevClientTexCoordArray[i] )
-                _glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                glEnableClientState(GL_TEXTURE_COORD_ARRAY);
         }
-        _glClientActiveTextureARB(m_PrevClientActiveTextureARB);
+        glClientActiveTextureARB(m_PrevClientActiveTextureARB);
     }
-    if(_glEnableVertexAttribArray)
+    if(glEnableVertexAttribArray)
     {
         GLint maxVertexAttribs;
-        _glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
+        glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
         if(maxVertexAttribs>MAX_VERTEX_ATTRIBS)
             maxVertexAttribs=MAX_VERTEX_ATTRIBS;
        
         for(int i=0; i<maxVertexAttribs; i++)
         {
             if(m_PrevEnabledVertexAttrib[i]!=0)
-                _glEnableVertexAttribArray(i);
+                glEnableVertexAttribArray(i);
         }
     }
 
@@ -585,21 +460,21 @@ void CTwGraphOpenGL::DrawLine(int _X0, int _Y0, int _X1, int _Y1, color32 _Color
     //GLfloat dy = -0.2f;
     const GLfloat dy = -0.5f;
     if( _AntiAliased )
-        _glEnable(GL_LINE_SMOOTH);
+        glEnable(GL_LINE_SMOOTH);
     else
-        _glDisable(GL_LINE_SMOOTH);
-    _glDisable(GL_TEXTURE_2D);
-    _glMatrixMode(GL_MODELVIEW);
-    _glLoadIdentity();
-    _glBegin(GL_LINES);
-        _glColor4ub(GLubyte(_Color0>>16), GLubyte(_Color0>>8), GLubyte(_Color0), GLubyte(_Color0>>24));
-        _glVertex2f((GLfloat)_X0+dx, (GLfloat)_Y0+dy);
-        _glColor4ub(GLubyte(_Color1>>16), GLubyte(_Color1>>8), GLubyte(_Color1), GLubyte(_Color1>>24));
-        _glVertex2f((GLfloat)_X1+dx, (GLfloat)_Y1+dy);
+        glDisable(GL_LINE_SMOOTH);
+    glDisable(GL_TEXTURE_2D);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glBegin(GL_LINES);
+        glColor4ub(GLubyte(_Color0>>16), GLubyte(_Color0>>8), GLubyte(_Color0), GLubyte(_Color0>>24));
+        glVertex2f((GLfloat)_X0+dx, (GLfloat)_Y0+dy);
+        glColor4ub(GLubyte(_Color1>>16), GLubyte(_Color1>>8), GLubyte(_Color1), GLubyte(_Color1>>24));
+        glVertex2f((GLfloat)_X1+dx, (GLfloat)_Y1+dy);
         //_glVertex2i(_X0, _Y0);
         //_glVertex2i(_X1, _Y1);
-    _glEnd();
-    _glDisable(GL_LINE_SMOOTH);
+    glEnd();
+    glDisable(GL_LINE_SMOOTH);
 }
   
 //  ---------------------------------------------------------------------------
@@ -631,25 +506,25 @@ void CTwGraphOpenGL::DrawRect(int _X0, int _Y0, int _X1, int _Y1, color32 _Color
     const GLfloat dx = +0.0f;
     const GLfloat dy = +0.0f;
 
-    _glDisable(GL_TEXTURE_2D);
-    _glMatrixMode(GL_MODELVIEW);
-    _glLoadIdentity();
+    glDisable(GL_TEXTURE_2D);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
     //GLubyte r = GLubyte(_Color>>16);
     //GLubyte g = GLubyte(_Color>>8);
     //GLubyte b = GLubyte(_Color);
     //GLubyte a = GLubyte(_Color>>24);
     //_glColor4ub(GLubyte(_Color>>16), GLubyte(_Color>>8), GLubyte(_Color), GLubyte(_Color>>24));
     //_glColor4ub(r, g, b, a);
-    _glBegin(GL_QUADS);
-        _glColor4ub(GLubyte(_Color00>>16), GLubyte(_Color00>>8), GLubyte(_Color00), GLubyte(_Color00>>24));
-        _glVertex2f((GLfloat)_X0+dx, (GLfloat)_Y0+dy);
-        _glColor4ub(GLubyte(_Color10>>16), GLubyte(_Color10>>8), GLubyte(_Color10), GLubyte(_Color10>>24));
-        _glVertex2f((GLfloat)_X1+dx, (GLfloat)_Y0+dy);
-        _glColor4ub(GLubyte(_Color11>>16), GLubyte(_Color11>>8), GLubyte(_Color11), GLubyte(_Color11>>24));
-        _glVertex2f((GLfloat)_X1+dx, (GLfloat)_Y1+dy);
-        _glColor4ub(GLubyte(_Color01>>16), GLubyte(_Color01>>8), GLubyte(_Color01), GLubyte(_Color01>>24));
-        _glVertex2f((GLfloat)_X0+dx, (GLfloat)_Y1+dy);
-    _glEnd();
+    glBegin(GL_QUADS);
+        glColor4ub(GLubyte(_Color00>>16), GLubyte(_Color00>>8), GLubyte(_Color00), GLubyte(_Color00>>24));
+        glVertex2f((GLfloat)_X0+dx, (GLfloat)_Y0+dy);
+        glColor4ub(GLubyte(_Color10>>16), GLubyte(_Color10>>8), GLubyte(_Color10), GLubyte(_Color10>>24));
+        glVertex2f((GLfloat)_X1+dx, (GLfloat)_Y0+dy);
+        glColor4ub(GLubyte(_Color11>>16), GLubyte(_Color11>>8), GLubyte(_Color11), GLubyte(_Color11>>24));
+        glVertex2f((GLfloat)_X1+dx, (GLfloat)_Y1+dy);
+        glColor4ub(GLubyte(_Color01>>16), GLubyte(_Color01>>8), GLubyte(_Color01), GLubyte(_Color01>>24));
+        glVertex2f((GLfloat)_X0+dx, (GLfloat)_Y1+dy);
+    glEnd();
 }
 
 //  ---------------------------------------------------------------------------
@@ -767,50 +642,50 @@ void CTwGraphOpenGL::DrawText(void *_TextObj, int _X, int _Y, color32 _Color, co
     if( TextObj->m_TextVerts.size()<4 && TextObj->m_BgVerts.size()<4 )
         return; // nothing to draw
 
-    _glMatrixMode(GL_MODELVIEW);
-    _glLoadIdentity();
-    _glTranslatef((GLfloat)_X, (GLfloat)_Y, 0);
-    _glEnableClientState(GL_VERTEX_ARRAY);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef((GLfloat)_X, (GLfloat)_Y, 0);
+    glEnableClientState(GL_VERTEX_ARRAY);
     if( (_BgColor!=0 || TextObj->m_BgColors.size()==TextObj->m_BgVerts.size()) && TextObj->m_BgVerts.size()>=4 )
     {
-        _glDisable(GL_TEXTURE_2D);
-        _glVertexPointer(2, GL_FLOAT, 0, &(TextObj->m_BgVerts[0]));
+        glDisable(GL_TEXTURE_2D);
+        glVertexPointer(2, GL_FLOAT, 0, &(TextObj->m_BgVerts[0]));
         if( TextObj->m_BgColors.size()==TextObj->m_BgVerts.size() && _BgColor==0 )
         {
-            _glEnableClientState(GL_COLOR_ARRAY);
-            _glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(TextObj->m_BgColors[0]));
+            glEnableClientState(GL_COLOR_ARRAY);
+            glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(TextObj->m_BgColors[0]));
         }
         else
         {
-            _glDisableClientState(GL_COLOR_ARRAY);
-            _glColor4ub(GLubyte(_BgColor>>16), GLubyte(_BgColor>>8), GLubyte(_BgColor), GLubyte(_BgColor>>24));
+            glDisableClientState(GL_COLOR_ARRAY);
+            glColor4ub(GLubyte(_BgColor>>16), GLubyte(_BgColor>>8), GLubyte(_BgColor), GLubyte(_BgColor>>24));
         }
-        _glDrawArrays(GL_TRIANGLES, 0, (int)TextObj->m_BgVerts.size());
+        glDrawArrays(GL_TRIANGLES, 0, (int)TextObj->m_BgVerts.size());
     }
-    _glEnable(GL_TEXTURE_2D);
-    _glBindTexture(GL_TEXTURE_2D, m_FontTexID);
-    _glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, m_FontTexID);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     if( TextObj->m_TextVerts.size()>=4 )
     {
-        _glVertexPointer(2, GL_FLOAT, 0, &(TextObj->m_TextVerts[0]));
-        _glTexCoordPointer(2, GL_FLOAT, 0, &(TextObj->m_TextUVs[0]));
+        glVertexPointer(2, GL_FLOAT, 0, &(TextObj->m_TextVerts[0]));
+        glTexCoordPointer(2, GL_FLOAT, 0, &(TextObj->m_TextUVs[0]));
         if( TextObj->m_Colors.size()==TextObj->m_TextVerts.size() && _Color==0 )
         {
-            _glEnableClientState(GL_COLOR_ARRAY);
-            _glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(TextObj->m_Colors[0]));
+            glEnableClientState(GL_COLOR_ARRAY);
+            glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(TextObj->m_Colors[0]));
         }
         else
         {
-            _glDisableClientState(GL_COLOR_ARRAY);
-            _glColor4ub(GLubyte(_Color>>16), GLubyte(_Color>>8), GLubyte(_Color), GLubyte(_Color>>24));
+            glDisableClientState(GL_COLOR_ARRAY);
+            glColor4ub(GLubyte(_Color>>16), GLubyte(_Color>>8), GLubyte(_Color), GLubyte(_Color>>24));
         }
 
-        _glDrawArrays(GL_TRIANGLES, 0, (int)TextObj->m_TextVerts.size());
+        glDrawArrays(GL_TRIANGLES, 0, (int)TextObj->m_TextVerts.size());
     }
     
-    _glDisableClientState(GL_VERTEX_ARRAY);
-    _glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    _glDisableClientState(GL_COLOR_ARRAY);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
 }
 
 //  ---------------------------------------------------------------------------
@@ -824,14 +699,14 @@ void CTwGraphOpenGL::ChangeViewport(int _X0, int _Y0, int _Width, int _Height, i
         vp[1] = _Y0;
         vp[2] = _Width-1;
         vp[3] = _Height-1;
-        _glViewport(vp[0], m_WndHeight-vp[1]-vp[3], vp[2], vp[3]);
+        glViewport(vp[0], m_WndHeight-vp[1]-vp[3], vp[2], vp[3]);
 
         GLint matrixMode = 0;
-        _glGetIntegerv(GL_MATRIX_MODE, &matrixMode);
-        _glMatrixMode(GL_PROJECTION);
-        _glLoadIdentity();
-        _glOrtho(_OffsetX, _OffsetX+vp[2], vp[3]-_OffsetY, -_OffsetY, -1, 1);
-        _glMatrixMode(matrixMode);
+        glGetIntegerv(GL_MATRIX_MODE, &matrixMode);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(_OffsetX, _OffsetX+vp[2], vp[3]-_OffsetY, -_OffsetY, -1, 1);
+        glMatrixMode(matrixMode);
     }
 }
 
@@ -839,13 +714,13 @@ void CTwGraphOpenGL::ChangeViewport(int _X0, int _Y0, int _Width, int _Height, i
 
 void CTwGraphOpenGL::RestoreViewport()
 {
-    _glViewport(m_ViewportInit[0], m_ViewportInit[1], m_ViewportInit[2], m_ViewportInit[3]);
+    glViewport(m_ViewportInit[0], m_ViewportInit[1], m_ViewportInit[2], m_ViewportInit[3]);
 
     GLint matrixMode = 0;
-    _glGetIntegerv(GL_MATRIX_MODE, &matrixMode);
-    _glMatrixMode(GL_PROJECTION);
-    _glLoadMatrixf(m_ProjMatrixInit);
-    _glMatrixMode(matrixMode);
+    glGetIntegerv(GL_MATRIX_MODE, &matrixMode);
+    glMatrixMode(GL_PROJECTION);
+    glLoadMatrixf(m_ProjMatrixInit);
+    glMatrixMode(matrixMode);
 }
 
 //  ---------------------------------------------------------------------------
@@ -854,11 +729,11 @@ void CTwGraphOpenGL::SetScissor(int _X0, int _Y0, int _Width, int _Height)
 {
     if( _Width>0 && _Height>0 )
     {
-        _glScissor(_X0-1, m_WndHeight-_Y0-_Height, _Width-1, _Height);
-        _glEnable(GL_SCISSOR_TEST);
+        glScissor(_X0-1, m_WndHeight-_Y0-_Height, _Width-1, _Height);
+        glEnable(GL_SCISSOR_TEST);
     }
     else
-        _glDisable(GL_SCISSOR_TEST);
+        glDisable(GL_SCISSOR_TEST);
 }
 
 //  ---------------------------------------------------------------------------
@@ -871,36 +746,36 @@ void CTwGraphOpenGL::DrawTriangles(int _NumTriangles, int *_Vertices, color32 *_
     const GLfloat dy = +0.0f;
 
     GLint prevCullFaceMode, prevFrontFace;
-    _glGetIntegerv(GL_CULL_FACE_MODE, &prevCullFaceMode);
-    _glGetIntegerv(GL_FRONT_FACE, &prevFrontFace);
-    GLboolean prevCullEnable = _glIsEnabled(GL_CULL_FACE);
-    _glCullFace(GL_BACK);
-    _glEnable(GL_CULL_FACE);
+    glGetIntegerv(GL_CULL_FACE_MODE, &prevCullFaceMode);
+    glGetIntegerv(GL_FRONT_FACE, &prevFrontFace);
+    GLboolean prevCullEnable = glIsEnabled(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glEnable(GL_CULL_FACE);
     if( _CullMode==CULL_CW )
-        _glFrontFace(GL_CCW);
+        glFrontFace(GL_CCW);
     else if( _CullMode==CULL_CCW )
-        _glFrontFace(GL_CW);
+        glFrontFace(GL_CW);
     else
-        _glDisable(GL_CULL_FACE);
+        glDisable(GL_CULL_FACE);
 
-    _glDisable(GL_TEXTURE_2D);
-    _glMatrixMode(GL_MODELVIEW);
-    _glLoadIdentity();
-    _glBegin(GL_TRIANGLES);
+    glDisable(GL_TEXTURE_2D);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glBegin(GL_TRIANGLES);
     for(int i=0; i<3*_NumTriangles; ++i)
     {
         color32 col = _Colors[i];
-        _glColor4ub(GLubyte(col>>16), GLubyte(col>>8), GLubyte(col), GLubyte(col>>24));
-        _glVertex2f((GLfloat)_Vertices[2*i+0]+dx, (GLfloat)_Vertices[2*i+1]+dy);
+        glColor4ub(GLubyte(col>>16), GLubyte(col>>8), GLubyte(col), GLubyte(col>>24));
+        glVertex2f((GLfloat)_Vertices[2*i+0]+dx, (GLfloat)_Vertices[2*i+1]+dy);
     }
-    _glEnd();
+    glEnd();
 
-    _glCullFace(prevCullFaceMode);
-    _glFrontFace(prevFrontFace);
+    glCullFace(prevCullFaceMode);
+    glFrontFace(prevFrontFace);
     if( prevCullEnable )
-        _glEnable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE);
     else
-        _glDisable(GL_CULL_FACE);
+        glDisable(GL_CULL_FACE);
 }
 
 //  ---------------------------------------------------------------------------

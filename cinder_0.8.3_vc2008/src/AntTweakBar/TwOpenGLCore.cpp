@@ -19,7 +19,6 @@
 #   define ANT_OGL_HEADER_INCLUDED
 #endif
 #include "TwPrecomp.h"
-#include "LoadOGLCore.h"
 #include "TwOpenGLCore.h"
 #include "TwMgr.h"
 
@@ -35,7 +34,7 @@ extern const char *g_ErrCantUnloadOGL;
     {
         int err=0;
         char msg[256];
-        while( (err=_glGetError())!=0 )
+        while( (err=glGetError())!=0 )
         {
             sprintf(msg, "%s(%d) : [%s] GL_CORE_ERROR=0x%x\n", file, line, func, err);
             #ifdef ANT_WINDOWS
@@ -58,20 +57,20 @@ extern const char *g_ErrCantUnloadOGL;
 static GLuint BindFont(const CTexFont *_Font)
 {
     GLuint TexID = 0;
-    _glGenTextures(1, &TexID);
-    _glBindTexture(GL_TEXTURE_2D, TexID);
-    _glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_FALSE);
-    _glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
-    _glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    _glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
-    _glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
-    _glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    _glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, _Font->m_TexWidth, _Font->m_TexHeight, 0, GL_RED, GL_UNSIGNED_BYTE, _Font->m_TexBytes);
-    _glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    _glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    _glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-    _glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-    _glBindTexture(GL_TEXTURE_2D, 0);
+    glGenTextures(1, &TexID);
+    glBindTexture(GL_TEXTURE_2D, TexID);
+    glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_FALSE);
+    glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, _Font->m_TexWidth, _Font->m_TexHeight, 0, GL_RED, GL_UNSIGNED_BYTE, _Font->m_TexBytes);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     return TexID;
 }
@@ -79,24 +78,24 @@ static GLuint BindFont(const CTexFont *_Font)
 static void UnbindFont(GLuint _FontTexID)
 {
     if( _FontTexID>0 )
-        _glDeleteTextures(1, &_FontTexID);
+        glDeleteTextures(1, &_FontTexID);
 }
 
 //  ---------------------------------------------------------------------------
 
 static GLuint CompileShader(GLuint shader)
 {
-    _glCompileShader(shader); CHECK_GL_ERROR;
+    glCompileShader(shader); CHECK_GL_ERROR;
 
     GLint status;
-    _glGetShaderiv(shader, GL_COMPILE_STATUS, &status); CHECK_GL_ERROR;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &status); CHECK_GL_ERROR;
     if (status == GL_FALSE)
     {
         GLint infoLogLength;
-        _glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength); CHECK_GL_ERROR;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength); CHECK_GL_ERROR;
 
         GLchar strInfoLog[256];
-        _glGetShaderInfoLog(shader, sizeof(strInfoLog), NULL, strInfoLog); CHECK_GL_ERROR;
+        glGetShaderInfoLog(shader, sizeof(strInfoLog), NULL, strInfoLog); CHECK_GL_ERROR;
 #ifdef ANT_WINDOWS
         OutputDebugStringA("Compile failure: ");
         OutputDebugStringA(strInfoLog);
@@ -111,17 +110,17 @@ static GLuint CompileShader(GLuint shader)
 
 static GLuint LinkProgram(GLuint program)
 {
-    _glLinkProgram(program); CHECK_GL_ERROR;
+    glLinkProgram(program); CHECK_GL_ERROR;
 
     GLint status;
-    _glGetProgramiv(program, GL_LINK_STATUS, &status); CHECK_GL_ERROR;
+    glGetProgramiv(program, GL_LINK_STATUS, &status); CHECK_GL_ERROR;
     if (status == GL_FALSE)
     {
         GLint infoLogLength;
-        _glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength); CHECK_GL_ERROR;
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength); CHECK_GL_ERROR;
 
         GLchar strInfoLog[256];
-        _glGetProgramInfoLog(program, sizeof(strInfoLog), NULL, strInfoLog); CHECK_GL_ERROR;
+        glGetProgramInfoLog(program, sizeof(strInfoLog), NULL, strInfoLog); CHECK_GL_ERROR;
 #ifdef ANT_WINDOWS
         OutputDebugStringA("Linker failure: ");
         OutputDebugStringA(strInfoLog);
@@ -140,16 +139,16 @@ void CTwGraphOpenGLCore::ResizeTriBuffers(size_t _NewSize)
 {
     m_TriBufferSize = _NewSize;
 
-    _glBindVertexArray(m_TriVArray);
+    glBindVertexArray(m_TriVArray);
 
-    _glBindBuffer(GL_ARRAY_BUFFER, m_TriVertices);
-    _glBufferData(GL_ARRAY_BUFFER, m_TriBufferSize*sizeof(Vec2), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, m_TriVertices);
+    glBufferData(GL_ARRAY_BUFFER, m_TriBufferSize*sizeof(Vec2), 0, GL_DYNAMIC_DRAW);
 
-    _glBindBuffer(GL_ARRAY_BUFFER, m_TriUVs);
-    _glBufferData(GL_ARRAY_BUFFER, m_TriBufferSize*sizeof(Vec2), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, m_TriUVs);
+    glBufferData(GL_ARRAY_BUFFER, m_TriBufferSize*sizeof(Vec2), 0, GL_DYNAMIC_DRAW);
 
-    _glBindBuffer(GL_ARRAY_BUFFER, m_TriColors);
-    _glBufferData(GL_ARRAY_BUFFER, m_TriBufferSize*sizeof(color32), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, m_TriColors);
+    glBufferData(GL_ARRAY_BUFFER, m_TriBufferSize*sizeof(color32), 0, GL_DYNAMIC_DRAW);
 
     CHECK_GL_ERROR;
 }
@@ -162,7 +161,7 @@ int CTwGraphOpenGLCore::Init()
     m_FontTexID = 0;
     m_FontTex = NULL;
 
-    if( LoadOpenGLCore()==0 )
+    if( glewInit() != GLEW_OK )
     {
         g_TwMgr->SetLastError(g_ErrCantLoadOGL);
         return 0;
@@ -176,8 +175,8 @@ int CTwGraphOpenGLCore::Init()
         "out vec4 fcolor;"
         "void main() { gl_Position = vec4(vertex, 1); fcolor = color; }"
     };
-    m_LineRectVS = _glCreateShader(GL_VERTEX_SHADER);
-    _glShaderSource(m_LineRectVS, 1, lineRectVS, NULL);
+    m_LineRectVS = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(m_LineRectVS, 1, lineRectVS, NULL);
     CompileShader(m_LineRectVS);
 
     const GLchar *lineRectFS[] = {
@@ -187,28 +186,28 @@ int CTwGraphOpenGLCore::Init()
         "out vec4 outColor;"
         "void main() { outColor = fcolor; }"
     };
-    m_LineRectFS = _glCreateShader(GL_FRAGMENT_SHADER);
-    _glShaderSource(m_LineRectFS, 1, lineRectFS, NULL);
+    m_LineRectFS = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(m_LineRectFS, 1, lineRectFS, NULL);
     CompileShader(m_LineRectFS);
 
-    m_LineRectProgram = _glCreateProgram();
-    _glAttachShader(m_LineRectProgram, m_LineRectVS);
-    _glAttachShader(m_LineRectProgram, m_LineRectFS);
-    _glBindAttribLocation(m_LineRectProgram, 0, "vertex");
-    _glBindAttribLocation(m_LineRectProgram, 1, "color");
+    m_LineRectProgram = glCreateProgram();
+    glAttachShader(m_LineRectProgram, m_LineRectVS);
+    glAttachShader(m_LineRectProgram, m_LineRectFS);
+    glBindAttribLocation(m_LineRectProgram, 0, "vertex");
+    glBindAttribLocation(m_LineRectProgram, 1, "color");
     LinkProgram(m_LineRectProgram);
 
     // Create line/rect vertex buffer
     const GLfloat lineRectInitVertices[] = { 0,0,0, 0,0,0, 0,0,0, 0,0,0 };
     const color32 lineRectInitColors[] = { 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff };
-    _glGenVertexArrays(1, &m_LineRectVArray);
-    _glBindVertexArray(m_LineRectVArray);
-    _glGenBuffers(1, &m_LineRectVertices);
-    _glBindBuffer(GL_ARRAY_BUFFER, m_LineRectVertices);
-    _glBufferData(GL_ARRAY_BUFFER, sizeof(lineRectInitVertices), lineRectInitVertices, GL_DYNAMIC_DRAW);
-    _glGenBuffers(1, &m_LineRectColors);
-    _glBindBuffer(GL_ARRAY_BUFFER, m_LineRectColors);
-    _glBufferData(GL_ARRAY_BUFFER, sizeof(lineRectInitColors), lineRectInitColors, GL_DYNAMIC_DRAW);
+    glGenVertexArrays(1, &m_LineRectVArray);
+    glBindVertexArray(m_LineRectVArray);
+    glGenBuffers(1, &m_LineRectVertices);
+    glBindBuffer(GL_ARRAY_BUFFER, m_LineRectVertices);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(lineRectInitVertices), lineRectInitVertices, GL_DYNAMIC_DRAW);
+    glGenBuffers(1, &m_LineRectColors);
+    glBindBuffer(GL_ARRAY_BUFFER, m_LineRectColors);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(lineRectInitColors), lineRectInitColors, GL_DYNAMIC_DRAW);
 
     // Create triangles shaders
     const GLchar *triVS[] = {
@@ -220,8 +219,8 @@ int CTwGraphOpenGLCore::Init()
         "out vec4 fcolor;"
         "void main() { gl_Position = vec4(2.0*(vertex.x+offset.x-0.5)/wndSize.x - 1.0, 1.0 - 2.0*(vertex.y+offset.y-0.5)/wndSize.y, 0, 1); fcolor = color; }"
     };
-    m_TriVS = _glCreateShader(GL_VERTEX_SHADER);
-    _glShaderSource(m_TriVS, 1, triVS, NULL);
+    m_TriVS = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(m_TriVS, 1, triVS, NULL);
     CompileShader(m_TriVS);
 
     const GLchar *triUniVS[] = {
@@ -233,30 +232,30 @@ int CTwGraphOpenGLCore::Init()
         "out vec4 fcolor;"
         "void main() { gl_Position = vec4(2.0*(vertex.x+offset.x-0.5)/wndSize.x - 1.0, 1.0 - 2.0*(vertex.y+offset.y-0.5)/wndSize.y, 0, 1); fcolor = color; }"
     };
-    m_TriUniVS = _glCreateShader(GL_VERTEX_SHADER);
-    _glShaderSource(m_TriUniVS, 1, triUniVS, NULL);
+    m_TriUniVS = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(m_TriUniVS, 1, triUniVS, NULL);
     CompileShader(m_TriUniVS);
 
     m_TriFS = m_TriUniFS = m_LineRectFS;
 
-    m_TriProgram = _glCreateProgram();
-    _glAttachShader(m_TriProgram, m_TriVS);
-    _glAttachShader(m_TriProgram, m_TriFS);
-    _glBindAttribLocation(m_TriProgram, 0, "vertex");
-    _glBindAttribLocation(m_TriProgram, 1, "color");
+    m_TriProgram = glCreateProgram();
+    glAttachShader(m_TriProgram, m_TriVS);
+    glAttachShader(m_TriProgram, m_TriFS);
+    glBindAttribLocation(m_TriProgram, 0, "vertex");
+    glBindAttribLocation(m_TriProgram, 1, "color");
     LinkProgram(m_TriProgram);
-    m_TriLocationOffset = _glGetUniformLocation(m_TriProgram, "offset");
-    m_TriLocationWndSize = _glGetUniformLocation(m_TriProgram, "wndSize");
+    m_TriLocationOffset = glGetUniformLocation(m_TriProgram, "offset");
+    m_TriLocationWndSize = glGetUniformLocation(m_TriProgram, "wndSize");
 
-    m_TriUniProgram = _glCreateProgram();
-    _glAttachShader(m_TriUniProgram, m_TriUniVS);
-    _glAttachShader(m_TriUniProgram, m_TriUniFS);
-    _glBindAttribLocation(m_TriUniProgram, 0, "vertex");
-    _glBindAttribLocation(m_TriUniProgram, 1, "color");
+    m_TriUniProgram = glCreateProgram();
+    glAttachShader(m_TriUniProgram, m_TriUniVS);
+    glAttachShader(m_TriUniProgram, m_TriUniFS);
+    glBindAttribLocation(m_TriUniProgram, 0, "vertex");
+    glBindAttribLocation(m_TriUniProgram, 1, "color");
     LinkProgram(m_TriUniProgram);
-    m_TriUniLocationOffset = _glGetUniformLocation(m_TriUniProgram, "offset");
-    m_TriUniLocationWndSize = _glGetUniformLocation(m_TriUniProgram, "wndSize");
-    m_TriUniLocationColor = _glGetUniformLocation(m_TriUniProgram, "color");
+    m_TriUniLocationOffset = glGetUniformLocation(m_TriUniProgram, "offset");
+    m_TriUniLocationWndSize = glGetUniformLocation(m_TriUniProgram, "wndSize");
+    m_TriUniLocationColor = glGetUniformLocation(m_TriUniProgram, "color");
 
     const GLchar *triTexFS[] = {
         "#version 150 core\n"
@@ -273,8 +272,8 @@ int CTwGraphOpenGLCore::Init()
         "void main() { outColor.rgb = fcolor.bgr; outColor.a = fcolor.a * texture2D(tex, fuv).r; }"
 #endif
     };
-    m_TriTexFS = _glCreateShader(GL_FRAGMENT_SHADER);
-    _glShaderSource(m_TriTexFS, 1, triTexFS, NULL);
+    m_TriTexFS = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(m_TriTexFS, 1, triTexFS, NULL);
     CompileShader(m_TriTexFS);
 
     const GLchar *triTexVS[] = {
@@ -288,8 +287,8 @@ int CTwGraphOpenGLCore::Init()
         "out vec4 fcolor;"
         "void main() { gl_Position = vec4(2.0*(vertex.x+offset.x-0.5)/wndSize.x - 1.0, 1.0 - 2.0*(vertex.y+offset.y-0.5)/wndSize.y, 0, 1); fuv = uv; fcolor = color; }"
     };
-    m_TriTexVS = _glCreateShader(GL_VERTEX_SHADER);
-    _glShaderSource(m_TriTexVS, 1, triTexVS, NULL);
+    m_TriTexVS = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(m_TriTexVS, 1, triTexVS, NULL);
     CompileShader(m_TriTexVS);
 
     const GLchar *triTexUniVS[] = {
@@ -303,40 +302,40 @@ int CTwGraphOpenGLCore::Init()
         "out vec2 fuv;"
         "void main() { gl_Position = vec4(2.0*(vertex.x+offset.x-0.5)/wndSize.x - 1.0, 1.0 - 2.0*(vertex.y+offset.y-0.5)/wndSize.y, 0, 1); fuv = uv; fcolor = color; }"
     };
-    m_TriTexUniVS = _glCreateShader(GL_VERTEX_SHADER);
-    _glShaderSource(m_TriTexUniVS, 1, triTexUniVS, NULL);
+    m_TriTexUniVS = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(m_TriTexUniVS, 1, triTexUniVS, NULL);
     CompileShader(m_TriTexUniVS);
 
     m_TriTexUniFS = m_TriTexFS;
 
-    m_TriTexProgram = _glCreateProgram();
-    _glAttachShader(m_TriTexProgram, m_TriTexVS);
-    _glAttachShader(m_TriTexProgram, m_TriTexFS);
-    _glBindAttribLocation(m_TriTexProgram, 0, "vertex");
-    _glBindAttribLocation(m_TriTexProgram, 1, "uv");
-    _glBindAttribLocation(m_TriTexProgram, 2, "color");
+    m_TriTexProgram = glCreateProgram();
+    glAttachShader(m_TriTexProgram, m_TriTexVS);
+    glAttachShader(m_TriTexProgram, m_TriTexFS);
+    glBindAttribLocation(m_TriTexProgram, 0, "vertex");
+    glBindAttribLocation(m_TriTexProgram, 1, "uv");
+    glBindAttribLocation(m_TriTexProgram, 2, "color");
     LinkProgram(m_TriTexProgram);
-    m_TriTexLocationOffset = _glGetUniformLocation(m_TriTexProgram, "offset");
-    m_TriTexLocationWndSize = _glGetUniformLocation(m_TriTexProgram, "wndSize");
-    m_TriTexLocationTexture = _glGetUniformLocation(m_TriTexProgram, "tex");
+    m_TriTexLocationOffset = glGetUniformLocation(m_TriTexProgram, "offset");
+    m_TriTexLocationWndSize = glGetUniformLocation(m_TriTexProgram, "wndSize");
+    m_TriTexLocationTexture = glGetUniformLocation(m_TriTexProgram, "tex");
 
-    m_TriTexUniProgram = _glCreateProgram();
-    _glAttachShader(m_TriTexUniProgram, m_TriTexUniVS);
-    _glAttachShader(m_TriTexUniProgram, m_TriTexUniFS);
-    _glBindAttribLocation(m_TriTexUniProgram, 0, "vertex");
-    _glBindAttribLocation(m_TriTexUniProgram, 1, "uv");
-    _glBindAttribLocation(m_TriTexUniProgram, 2, "color");
+    m_TriTexUniProgram = glCreateProgram();
+    glAttachShader(m_TriTexUniProgram, m_TriTexUniVS);
+    glAttachShader(m_TriTexUniProgram, m_TriTexUniFS);
+    glBindAttribLocation(m_TriTexUniProgram, 0, "vertex");
+    glBindAttribLocation(m_TriTexUniProgram, 1, "uv");
+    glBindAttribLocation(m_TriTexUniProgram, 2, "color");
     LinkProgram(m_TriTexUniProgram);
-    m_TriTexUniLocationOffset = _glGetUniformLocation(m_TriTexUniProgram, "offset");
-    m_TriTexUniLocationWndSize = _glGetUniformLocation(m_TriTexUniProgram, "wndSize");
-    m_TriTexUniLocationColor = _glGetUniformLocation(m_TriTexUniProgram, "color");
-    m_TriTexUniLocationTexture = _glGetUniformLocation(m_TriTexUniProgram, "tex");
+    m_TriTexUniLocationOffset = glGetUniformLocation(m_TriTexUniProgram, "offset");
+    m_TriTexUniLocationWndSize = glGetUniformLocation(m_TriTexUniProgram, "wndSize");
+    m_TriTexUniLocationColor = glGetUniformLocation(m_TriTexUniProgram, "color");
+    m_TriTexUniLocationTexture = glGetUniformLocation(m_TriTexUniProgram, "tex");
 
     // Create tri vertex buffer
-    _glGenVertexArrays(1, &m_TriVArray);
-    _glGenBuffers(1, &m_TriVertices);
-    _glGenBuffers(1, &m_TriUVs);
-    _glGenBuffers(1, &m_TriColors);
+    glGenVertexArrays(1, &m_TriVArray);
+    glGenBuffers(1, &m_TriVertices);
+    glGenBuffers(1, &m_TriUVs);
+    glGenBuffers(1, &m_TriColors);
     ResizeTriBuffers(16384); // set initial size
 
     CHECK_GL_ERROR;
@@ -353,40 +352,40 @@ int CTwGraphOpenGLCore::Shut()
 
     CHECK_GL_ERROR;
 
-    _glDeleteProgram(m_LineRectProgram); m_LineRectProgram = 0;
-    _glDeleteShader(m_LineRectVS); m_LineRectVS = 0;
-    _glDeleteShader(m_LineRectFS); m_LineRectFS = 0;
+    glDeleteProgram(m_LineRectProgram); m_LineRectProgram = 0;
+    glDeleteShader(m_LineRectVS); m_LineRectVS = 0;
+    glDeleteShader(m_LineRectFS); m_LineRectFS = 0;
 
-    _glDeleteProgram(m_TriProgram); m_TriProgram = 0;
-    _glDeleteShader(m_TriVS); m_TriVS = 0;
+    glDeleteProgram(m_TriProgram); m_TriProgram = 0;
+    glDeleteShader(m_TriVS); m_TriVS = 0;
 
-    _glDeleteProgram(m_TriUniProgram); m_TriUniProgram = 0;
-    _glDeleteShader(m_TriUniVS); m_TriUniVS = 0;
+    glDeleteProgram(m_TriUniProgram); m_TriUniProgram = 0;
+    glDeleteShader(m_TriUniVS); m_TriUniVS = 0;
 
-    _glDeleteProgram(m_TriTexProgram); m_TriTexProgram = 0;
-    _glDeleteShader(m_TriTexVS); m_TriTexVS = 0;
-    _glDeleteShader(m_TriTexFS); m_TriTexFS = 0;
+    glDeleteProgram(m_TriTexProgram); m_TriTexProgram = 0;
+    glDeleteShader(m_TriTexVS); m_TriTexVS = 0;
+    glDeleteShader(m_TriTexFS); m_TriTexFS = 0;
 
-    _glDeleteProgram(m_TriTexUniProgram); m_TriTexUniProgram = 0;
-    _glDeleteShader(m_TriTexUniVS); m_TriTexUniVS = 0;
+    glDeleteProgram(m_TriTexUniProgram); m_TriTexUniProgram = 0;
+    glDeleteShader(m_TriTexUniVS); m_TriTexUniVS = 0;
 
-    _glDeleteBuffers(1, &m_LineRectVertices); m_LineRectVertices = 0;
-    _glDeleteBuffers(1, &m_LineRectColors); m_LineRectColors = 0;
-    _glDeleteVertexArrays(1, &m_LineRectVArray); m_LineRectVArray = 0;
+    glDeleteBuffers(1, &m_LineRectVertices); m_LineRectVertices = 0;
+    glDeleteBuffers(1, &m_LineRectColors); m_LineRectColors = 0;
+    glDeleteVertexArrays(1, &m_LineRectVArray); m_LineRectVArray = 0;
 
-    _glDeleteBuffers(1, &m_TriVertices); m_TriVertices = 0;
-    _glDeleteBuffers(1, &m_TriColors); m_TriColors = 0;
-    _glDeleteBuffers(1, &m_TriUVs); m_TriUVs = 0;
-    _glDeleteVertexArrays(1, &m_TriVArray); m_TriVArray = 0;
+    glDeleteBuffers(1, &m_TriVertices); m_TriVertices = 0;
+    glDeleteBuffers(1, &m_TriColors); m_TriColors = 0;
+    glDeleteBuffers(1, &m_TriUVs); m_TriUVs = 0;
+    glDeleteVertexArrays(1, &m_TriVArray); m_TriVArray = 0;
 
     CHECK_GL_ERROR;
 
     int Res = 1;
-    if( UnloadOpenGLCore()==0 )
-    {
-        g_TwMgr->SetLastError(g_ErrCantUnloadOGL);
-        Res = 0;
-    }
+    //if( glewInit()==0 )
+    //{
+    //    g_TwMgr->SetLastError(g_ErrCantUnloadOGL);
+    //    Res = 0;
+    //}
 
     return Res;
 }
@@ -403,7 +402,7 @@ void CTwGraphOpenGLCore::BeginDraw(int _WndWidth, int _WndHeight)
     m_OffsetX = 0;
     m_OffsetY = 0;
 
-    _glGetIntegerv(GL_VIEWPORT, m_PrevViewport); CHECK_GL_ERROR;
+    glGetIntegerv(GL_VIEWPORT, m_PrevViewport); CHECK_GL_ERROR;
     if( _WndWidth>0 && _WndHeight>0 )
     {
         GLint Vp[4];
@@ -411,50 +410,50 @@ void CTwGraphOpenGLCore::BeginDraw(int _WndWidth, int _WndHeight)
         Vp[1] = 0;
         Vp[2] = _WndWidth-1;
         Vp[3] = _WndHeight-1;
-        _glViewport(Vp[0], Vp[1], Vp[2], Vp[3]);
+        glViewport(Vp[0], Vp[1], Vp[2], Vp[3]);
     }
 
     m_PrevVArray = 0;
-    _glGetIntegerv(GL_VERTEX_ARRAY_BINDING, (GLint*)&m_PrevVArray); CHECK_GL_ERROR;
-    _glBindVertexArray(0); CHECK_GL_ERROR;
+    glGetIntegerv(GL_VERTEX_ARRAY_BINDING, (GLint*)&m_PrevVArray); CHECK_GL_ERROR;
+    glBindVertexArray(0); CHECK_GL_ERROR;
 
     m_PrevLineWidth = 1;
-    _glGetFloatv(GL_LINE_WIDTH, &m_PrevLineWidth); CHECK_GL_ERROR;
-    _glLineWidth(1); CHECK_GL_ERROR;
+    glGetFloatv(GL_LINE_WIDTH, &m_PrevLineWidth); CHECK_GL_ERROR;
+    glLineWidth(1); CHECK_GL_ERROR;
 
-    m_PrevLineSmooth = _glIsEnabled(GL_LINE_SMOOTH);
-    _glDisable(GL_LINE_SMOOTH); CHECK_GL_ERROR;
+    m_PrevLineSmooth = glIsEnabled(GL_LINE_SMOOTH);
+    glDisable(GL_LINE_SMOOTH); CHECK_GL_ERROR;
 
-    m_PrevCullFace = _glIsEnabled(GL_CULL_FACE);
-    _glDisable(GL_CULL_FACE); CHECK_GL_ERROR;
+    m_PrevCullFace = glIsEnabled(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE); CHECK_GL_ERROR;
     
-    m_PrevDepthTest = _glIsEnabled(GL_DEPTH_TEST);
-    _glDisable(GL_DEPTH_TEST); CHECK_GL_ERROR;
+    m_PrevDepthTest = glIsEnabled(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST); CHECK_GL_ERROR;
 
-    m_PrevBlend = _glIsEnabled(GL_BLEND);
-    _glEnable(GL_BLEND); CHECK_GL_ERROR;
+    m_PrevBlend = glIsEnabled(GL_BLEND);
+    glEnable(GL_BLEND); CHECK_GL_ERROR;
 
-    m_PrevScissorTest = _glIsEnabled(GL_SCISSOR_TEST);
-    _glDisable(GL_SCISSOR_TEST); CHECK_GL_ERROR;
+    m_PrevScissorTest = glIsEnabled(GL_SCISSOR_TEST);
+    glDisable(GL_SCISSOR_TEST); CHECK_GL_ERROR;
 
-    _glGetIntegerv(GL_SCISSOR_BOX, m_PrevScissorBox); CHECK_GL_ERROR;
+    glGetIntegerv(GL_SCISSOR_BOX, m_PrevScissorBox); CHECK_GL_ERROR;
 
-    _glGetIntegerv(GL_BLEND_SRC, &m_PrevSrcBlend); CHECK_GL_ERROR;
-    _glGetIntegerv(GL_BLEND_DST, &m_PrevDstBlend); CHECK_GL_ERROR;
-    _glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); CHECK_GL_ERROR;
+    glGetIntegerv(GL_BLEND_SRC, &m_PrevSrcBlend); CHECK_GL_ERROR;
+    glGetIntegerv(GL_BLEND_DST, &m_PrevDstBlend); CHECK_GL_ERROR;
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); CHECK_GL_ERROR;
 
     m_PrevTexture = 0;
-    _glGetIntegerv(GL_TEXTURE_BINDING_2D, &m_PrevTexture); CHECK_GL_ERROR;
-    _glBindTexture(GL_TEXTURE_2D, 0); CHECK_GL_ERROR;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &m_PrevTexture); CHECK_GL_ERROR;
+    glBindTexture(GL_TEXTURE_2D, 0); CHECK_GL_ERROR;
 
     m_PrevProgramObject = 0;
-    _glGetIntegerv(GL_CURRENT_PROGRAM, (GLint*)&m_PrevProgramObject); CHECK_GL_ERROR;
-    _glBindVertexArray(0); CHECK_GL_ERROR;
-    _glUseProgram(0); CHECK_GL_ERROR;  
+    glGetIntegerv(GL_CURRENT_PROGRAM, (GLint*)&m_PrevProgramObject); CHECK_GL_ERROR;
+    glBindVertexArray(0); CHECK_GL_ERROR;
+    glUseProgram(0); CHECK_GL_ERROR;  
 
     m_PrevActiveTexture = 0;
-    _glGetIntegerv(GL_ACTIVE_TEXTURE, (GLint*)&m_PrevActiveTexture); CHECK_GL_ERROR;
-    _glActiveTexture(GL_TEXTURE0);
+    glGetIntegerv(GL_ACTIVE_TEXTURE, (GLint*)&m_PrevActiveTexture); CHECK_GL_ERROR;
+    glActiveTexture(GL_TEXTURE0);
 
     CHECK_GL_ERROR;
 }
@@ -466,64 +465,64 @@ void CTwGraphOpenGLCore::EndDraw()
     assert(m_Drawing==true);
     m_Drawing = false;
 
-    _glLineWidth(m_PrevLineWidth); CHECK_GL_ERROR;
+    glLineWidth(m_PrevLineWidth); CHECK_GL_ERROR;
 
     if( m_PrevLineSmooth )
     {
-      _glEnable(GL_LINE_SMOOTH); CHECK_GL_ERROR;
+      glEnable(GL_LINE_SMOOTH); CHECK_GL_ERROR;
     }
     else
     {
-      _glDisable(GL_LINE_SMOOTH); CHECK_GL_ERROR;      
+      glDisable(GL_LINE_SMOOTH); CHECK_GL_ERROR;      
     }
 
     if( m_PrevCullFace )
     {
-      _glEnable(GL_CULL_FACE); CHECK_GL_ERROR;
+      glEnable(GL_CULL_FACE); CHECK_GL_ERROR;
     }
     else
     {
-      _glDisable(GL_CULL_FACE); CHECK_GL_ERROR;      
+      glDisable(GL_CULL_FACE); CHECK_GL_ERROR;      
     }
 
     if( m_PrevDepthTest )
     {
-      _glEnable(GL_DEPTH_TEST); CHECK_GL_ERROR;
+      glEnable(GL_DEPTH_TEST); CHECK_GL_ERROR;
     }
     else
     {
-      _glDisable(GL_DEPTH_TEST); CHECK_GL_ERROR;      
+      glDisable(GL_DEPTH_TEST); CHECK_GL_ERROR;      
     }
 
     if( m_PrevBlend )
     {
-      _glEnable(GL_BLEND); CHECK_GL_ERROR;
+      glEnable(GL_BLEND); CHECK_GL_ERROR;
     }
     else
     {
-      _glDisable(GL_BLEND); CHECK_GL_ERROR;      
+      glDisable(GL_BLEND); CHECK_GL_ERROR;      
     }
 
     if( m_PrevScissorTest )
     {
-      _glEnable(GL_SCISSOR_TEST); CHECK_GL_ERROR;
+      glEnable(GL_SCISSOR_TEST); CHECK_GL_ERROR;
     }
     else
     {
-      _glDisable(GL_SCISSOR_TEST); CHECK_GL_ERROR;      
+      glDisable(GL_SCISSOR_TEST); CHECK_GL_ERROR;      
     }
 
-    _glScissor(m_PrevScissorBox[0], m_PrevScissorBox[1], m_PrevScissorBox[2], m_PrevScissorBox[3]); CHECK_GL_ERROR;
+    glScissor(m_PrevScissorBox[0], m_PrevScissorBox[1], m_PrevScissorBox[2], m_PrevScissorBox[3]); CHECK_GL_ERROR;
 
-    _glBlendFunc(m_PrevSrcBlend, m_PrevDstBlend); CHECK_GL_ERROR;
+    glBlendFunc(m_PrevSrcBlend, m_PrevDstBlend); CHECK_GL_ERROR;
 
-    _glBindTexture(GL_TEXTURE_2D, m_PrevTexture); CHECK_GL_ERROR;
+    glBindTexture(GL_TEXTURE_2D, m_PrevTexture); CHECK_GL_ERROR;
 
-    _glUseProgram(m_PrevProgramObject); CHECK_GL_ERROR;
+    glUseProgram(m_PrevProgramObject); CHECK_GL_ERROR;
     
-    _glBindVertexArray(m_PrevVArray); CHECK_GL_ERROR;
+    glBindVertexArray(m_PrevVArray); CHECK_GL_ERROR;
 
-    _glViewport(m_PrevViewport[0], m_PrevViewport[1], m_PrevViewport[2], m_PrevViewport[3]); CHECK_GL_ERROR;
+    glViewport(m_PrevViewport[0], m_PrevViewport[1], m_PrevViewport[2], m_PrevViewport[3]); CHECK_GL_ERROR;
 
     CHECK_GL_ERROR;
 }
@@ -568,33 +567,33 @@ void CTwGraphOpenGLCore::DrawLine(int _X0, int _Y0, int _X1, int _Y1, color32 _C
     //GLfloat dy = -0.2f;
     const GLfloat dy = -0.5f;
     if( _AntiAliased )
-        _glEnable(GL_LINE_SMOOTH);
+        glEnable(GL_LINE_SMOOTH);
     else
-        _glDisable(GL_LINE_SMOOTH);
+        glDisable(GL_LINE_SMOOTH);
 
-    _glBindVertexArray(m_LineRectVArray);
+    glBindVertexArray(m_LineRectVArray);
 
     GLfloat x0 = ToNormScreenX(_X0+dx + m_OffsetX, m_WndWidth);
     GLfloat y0 = ToNormScreenY(_Y0+dy + m_OffsetY, m_WndHeight);
     GLfloat x1 = ToNormScreenX(_X1+dx + m_OffsetX, m_WndWidth);
     GLfloat y1 = ToNormScreenY(_Y1+dy + m_OffsetY, m_WndHeight);
     GLfloat vertices[] = { x0,y0,0,  x1,y1,0 };
-    _glBindBuffer(GL_ARRAY_BUFFER, m_LineRectVertices);
-    _glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-    _glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, 0, NULL);
-    _glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, m_LineRectVertices);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, 0, NULL);
+    glEnableVertexAttribArray(0);
 
     color32 colors[] = { _Color0, _Color1 };
-    _glBindBuffer(GL_ARRAY_BUFFER, m_LineRectColors);
-    _glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(colors), colors);
-    _glVertexAttribPointer(1, GL_BGRA, GL_UNSIGNED_BYTE, GL_TRUE, 0, NULL);
-    _glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, m_LineRectColors);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(colors), colors);
+    glVertexAttribPointer(1, GL_BGRA, GL_UNSIGNED_BYTE, GL_TRUE, 0, NULL);
+    glEnableVertexAttribArray(1);
 
-    _glUseProgram(m_LineRectProgram);
-    _glDrawArrays(GL_LINES, 0, 2);
+    glUseProgram(m_LineRectProgram);
+    glDrawArrays(GL_LINES, 0, 2);
 
     if( _AntiAliased )
-        _glDisable(GL_LINE_SMOOTH);
+        glDisable(GL_LINE_SMOOTH);
 
     CHECK_GL_ERROR;
 }
@@ -616,26 +615,26 @@ void CTwGraphOpenGLCore::DrawRect(int _X0, int _Y0, int _X1, int _Y1, color32 _C
     else if(_Y0>_Y1)
         --_Y1;
 
-    _glBindVertexArray(m_LineRectVArray);
+    glBindVertexArray(m_LineRectVArray);
 
     GLfloat x0 = ToNormScreenX((float)_X0 + m_OffsetX, m_WndWidth);
     GLfloat y0 = ToNormScreenY((float)_Y0 + m_OffsetY, m_WndHeight);
     GLfloat x1 = ToNormScreenX((float)_X1 + m_OffsetX, m_WndWidth);
     GLfloat y1 = ToNormScreenY((float)_Y1 + m_OffsetY, m_WndHeight);
     GLfloat vertices[] = { x0,y0,0, x1,y0,0, x0,y1,0, x1,y1,0 };
-    _glBindBuffer(GL_ARRAY_BUFFER, m_LineRectVertices);
-    _glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-    _glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, 0, NULL);
-    _glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, m_LineRectVertices);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, 0, NULL);
+    glEnableVertexAttribArray(0);
 
     GLuint colors[] = { _Color00, _Color10, _Color01, _Color11 };
-    _glBindBuffer(GL_ARRAY_BUFFER, m_LineRectColors);
-    _glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(colors), colors);
-    _glVertexAttribPointer(1, GL_BGRA, GL_UNSIGNED_BYTE, GL_TRUE, 0, NULL);
-    _glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, m_LineRectColors);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(colors), colors);
+    glVertexAttribPointer(1, GL_BGRA, GL_UNSIGNED_BYTE, GL_TRUE, 0, NULL);
+    glEnableVertexAttribArray(1);
 
-    _glUseProgram(m_LineRectProgram);
-    _glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glUseProgram(m_LineRectProgram);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     CHECK_GL_ERROR;
 }
@@ -763,81 +762,81 @@ void CTwGraphOpenGLCore::DrawText(void *_TextObj, int _X, int _Y, color32 _Color
         if( numBgVerts > m_TriBufferSize )
             ResizeTriBuffers(numBgVerts + 2048);
   
-        _glBindVertexArray(m_TriVArray);
+        glBindVertexArray(m_TriVArray);
 
-        _glBindBuffer(GL_ARRAY_BUFFER, m_TriVertices);
-        _glBufferSubData(GL_ARRAY_BUFFER, 0, numBgVerts*sizeof(Vec2), &(TextObj->m_BgVerts[0]));
-        _glVertexAttribPointer(0, 2, GL_FLOAT, GL_TRUE, 0, NULL);
-        _glEnableVertexAttribArray(0);
-        _glDisableVertexAttribArray(1);
-        _glDisableVertexAttribArray(2);
+        glBindBuffer(GL_ARRAY_BUFFER, m_TriVertices);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, numBgVerts*sizeof(Vec2), &(TextObj->m_BgVerts[0]));
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_TRUE, 0, NULL);
+        glEnableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(2);
 
         if( TextObj->m_BgColors.size()==TextObj->m_BgVerts.size() && _BgColor==0 )
         {
-            _glBindBuffer(GL_ARRAY_BUFFER, m_TriColors);
-            _glBufferSubData(GL_ARRAY_BUFFER, 0, numBgVerts*sizeof(color32), &(TextObj->m_BgColors[0]));
-            _glVertexAttribPointer(1, GL_BGRA, GL_UNSIGNED_BYTE, GL_TRUE, 0, NULL);
-            _glEnableVertexAttribArray(1);
+            glBindBuffer(GL_ARRAY_BUFFER, m_TriColors);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, numBgVerts*sizeof(color32), &(TextObj->m_BgColors[0]));
+            glVertexAttribPointer(1, GL_BGRA, GL_UNSIGNED_BYTE, GL_TRUE, 0, NULL);
+            glEnableVertexAttribArray(1);
 
-            _glUseProgram(m_TriProgram);
-            _glUniform2f(m_TriLocationOffset, (float)_X, (float)_Y);
-            _glUniform2f(m_TriLocationWndSize, (float)m_WndWidth, (float)m_WndHeight);
+            glUseProgram(m_TriProgram);
+            glUniform2f(m_TriLocationOffset, (float)_X, (float)_Y);
+            glUniform2f(m_TriLocationWndSize, (float)m_WndWidth, (float)m_WndHeight);
         }
         else
         {
-            _glUseProgram(m_TriUniProgram);
-            _glUniform4f(m_TriUniLocationColor, GLfloat((_BgColor>>16)&0xff)/256.0f, GLfloat((_BgColor>>8)&0xff)/256.0f, GLfloat(_BgColor&0xff)/256.0f, GLfloat((_BgColor>>24)&0xff)/256.0f);
-            _glUniform2f(m_TriUniLocationOffset, (float)_X, (float)_Y);
-            _glUniform2f(m_TriUniLocationWndSize, (float)m_WndWidth, (float)m_WndHeight);
+            glUseProgram(m_TriUniProgram);
+            glUniform4f(m_TriUniLocationColor, GLfloat((_BgColor>>16)&0xff)/256.0f, GLfloat((_BgColor>>8)&0xff)/256.0f, GLfloat(_BgColor&0xff)/256.0f, GLfloat((_BgColor>>24)&0xff)/256.0f);
+            glUniform2f(m_TriUniLocationOffset, (float)_X, (float)_Y);
+            glUniform2f(m_TriUniLocationWndSize, (float)m_WndWidth, (float)m_WndHeight);
         }
         
-        _glDrawArrays(GL_TRIANGLES, 0, (GLsizei)TextObj->m_BgVerts.size());
+        glDrawArrays(GL_TRIANGLES, 0, (GLsizei)TextObj->m_BgVerts.size());
     }
 
     // draw character triangles
     if( TextObj->m_TextVerts.size()>=4 )
     {
-        _glActiveTexture(GL_TEXTURE0);
-        _glBindTexture(GL_TEXTURE_2D, m_FontTexID);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, m_FontTexID);
         size_t numTextVerts = TextObj->m_TextVerts.size();
         if( numTextVerts > m_TriBufferSize )
             ResizeTriBuffers(numTextVerts + 2048);
         
-        _glBindVertexArray(m_TriVArray);
-        _glDisableVertexAttribArray(2);
+        glBindVertexArray(m_TriVArray);
+        glDisableVertexAttribArray(2);
 
-        _glBindBuffer(GL_ARRAY_BUFFER, m_TriVertices);
-        _glBufferSubData(GL_ARRAY_BUFFER, 0, numTextVerts*sizeof(Vec2), &(TextObj->m_TextVerts[0]));
-        _glVertexAttribPointer(0, 2, GL_FLOAT, GL_TRUE, 0, NULL);
-        _glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, m_TriVertices);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, numTextVerts*sizeof(Vec2), &(TextObj->m_TextVerts[0]));
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_TRUE, 0, NULL);
+        glEnableVertexAttribArray(0);
 
-        _glBindBuffer(GL_ARRAY_BUFFER, m_TriUVs);
-        _glBufferSubData(GL_ARRAY_BUFFER, 0, numTextVerts*sizeof(Vec2), &(TextObj->m_TextUVs[0]));
-        _glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-        _glEnableVertexAttribArray(1);
+        glBindBuffer(GL_ARRAY_BUFFER, m_TriUVs);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, numTextVerts*sizeof(Vec2), &(TextObj->m_TextUVs[0]));
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+        glEnableVertexAttribArray(1);
 
         if( TextObj->m_Colors.size()==TextObj->m_TextVerts.size() && _Color==0 )
         {
-            _glBindBuffer(GL_ARRAY_BUFFER, m_TriColors);
-            _glBufferSubData(GL_ARRAY_BUFFER, 0, numTextVerts*sizeof(color32), &(TextObj->m_Colors[0]));
-            _glVertexAttribPointer(2, GL_BGRA, GL_UNSIGNED_BYTE, GL_TRUE, 0, NULL);
-            _glEnableVertexAttribArray(2);
+            glBindBuffer(GL_ARRAY_BUFFER, m_TriColors);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, numTextVerts*sizeof(color32), &(TextObj->m_Colors[0]));
+            glVertexAttribPointer(2, GL_BGRA, GL_UNSIGNED_BYTE, GL_TRUE, 0, NULL);
+            glEnableVertexAttribArray(2);
 
-            _glUseProgram(m_TriTexProgram);
-            _glUniform2f(m_TriTexLocationOffset, (float)_X, (float)_Y);
-            _glUniform2f(m_TriTexLocationWndSize, (float)m_WndWidth, (float)m_WndHeight);
-            _glUniform1i(m_TriTexLocationTexture, 0);
+            glUseProgram(m_TriTexProgram);
+            glUniform2f(m_TriTexLocationOffset, (float)_X, (float)_Y);
+            glUniform2f(m_TriTexLocationWndSize, (float)m_WndWidth, (float)m_WndHeight);
+            glUniform1i(m_TriTexLocationTexture, 0);
         }
         else
         {
-            _glUseProgram(m_TriTexUniProgram);
-            _glUniform4f(m_TriTexUniLocationColor, GLfloat((_Color>>16)&0xff)/256.0f, GLfloat((_Color>>8)&0xff)/256.0f, GLfloat(_Color&0xff)/256.0f, GLfloat((_Color>>24)&0xff)/256.0f);
-            _glUniform2f(m_TriTexUniLocationOffset, (float)_X, (float)_Y);
-            _glUniform2f(m_TriTexUniLocationWndSize, (float)m_WndWidth, (float)m_WndHeight);
-            _glUniform1i(m_TriTexUniLocationTexture, 0);
+            glUseProgram(m_TriTexUniProgram);
+            glUniform4f(m_TriTexUniLocationColor, GLfloat((_Color>>16)&0xff)/256.0f, GLfloat((_Color>>8)&0xff)/256.0f, GLfloat(_Color&0xff)/256.0f, GLfloat((_Color>>24)&0xff)/256.0f);
+            glUniform2f(m_TriTexUniLocationOffset, (float)_X, (float)_Y);
+            glUniform2f(m_TriTexUniLocationWndSize, (float)m_WndWidth, (float)m_WndHeight);
+            glUniform1i(m_TriTexUniLocationTexture, 0);
         }
         
-        _glDrawArrays(GL_TRIANGLES, 0, (GLsizei)TextObj->m_TextVerts.size());
+        glDrawArrays(GL_TRIANGLES, 0, (GLsizei)TextObj->m_TextVerts.size());
     }
 
     CHECK_GL_ERROR;
@@ -867,11 +866,11 @@ void CTwGraphOpenGLCore::SetScissor(int _X0, int _Y0, int _Width, int _Height)
 {
     if( _Width>0 && _Height>0 )
     {
-        _glScissor(_X0-1, m_WndHeight-_Y0-_Height, _Width-1, _Height);
-        _glEnable(GL_SCISSOR_TEST);
+        glScissor(_X0-1, m_WndHeight-_Y0-_Height, _Width-1, _Height);
+        glEnable(GL_SCISSOR_TEST);
     }
     else
-        _glDisable(GL_SCISSOR_TEST);
+        glDisable(GL_SCISSOR_TEST);
 }
 
 //  ---------------------------------------------------------------------------
@@ -885,47 +884,47 @@ void CTwGraphOpenGLCore::DrawTriangles(int _NumTriangles, int *_Vertices, color3
 
     // Backup states
     GLint prevCullFaceMode, prevFrontFace;
-    _glGetIntegerv(GL_CULL_FACE_MODE, &prevCullFaceMode);
-    _glGetIntegerv(GL_FRONT_FACE, &prevFrontFace);
-    GLboolean prevCullEnable = _glIsEnabled(GL_CULL_FACE);
-    _glCullFace(GL_BACK);
-    _glEnable(GL_CULL_FACE);
+    glGetIntegerv(GL_CULL_FACE_MODE, &prevCullFaceMode);
+    glGetIntegerv(GL_FRONT_FACE, &prevFrontFace);
+    GLboolean prevCullEnable = glIsEnabled(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glEnable(GL_CULL_FACE);
     if( _CullMode==CULL_CW )
-        _glFrontFace(GL_CCW);
+        glFrontFace(GL_CCW);
     else if( _CullMode==CULL_CCW )
-        _glFrontFace(GL_CW);
+        glFrontFace(GL_CW);
     else
-        _glDisable(GL_CULL_FACE);
+        glDisable(GL_CULL_FACE);
 
-    _glUseProgram(m_TriProgram);
-    _glBindVertexArray(m_TriVArray);
-    _glUniform2f(m_TriLocationOffset, (float)m_OffsetX+dx, (float)m_OffsetY+dy);
-    _glUniform2f(m_TriLocationWndSize, (float)m_WndWidth, (float)m_WndHeight);
-    _glDisableVertexAttribArray(2);
+    glUseProgram(m_TriProgram);
+    glBindVertexArray(m_TriVArray);
+    glUniform2f(m_TriLocationOffset, (float)m_OffsetX+dx, (float)m_OffsetY+dy);
+    glUniform2f(m_TriLocationWndSize, (float)m_WndWidth, (float)m_WndHeight);
+    glDisableVertexAttribArray(2);
 
     size_t numVerts = 3*_NumTriangles;
     if( numVerts > m_TriBufferSize )
         ResizeTriBuffers(numVerts + 2048);
   
-    _glBindBuffer(GL_ARRAY_BUFFER, m_TriVertices);
-    _glBufferSubData(GL_ARRAY_BUFFER, 0, numVerts*2*sizeof(int), _Vertices);
-    _glVertexAttribPointer(0, 2, GL_INT, GL_FALSE, 0, NULL);
-    _glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, m_TriVertices);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, numVerts*2*sizeof(int), _Vertices);
+    glVertexAttribPointer(0, 2, GL_INT, GL_FALSE, 0, NULL);
+    glEnableVertexAttribArray(0);
 
-    _glBindBuffer(GL_ARRAY_BUFFER, m_TriColors);
-    _glBufferSubData(GL_ARRAY_BUFFER, 0, numVerts*sizeof(color32), _Colors);
-    _glVertexAttribPointer(1, GL_BGRA, GL_UNSIGNED_BYTE, GL_TRUE, 0, NULL);
-    _glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, m_TriColors);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, numVerts*sizeof(color32), _Colors);
+    glVertexAttribPointer(1, GL_BGRA, GL_UNSIGNED_BYTE, GL_TRUE, 0, NULL);
+    glEnableVertexAttribArray(1);
         
-    _glDrawArrays(GL_TRIANGLES, 0, (GLsizei)numVerts);
+    glDrawArrays(GL_TRIANGLES, 0, (GLsizei)numVerts);
 
     // Reset states
-    _glCullFace(prevCullFaceMode);
-    _glFrontFace(prevFrontFace);
+    glCullFace(prevCullFaceMode);
+    glFrontFace(prevFrontFace);
     if( prevCullEnable )
-        _glEnable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE);
     else
-        _glDisable(GL_CULL_FACE);
+        glDisable(GL_CULL_FACE);
 
     CHECK_GL_ERROR;
 }

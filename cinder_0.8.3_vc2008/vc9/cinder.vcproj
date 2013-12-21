@@ -557,10 +557,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\cinder\gl\glew.c"
-					>
-				</File>
-				<File
 					RelativePath="..\src\cinder\gl\GlslProg.cpp"
 					>
 				</File>
@@ -682,22 +678,6 @@
 				</File>
 				<File
 					RelativePath="..\src\AntTweakBar\AntTweakBar.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\AntTweakBar\LoadOGL.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\AntTweakBar\LoadOGL.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\AntTweakBar\LoadOGLCore.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\AntTweakBar\LoadOGLCore.h"
 					>
 				</File>
 				<File
@@ -1331,10 +1311,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\include\cinder\gl\glew.h"
-					>
-				</File>
-				<File
 					RelativePath="..\include\cinder\gl\GlslProg.h"
 					>
 				</File>
@@ -1601,6 +1577,26 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+		</Filter>
+		<Filter
+			Name="glew"
+			>
+			<File
+				RelativePath="..\src\glew\glew.c"
+				>
+			</File>
+			<File
+				RelativePath="..\include\glew\glew.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\glew\glxew.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\glew\wglew.h"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>
