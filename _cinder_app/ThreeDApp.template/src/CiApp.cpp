@@ -4,8 +4,6 @@
 
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
-#include "cinder/gl/Fbo.h"
-#include "cinder/gl/GlslProg.h"
 #include "cinder/gl/Vbo.h"
 #include "cinder/params/Params.h"
 
@@ -46,6 +44,7 @@ struct CiApp : public AppBasic
 
     void draw()
     {
+        gl::setMatricesWindow(getWindowSize());
         gl::clear(ColorA::black());
 
         mParams.draw();
