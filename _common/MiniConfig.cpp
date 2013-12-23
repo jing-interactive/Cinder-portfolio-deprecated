@@ -52,8 +52,9 @@ void readConfig()
 #undef GROUP_DEF
         console() << "Reads from " << configPath.string() << endl;
 	}
-	catch( ... ) {
-		console() << "[Warning] Fails to read from " << configPath.string()<<endl;
+	catch (exception& e) {
+        console() << e.what() << endl;
+		console() << "[Warning] Fails to read from " << configPath.string() << endl;
         revertToDefaultValues();
 		writeConfig();
 	}
@@ -115,7 +116,7 @@ void setupConfigUI(cinder::params::InterfaceGl* params)
 
 namespace
 {
-    const int kPODItemHeight = 20;
+    const int kPODItemHeight = 21;
     template <typename T>
     int getItemHeight(const T&)
     {

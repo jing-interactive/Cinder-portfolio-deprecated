@@ -138,27 +138,25 @@ ColorT<uint8_t> ColorT<uint8_t>::operator/( uint8_t rhs ) const
 // uint8_t additional
 std::ostream& operator<<( std::ostream &lhs, const ColorT<float> &rhs ) 
 {
-	lhs << "[" << rhs.r << "," << rhs.g << "," << rhs.b  << "]";
+	lhs << rhs.r << " " << rhs.g << " " << rhs.b;
 	return lhs;
 }
 
 std::ostream& operator<<( std::ostream &lhs, const ColorT<uint8_t> &rhs ) 
 {
-	lhs << "[" << static_cast<int>( rhs.r ) << "," << static_cast<int>( rhs.g ) << "," << static_cast<int>( rhs.b )  << "]";
+	lhs << static_cast<int>( rhs.r ) << " " << static_cast<int>( rhs.g ) << " " << static_cast<int>( rhs.b );
 	return lhs;
 }
 
 std::istream& operator>>( std::istream &lhs, ColorT<float> &rhs ) 
 {
-    std::string dummy;
-    lhs >> dummy >> rhs.r >> dummy >> rhs.g >> dummy >> rhs.b  >> dummy;
+    lhs >> rhs.r >> std::ws >> rhs.g >> std::ws >> rhs.b;
     return lhs;
 }
 
 std::istream& operator>>( std::istream &lhs, ColorT<uint8_t> &rhs ) 
 {
-    std::string dummy;
-    lhs >> dummy >> rhs.r >> dummy >> rhs.g >> dummy >> rhs.b >> dummy;
+    lhs >> std::ws >> rhs.r >> std::ws >> rhs.g >> std::ws >> rhs.b;
     return lhs;
 }
 

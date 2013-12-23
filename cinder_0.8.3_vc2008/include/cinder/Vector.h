@@ -310,8 +310,8 @@ class Vec2
 
     friend std::istream& operator>>( std::istream& lhs, Vec2<T>& rhs )
     {
-        std::string dummy;
-        lhs >> rhs.x >> rhs.y >> dummy;
+        char whitespace;
+        lhs >> rhs.x >> whitespace >> rhs.y;
         return lhs;
     }
 
@@ -689,7 +689,8 @@ public:
 
     friend std::istream& operator>>( std::istream& lhs, Vec3<T>& rhs )
     {
-        lhs >> rhs.x >> rhs.y >> rhs.z;
+        char whitespace;
+        lhs >> rhs.x >> whitespace >> rhs.y >> whitespace >> rhs.z;
         return lhs;
     }
 
@@ -1261,7 +1262,8 @@ class Vec4
 
     friend std::istream& operator>>( std::istream& lhs, Vec4<T>& rhs )
     {
-        lhs >> rhs.x >> rhs.y >> rhs.z >> rhs.w;
+        char whitespace;
+        lhs >> rhs.x >> whitespace >> rhs.y >> whitespace >> rhs.z >> whitespace >> rhs.w;
         return lhs;
     }
 

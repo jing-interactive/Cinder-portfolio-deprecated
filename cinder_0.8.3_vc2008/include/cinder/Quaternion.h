@@ -744,10 +744,11 @@ public:
 
     friend std::istream& operator>>( std::istream &lhs, Quaternion<T> &rhs )
     {
+        char whitespace;
         Vec3<T> axis;
         float angle;
 
-        lhs >> axis;
+        lhs >> axis >> whitespace;
         lhs >> angle;
         rhs = Quaternion<T>(axis, toRadians(angle));
 
