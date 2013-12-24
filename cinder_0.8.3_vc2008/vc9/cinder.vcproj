@@ -314,6 +314,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\cinder\Plane.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\cinder\PolyLine.cpp"
 				>
 			</File>

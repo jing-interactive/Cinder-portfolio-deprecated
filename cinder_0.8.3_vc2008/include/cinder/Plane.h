@@ -46,10 +46,11 @@ class Plane
 	//! Defines a plane using 4 coefficients.
 	void	set( T a, T b, T c, T d );
 
-	Vec3<T>			getPoint() const { return mNormal * mDistance; };
-	const Vec3<T>&	getNormal() const { return mNormal; };
-	float			getDistance() const { return mDistance; }
-	float			distance( const Vec3f &p ) const { return (mNormal.dot(p) - mDistance); };
+	Vec3<T>			getPoint() const { return mNormal * mDistance; }
+	const Vec3<T>&	getNormal() const { return mNormal; }
+	T			    getDistance() const { return mDistance; }
+	T			    distance( const Vec3<T> &p ) const { return (mNormal.dot( p ) - mDistance); }
+    Vec3<T>         getClosetPoint( const Vec3<T> &p ) const { return p - mNormal * distance( p ); }
 
 	Vec3<T>			reflectPoint( const Vec3<T> &p ) const { return mNormal * distance( p ) * -2 + p; }
 	Vec3<T>			reflectVector( const Vec3<T> &v ) const { return mNormal * mNormal.dot(v) * 2 - v; }
