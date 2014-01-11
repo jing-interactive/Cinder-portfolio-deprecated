@@ -4,6 +4,20 @@
 #include "opencv2/imgproc.hpp"
 #include "opencv2/highgui.hpp"
 
+#define OPENCV_VERSION CVAUX_STR(CV_MAJOR_VERSION)""CVAUX_STR(CV_MINOR_VERSION)""CVAUX_STR(CV_SUBMINOR_VERSION)
+// 210/243/290
+/*
+#ifdef _DEBUG
+#pragma comment(lib,"opencv_core"OPENCV_VERSION"d.lib")
+#pragma comment(lib,"opencv_imgproc"OPENCV_VERSION"d.lib")
+#pragma comment(lib,"opencv_highgui"OPENCV_VERSION"d.lib")
+#else	//_DEBUG
+#pragma comment(lib,"opencv_core"OPENCV_VERSION".lib")
+#pragma comment(lib,"opencv_imgproc"OPENCV_VERSION".lib")
+#pragma comment(lib,"opencv_highgui"OPENCV_VERSION".lib")
+#endif	//_DEBUG
+*/
+
 #include "cinder/Cinder.h"
 #include "cinder/ImageIo.h"
 

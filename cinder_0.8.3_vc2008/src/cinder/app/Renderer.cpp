@@ -39,7 +39,9 @@
 #elif defined( CINDER_MSW )
 	#include "cinder/app/AppImplMsw.h"
 	#include "cinder/app/AppImplMswRendererGl.h"
+#ifdef RENDER2D_ENABLED
 	#include "cinder/app/AppImplMswRendererGdi.h"
+#endif
 #endif
 #include "cinder/ip/Flip.h"
 
@@ -317,7 +319,7 @@ Surface Renderer2d::copyWindowSurface( const Area &area )
 }
 #endif
 
-#if defined( CINDER_MSW )
+#if defined( CINDER_MSW ) && defined(RENDER2D_ENABLED)
 
 Renderer2d::Renderer2d( bool doubleBuffer )
 	: mDoubleBuffer( doubleBuffer )

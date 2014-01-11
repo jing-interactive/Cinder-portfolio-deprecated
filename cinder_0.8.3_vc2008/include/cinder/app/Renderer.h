@@ -170,6 +170,7 @@ class Renderer2d : public Renderer {
 
 #elif defined( CINDER_MSW )
 
+#ifdef RENDER2D_ENABLED
 class Renderer2d : public Renderer {
  public:
 	Renderer2d( bool doubleBuffer = true );
@@ -195,6 +196,8 @@ class Renderer2d : public Renderer {
 	HWND			mWnd;
 	HDC				mDC;
 };
+
+#endif
 
 #endif
 

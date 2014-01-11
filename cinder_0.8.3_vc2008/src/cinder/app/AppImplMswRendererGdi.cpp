@@ -20,6 +20,8 @@
  POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifdef RENDER2D_ENABLED
+
 #include "cinder/app/AppImplMswRendererGdi.h"
 #include "cinder/gl/gl.h"
 #include "cinder/app/App.h"
@@ -118,3 +120,5 @@ Surface8u AppImplMswRendererGdi::copyWindowContents( const Area &area )
 }
 
 } } // namespace cinder::app
+
+#endif

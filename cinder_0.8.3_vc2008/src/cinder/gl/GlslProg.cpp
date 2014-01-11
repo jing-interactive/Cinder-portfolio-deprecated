@@ -107,6 +107,20 @@ void GlslProg::loadShader( const char *shaderSource, GLint shaderType )
 void GlslProg::link()
 {
 	glLinkProgram( mObj->mHandle );	
+
+    GLint status = GL_FALSE;
+    glGetProgramiv(mObj->mHandle, GL_LINK_STATUS, &status);
+    if (status != GL_TRUE)
+    {
+        int length;
+        glGetProgramiv(mObj->mHandle, GL_INFO_LOG_LENGTH, &length);
+        if (length > 0)
+        {
+            std::vector<char> log(length);
+            glGetProgramInfoLog(mObj->mHandle, length, NULL, &log[0]);
+            throw std::exception(&log[0]);
+        }
+    }
 }
 
 void GlslProg::bind() const
