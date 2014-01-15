@@ -28,6 +28,11 @@
 #include <vector>
 #include <utility>
 
+#include <boost/signals2.hpp>
+namespace cinder { namespace signals {
+    using namespace boost::signals2;
+} } // cinder::signals
+
 #if defined( _MSC_VER ) && ( _MSC_VER >= 1600 )
 	#include <functional>
 #elif defined( CINDER_COCOA )
@@ -35,6 +40,7 @@
 #else
 	#include <boost/tr1/functional.hpp>
 #endif
+
 namespace std {
 	using std::tr1::function;
 	using std::tr1::bind;

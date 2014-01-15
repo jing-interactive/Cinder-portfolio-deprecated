@@ -36,10 +36,10 @@ namespace boost
     {
       typedef boost::shared_ptr<T> shared_type;
     };
-    template<typename T> struct weak_ptr_traits<std::weak_ptr<T> >
-    {
-      typedef std::shared_ptr<T> shared_type;
-    };
+    //template<typename T> struct weak_ptr_traits<std::weak_ptr<T> >
+    //{
+    //  typedef std::shared_ptr<T> shared_type;
+    //};
 
     template<typename SharedPtr> struct shared_ptr_traits
     {};
@@ -48,10 +48,10 @@ namespace boost
     {
       typedef boost::weak_ptr<T> weak_type;
     };
-    template<typename T> struct shared_ptr_traits<std::shared_ptr<T> >
-    {
-      typedef std::weak_ptr<T> weak_type;
-    };
+    //template<typename T> struct shared_ptr_traits<std::shared_ptr<T> >
+    //{
+    //  typedef std::weak_ptr<T> weak_type;
+    //};
 
     namespace detail
     {

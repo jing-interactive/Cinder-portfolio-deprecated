@@ -152,6 +152,8 @@ void App::privateSetup__()
 
 void App::privateUpdate__()
 {
+    mSignalUpdate();
+
 	update();
 	mFrameCount++;
 
@@ -175,6 +177,7 @@ void App::privateDraw__()
 
 void App::privateShutdown__()
 {
+    mSignalShutdown();
 	shutdown();
 }
 	

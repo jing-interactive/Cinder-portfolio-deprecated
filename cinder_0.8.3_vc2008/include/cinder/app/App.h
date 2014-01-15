@@ -187,6 +187,12 @@ class App {
 	//! Quits the application gracefully
 	virtual void	quit() = 0;
 
+    //! Emitted at the start of each application update cycle
+    signals::signal<void()>&	getSignalUpdate() { return mSignalUpdate; }
+
+    //! Emitted prior to the application shutting down
+    signals::signal<void()>&	getSignalShutdown() { return mSignalShutdown; }
+
 	//! Registers a callback for mouseDown events. Returns a unique identifier which can be used as a parameter to unregisterMouseDown().
 	CallbackId		registerMouseDown( std::function<bool (MouseEvent)> callback ) { return mCallbacksMouseDown.registerCb( callback ); }
 	//! Registers a callback for mouseDown events. Returns a unique identifier which can be used as a parameter to unregisterMouseDown().
@@ -369,6 +375,8 @@ class App {
 	
 	//! Returns a reference to the App's Timeline
 	Timeline&		timeline() { return *mTimeline; }
+
+    signals::signal<void()>		mSignalUpdate, mSignalShutdown;
 
 	/** \return a copy of the window's contents as a Surface8u **/
 	Surface	copyWindowSurface();

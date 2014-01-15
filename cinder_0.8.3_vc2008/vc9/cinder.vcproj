@@ -1052,6 +1052,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\cinder\Function.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\cinder\ImageIo.h"
 				>
 			</File>
