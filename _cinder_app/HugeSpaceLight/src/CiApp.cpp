@@ -28,7 +28,8 @@ using namespace ci::app;
 using namespace std;
 
 const float kCamFov = 60.0f;
-const int kOscPort = 3333;
+const int kOscListenPort = 3333;
+const int kOscPadPort = 4444;
 const float kLedOffset = 225.0f;
 const int kThreadCount = 10;
 
@@ -171,7 +172,7 @@ struct CiApp : public AppBasic
         }
 
         // osc setup
-        mListener.setup(kOscPort);
+        mListener.setup(kOscListenPort);
         mListener.registerMessageReceived(this, &CiApp::onOscMessage);
 
         // parse leds.txt
@@ -289,9 +290,9 @@ struct CiApp : public AppBasic
     {
         const string& addr = msg->getAddress();
 
-        if (addr == "/pull")
+        if (addr == "/debug/movie")
         {
-            int file_idx = msg->getArgAsInt32(0);
+            ANIMATION = msg->getArgAsInt32(0);
         }
     }
 
@@ -348,7 +349,7 @@ struct CiApp : public AppBasic
 
         float delta = getElapsedSeconds() - mPrevSec;
         mPrevSec = getElapsedSeconds();
-        if (ANIMATION != mCurrentAnim)
+        if (mCurrentAnim != ANIMATION)
         {
             for (size_t i=0; i<2; i++)
             {

@@ -12,6 +12,8 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
+#pragma warning(disable: 4244)
+
 static void updateTextureFromSurface(gl::Texture& dst, const Surface& src)
 {
     if (dst && src.getSize() == dst.getSize())

@@ -13,6 +13,8 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
+#pragma warning(disable: 4244)
+
 struct CiApp : public AppBasic 
 {
     void prepareSettings(Settings *settings)
