@@ -9,8 +9,9 @@ struct SequenceAnimT
     {
         reset();
     }
-    float index;
-    std::vector<T> frames;
+    std::vector<T>  frames;
+    std::string     name;
+    float           index;
 
     void reset()
     {
@@ -35,20 +36,20 @@ struct SequenceAnimT
     {
         int id = static_cast<int>(index);
 
-        if (!tex)
+        if (!mTexture)
         {
-            tex = ci::gl::Texture(frames[id]);
+            mTexture = ci::gl::Texture(frames[id]);
         }
         else
         {
-            tex.update(frames[id], frames[id].getBounds());
+            mTexture.update(frames[id], frames[id].getBounds());
         }
 
-        return tex;
+        return mTexture;
     }
 
 private:
-    ci::gl::Texture tex;
+    ci::gl::Texture mTexture;
 };
 
 typedef SequenceAnimT<ci::Channel> SequenceAnimGray;

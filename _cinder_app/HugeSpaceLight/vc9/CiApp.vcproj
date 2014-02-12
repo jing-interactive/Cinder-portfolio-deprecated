@@ -176,6 +176,14 @@
 	</References>
 	<Files>
 		<File
+			RelativePath="..\..\..\_common\AssetManager.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\..\_common\AssetManager.h"
+			>
+		</File>
+		<File
 			RelativePath="..\src\CiApp.cpp"
 			>
 		</File>
@@ -189,6 +197,10 @@
 		</File>
 		<File
 			RelativePath="..\..\..\_common\MiniConfig.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\..\_common\SequenceAnim.h"
 			>
 		</File>
 	</Files>

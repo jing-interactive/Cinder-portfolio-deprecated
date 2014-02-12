@@ -1,13 +1,8 @@
 #include "cinder/app/AppBasic.h"
 #include "cinder/ImageIo.h"
-#include "cinder/MayaCamUI.h"
-#include "cinder/Arcball.h"
+#include "cinder/Camera.h"
 
-#include "cinder/gl/gl.h"
-#include "cinder/gl/Texture.h"
 #include "cinder/gl/Fbo.h"
-#include "cinder/gl/GlslProg.h"
-#include "cinder/gl/Vbo.h"
 #include "cinder/params/Params.h"
 
 #include "cinder/Utilities.h"
@@ -20,8 +15,13 @@
 #include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
 
+#include "../../../_common/AssetManager.h"
+#include "../../../_common/SequenceAnim.h"
+
 #define ASIO_DISABLE_BOOST_REGEX 0
 #include "../../../_common/asio/asio.hpp"
+
+#pragma warning(disable: 4244)
 
 using namespace ci;
 using namespace ci::app;
@@ -45,55 +45,7 @@ struct Led
     size_t id;
 };
 
-typedef shared_ptr<struct Anim> AnimPtr;
-struct Anim
-{
-    Anim()
-    {
-        reset();
-    }
-    string name;
-    float index;
-    vector<Channel> frames;
-
-    void reset()
-    {
-        index = 0;
-    }
-
-    void update(float speed)
-    {
-        index += speed;
-        if (index >= frames.size())
-        {
-            index = 0;
-        }
-    }
-
-    const Channel& getFrame() const
-    {
-        return frames[static_cast<int>(index)];
-    }
-
-    const gl::Texture& getTexture()
-    {
-        int id = static_cast<int>(index);
-
-        if (!tex)
-        {
-            tex = gl::Texture(frames[id]);
-        }
-        else
-        {
-            tex.update(frames[id], frames[id].getBounds());
-        }
-
-        return tex;
-    }
-
-private:
-    gl::Texture tex;
-};
+typedef shared_ptr<SequenceAnimGray> AnimPtr;
 
 struct CiApp : public AppBasic 
 {
@@ -137,9 +89,9 @@ struct CiApp : public AppBasic
             fs::path root = getAssetPath(kAnimFolderNames[id]);
             for (fs::directory_iterator it(root); it != kEndIt; ++it)
             {
-                if (fs::is_directory(*it) || fs::is_symlink(*it))
+                if (fs::is_directory(*it))
                 {
-                    AnimPtr anim = boost::make_shared<Anim>();
+                    AnimPtr anim = boost::make_shared<SequenceAnimGray>();
                     if (!loadAnimFromDir(*it, anim))
                         continue;
                     mAnims[id].push_back(anim);
@@ -156,19 +108,6 @@ struct CiApp : public AppBasic
                 mParams.removeParam("ANIMATION");
                 mParams.addParam("ANIMATION", animNames, &ANIMATION);
             }
-        }
-
-        mParams.addSeparator();
-        mParams.addButton("RESET_ROTATION", bind(&CiApp::resetArcball, this));
-
-        {
-            vector<string> axisNames;
-            axisNames.push_back("x/red-axis");
-            axisNames.push_back("y/green-axis");
-            axisNames.push_back("z/blue-axis");
-
-            mParams.removeParam("ROTATION_AXIS");
-            mParams.addParam("ROTATION_AXIS", axisNames, &ROTATION_AXIS);
         }
 
         // osc setup
@@ -201,10 +140,6 @@ struct CiApp : public AppBasic
         }
 
         mAABB = AxisAlignedBox3f(minBound, maxBound);
-        BOOST_FOREACH(Led& led, mLeds)
-        {
-            //led.pos -= minBound;
-        }
 
         mPrevSec = getElapsedSeconds();
 
@@ -262,30 +197,6 @@ struct CiApp : public AppBasic
         }
     }
 
-    void resize(ResizeEvent event)
-    {
-        App::resize(event);
-        mArcball.setWindowSize(getWindowSize());
-        mArcball.setCenter(Vec2f(getWindowWidth() / 2.0f, getWindowHeight() / 2.0f));
-        mArcball.setRadius(150);
-    }
-
-    void mouseDown(MouseEvent event)
-    {
-        if(event.isAltDown())
-            mMayaCam.mouseDown(event.getPos());
-        else
-            mArcball.mouseDown(event.getPos());
-    }
-
-    void mouseDrag(MouseEvent event)
-    {	
-        if(event.isAltDown())
-            mMayaCam.mouseDrag(event.getPos(), event.isLeftDown(), event.isMiddleDown(), event.isRightDown());
-        else
-            mArcball.mouseDrag(event.getPos());
-    }
-
     void onOscMessage(const osc::Message* msg)
     {
         const string& addr = msg->getAddress();
@@ -296,11 +207,6 @@ struct CiApp : public AppBasic
         }
     }
 
-    void resetArcball()
-    {
-        mArcball.resetQuat();
-    }
-
     void keyUp(KeyEvent event)
     {
         switch (event.getCode())
@@ -308,44 +214,19 @@ struct CiApp : public AppBasic
         case KeyEvent::KEY_ESCAPE:
             {
                 quit();
-            }break;
-        case KeyEvent::KEY_SPACE:
-            {
-                resetArcball();
-            }break;
+                break;
+            }
         case KeyEvent::KEY_h:
             {
                 mParams.show(!mParams.isVisible());
-            }break;
-        case KeyEvent::KEY_x:
-        case KeyEvent::KEY_r:
-            {
-                ROTATION_AXIS = 0;
-            }break;
-        case KeyEvent::KEY_y:
-        case KeyEvent::KEY_g:
-            {
-                ROTATION_AXIS = 1;
-            }break;
-        case KeyEvent::KEY_z:
-        case KeyEvent::KEY_b:
-            {
-                ROTATION_AXIS = 2;
-            }break;
+                break;
+            }
         }
     }
 
     void update()
     {
         mIoService.poll();
-
-        const Vec3f axises[] = 
-        {
-            Vec3f::xAxis(),
-            Vec3f::yAxis(),
-            Vec3f::zAxis(),
-        };
-        mArcball.setConstraintAxis(axises[ROTATION_AXIS]);
 
         float delta = getElapsedSeconds() - mPrevSec;
         mPrevSec = getElapsedSeconds();
@@ -390,10 +271,8 @@ struct CiApp : public AppBasic
         if (mCurrentCamDistance != CAM_DISTANCE)
         {
             mCurrentCamDistance = CAM_DISTANCE;
-            CameraPersp initialCam;
-            initialCam.setPerspective(kCamFov, getWindowAspectRatio(), 0.1f, 1000.0f);
-            initialCam.lookAt(Vec3f(- mAABB.getMax().x * mCurrentCamDistance, mAABB.getMax().y * 0.5f, 0.0f), Vec3f::zero());
-            mMayaCam.setCurrentCam(initialCam);
+            mCamera.setPerspective(kCamFov, getWindowAspectRatio(), 0.1f, 1000.0f);
+            mCamera.lookAt(Vec3f(- mAABB.getMax().x * mCurrentCamDistance, mAABB.getMax().y * 0.5f, 0.0f), Vec3f::zero());
         }
     }
 
@@ -403,7 +282,7 @@ struct CiApp : public AppBasic
         gl::enableDepthWrite();
 
         gl::clear(ColorA::gray(43 / 255.f));
-        gl::setMatrices(mMayaCam.getCamera());
+        gl::setMatrices(mCamera);
 
         float kSceneOffsetY = 0;//SCENE_OFFSET_Y * REAL_TO_VIRTUAL;
 
@@ -411,7 +290,7 @@ struct CiApp : public AppBasic
         {
             gl::pushModelView();
             gl::translate(0, mAABB.getSize().y * -0.5f, kSceneOffsetY);
-            gl::rotate(mArcball.getQuat());
+            gl::rotate(CAM_ROTATION);
             gl::scale(50, 50, 50);
             gl::drawCoordinateFrame();
             gl::popModelView();
@@ -422,7 +301,7 @@ struct CiApp : public AppBasic
             Vec3f trans = mAABB.getSize() * -0.5f;
             trans.x *= -1;
             trans.y += kSceneOffsetY;
-            gl::rotate(mArcball.getQuat());
+            gl::rotate(CAM_ROTATION);
             gl::translate(trans);
 
             gl::scale(-1, 1, 1);
@@ -477,11 +356,11 @@ struct CiApp : public AppBasic
         mParams.draw();
     }
 
-    void safeLoadImage(fs::path imagePath, AnimPtr animPtr, size_t index)
+    void safeLoadImage(fs::path imagePath, AnimPtr anim, size_t index)
     {
         try
         {
-            animPtr->frames[index] = loadImage(imagePath);
+            anim->frames[index] = loadImage(imagePath);
         }
         catch (std::exception& e)
         {
@@ -494,14 +373,14 @@ struct CiApp : public AppBasic
 #endif
     }
 
-    bool loadAnimFromDir(fs::path dir, AnimPtr animPtr) 
+    bool loadAnimFromDir(fs::path dir, AnimPtr anim) 
     {
         double startTime = getElapsedSeconds();
 
-        animPtr->name = dir.filename().string();
+        anim->name = dir.filename().string();
 
         int fileCount = distance(fs::directory_iterator(dir), kEndIt);
-        animPtr->frames.resize(fileCount);
+        anim->frames.resize(fileCount);
 
         size_t index = 0;
         for (fs::directory_iterator it(dir); it != kEndIt; ++it, ++index)
@@ -509,15 +388,15 @@ struct CiApp : public AppBasic
             if (!fs::is_regular_file(*it))
                 continue;
 
-            mIoService.post(boost::bind(&CiApp::safeLoadImage, this, *it, animPtr, index));
+            mIoService.post(boost::bind(&CiApp::safeLoadImage, this, *it, anim, index));
         }
 
-        if (animPtr->frames.empty())
+        if (anim->frames.empty())
         {
             return false;
         }
 
-        console() << dir << ": " << getElapsedSeconds() - startTime;
+        console() << dir << ": " << getElapsedSeconds() - startTime << endl;
 
         return true;
     }
@@ -526,10 +405,9 @@ private:
     params::InterfaceGl mParams;
     osc::Listener   mListener;
     vector<Led>     mLeds;
-    MayaCamUI		mMayaCam;
     int             mCurrentCamDistance;
-    Arcball         mArcball;
     AxisAlignedBox3f mAABB;
+    CameraPersp     mCamera;
 
     vector<AnimPtr>    mAnims[2];
 
