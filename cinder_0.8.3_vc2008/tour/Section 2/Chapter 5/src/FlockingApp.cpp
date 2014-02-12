@@ -7,8 +7,8 @@
 #include "cinder/Rand.h"
 #include "ParticleController.h"
 
-#define NUM_INITIAL_PARTICLES 2000
-#define NUM_INITIAL_PREDATORS 9
+#define NUM_INITIAL_PARTICLES 400
+#define NUM_INITIAL_PREDATORS 20
 #define NUM_PARTICLES_TO_SPAWN 15
 
 using namespace ci;
@@ -60,7 +60,7 @@ void FlockingApp::setup()
 	mZoneRadius		= 80.0f;
 	mLowerThresh	= 0.5f;
 	mHigherThresh	= 0.8f;
-	mAttractStrength	= 0.004f;
+	mAttractStrength	= 0.014f;
 	mRepelStrength		= 0.01f;
 	mOrientStrength		= 0.01f;
 	
@@ -127,7 +127,7 @@ void FlockingApp::draw()
 	mParticleController.draw();
 	
 	if( mSaveFrames ){
-		writeImage( getHomeDirectory() + "flocking/image_" + toString( getElapsedFrames() ) + ".png", copyWindowSurface() );
+		//writeImage( getHomeDirectory() + "flocking/image_" + toString( getElapsedFrames() ) + ".png", copyWindowSurface() );
 	}
 	
 	// DRAW PARAMS WINDOW

@@ -47,8 +47,8 @@
 
 #if defined( CINDER_MSW )
 	//#include <windows.h>
-	//#undef min
-	//#undef max
+	#undef min
+	#undef max
 	//#include <gl/gl.h>
 #elif defined( CINDER_COCOA_TOUCH )
 	#include <OpenGLES/ES1/gl.h>
