@@ -18,7 +18,7 @@ using namespace std;
 
 namespace
 {
-    const std::string FILE_TAG = "root";
+    const string kConfigFileName = "MiniConfig.xml";
 
     void revertToDefaultValues()
     {
@@ -35,19 +35,18 @@ namespace
 
 void readConfig()
 {
-	fs::path configPath = getAssetPath("./") / CONFIG_FILE_NAME;
+	fs::path configPath = getAssetPath("./") / kConfigFileName;
 	try
 	{
 		XmlTree tree(loadFile(configPath));
-		XmlTree root = tree.getChild(FILE_TAG);
         XmlTree group;
 
-#define GROUP_DEF(grp) group = root.getChild(#grp);
+#define GROUP_DEF(grp) group = tree.getChild(#grp);
 #define ITEM_DEF(type, var, default)                        \
     do                                                      \
     {                                                       \
         if (group.getTag().empty())                         \
-            var = root.getChild(#var).getValue<type>();     \
+            var = tree.getChild(#var).getValue<type>();     \
         else                                                \
             var = group.getChild(#var).getValue<type>();    \
     } while (0);
@@ -69,10 +68,10 @@ void readConfig()
 
 void writeConfig()
 {
-	fs::path configPath = getAssetPath("./") / CONFIG_FILE_NAME;
+	fs::path configPath = getAssetPath("./") / kConfigFileName;
 	try
 	{
-		XmlTree tree(FILE_TAG, "");
+        XmlTree tree = XmlTree::createDoc();
         XmlTree group;
 
 #define GROUP_DEF(grp)                                          \
@@ -98,9 +97,9 @@ void writeConfig()
 
 #ifdef CHINESE_GBK_ENCODING_ENABLED
         // OStreamRef os = writeFile(configPath)->getStream();
-        std::ofstream of(configPath.string().c_str());
-        const std::string kGbkHeader = "<?xml version=\"1.0\" encoding=\"gbk\"?>";
-        of << kGbkHeader << std::endl << tree;
+        ofstream of(configPath.string().c_str());
+        const string kGbkHeader = "<?xml version=\"1.0\" encoding=\"gbk\"?>";
+        of << kGbkHeader << endl << tree;
 #else
         tree.write( writeFile(configPath));
 #endif
@@ -119,7 +118,7 @@ void setupConfigUI(cinder::params::InterfaceGl* params)
 #define ITEM_DEF_MINMAX(type, var, default, Min, Max)               \
     do                                                              \
     {                                                               \
-        type step = (Max - Min) / (type)20;                         \
+        type step = (Max - Min) / (type)100;                         \
         stringstream ss;                                            \
         ss << "min=" << Min << " max=" << Max << " step=" << step;  \
         params->addParam(#var, &var, ss.str());                     \
@@ -133,32 +132,32 @@ void setupConfigUI(cinder::params::InterfaceGl* params)
 
 namespace
 {
-    const int kPODItemHeight = 21;
+    const int kPODItemHeight = 16;
     template <typename T>
     int getItemHeight(const T&)
     {
         return kPODItemHeight;
     }
 
-    template<>
+    template <>
     int getItemHeight(const Quatf&)
     {
         return 80;
     }
 
-    template<>
+    template <>
     int getItemHeight(const Vec3f&)
     {
         return 120;
     }
 
-    template<>
+    template <>
     int getItemHeight(const Color&)
     {
         return 80;
     }
 
-    template<>
+    template <>
     int getItemHeight(const ColorA&)
     {
         return 80;
@@ -176,5 +175,6 @@ int getConfigUIHeight()
 #undef ITEM_DEF_MINMAX
 #undef ITEM_DEF
 #undef GROUP_DEF
+
     return height;
 }

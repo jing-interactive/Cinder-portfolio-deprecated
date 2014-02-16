@@ -7,24 +7,46 @@ struct SequenceAnimT
 {
     SequenceAnimT()
     {
+        mIsOneshot = false;
         reset();
     }
-    std::vector<T>  frames;
-    std::string     name;
-    float           index;
+
+    float index;
+    std::vector<T> frames;
+    std::string name;
+
+    void setOneshot(bool flag)
+    {
+        mIsOneshot = flag;
+    }
 
     void reset()
     {
         index = 0;
+        mIsAlive = true;
     }
 
     void update(float speed)
     {
+        if (!mIsAlive)
+        {
+            return;
+        }
+
         index += speed;
         if (index >= frames.size())
         {
             index = 0;
+            if (mIsOneshot)
+            {
+                mIsAlive = false;
+            }
         }
+    }
+
+    bool isAlive() const
+    {
+        return mIsAlive;
     }
 
     const T& getFrame() const
@@ -36,20 +58,22 @@ struct SequenceAnimT
     {
         int id = static_cast<int>(index);
 
-        if (!mTexture)
+        if (!tex)
         {
-            mTexture = ci::gl::Texture(frames[id]);
+            tex = ci::gl::Texture(frames[id]);
         }
         else
         {
-            mTexture.update(frames[id], frames[id].getBounds());
+            tex.update(frames[id], frames[id].getBounds());
         }
 
-        return mTexture;
+        return tex;
     }
 
 private:
-    ci::gl::Texture mTexture;
+    ci::gl::Texture tex;
+    bool            mIsOneshot;
+    bool            mIsAlive;
 };
 
 typedef SequenceAnimT<ci::Channel> SequenceAnimGray;

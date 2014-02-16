@@ -11,8 +11,6 @@ using ci::Quatf;
 using ci::Color;
 using ci::ColorA;
 
-#define CONFIG_FILE_NAME "MiniConfig.xml"
-
 #define GROUP_DEF(grp)
 #define ITEM_DEF(type, var, default) extern type var;
 #define ITEM_DEF_MINMAX(type, var, default, Min, Max) ITEM_DEF(type, var, default);

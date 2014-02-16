@@ -1,6 +1,7 @@
 #include "cinder/app/AppBasic.h"
 #include "cinder/ImageIo.h"
 #include "cinder/Camera.h"
+#include "cinder/Xml.h"
 
 #include "cinder/gl/Fbo.h"
 #include "cinder/params/Params.h"
@@ -47,15 +48,125 @@ struct Led
 
 typedef shared_ptr<SequenceAnimGray> AnimPtr;
 
+// TODO: proto-buf?
+struct Movie
+{
+    Movie()
+    {
+        lightValue = 1000;
+        lightValue2 = 0;
+        loopCount = 1;
+    }
+    int lightValue;
+    int lightValue2; // if non-zero, then random light value from (lightValue, lightValue2)
+    int loopCount; // >1
+
+    friend ostream& operator<<(ostream& lhs, const Movie& rhs)
+    {
+        lhs << rhs.lightValue << " " << rhs.lightValue2 << " " << rhs.loopCount;
+        return lhs;
+    }
+
+    friend istream& operator>>(istream& lhs, Movie& rhs)
+    {
+        lhs >> rhs.lightValue >> std::ws >> rhs.lightValue2 >> std::ws >> rhs.loopCount;
+        return lhs;
+    }
+};
+
+const int kMovieCount = 6;
+struct Program
+{
+    Program()
+    {
+        isKinectEnabled = false;
+    }
+
+    Movie movies[kMovieCount];
+    bool isKinectEnabled;
+
+    friend ostream& operator<<(ostream& lhs, const Program& rhs)
+    {
+        for (int i=0; i<kMovieCount; i++)
+        {
+            lhs << rhs.movies[i] << " ";
+        }
+        lhs << rhs.isKinectEnabled;
+        return lhs;
+    }
+
+    friend istream& operator>>(istream& lhs, Program& rhs)
+    {
+        for (int i=0; i<kMovieCount; i++)
+        {
+            lhs >> rhs.movies[i] >> std::ws;
+        }
+        lhs >> rhs.isKinectEnabled;
+        return lhs;
+    }
+};
+
+const string kProgSettingFileName = "ProgramSettings.xml";
+const int kProgramCount = 6;
+const int kHourCount = 24; // valid hours for G9 are [10~23; 00; 01]
+const int kEmptyProgram = -1;
+
 struct CiApp : public AppBasic 
 {
+    Program mPrograms[kProgramCount];
+    int mProgIds[kHourCount];
+
     CiApp(): mWork(mIoService)
     {
+        fill(mProgIds, mProgIds + kHourCount, kEmptyProgram);
+    }
+
+    void readProgramSettings()
+    {
+        fs::path configPath = getAssetPath("") / kProgSettingFileName;
+        try
+        {
+            XmlTree tree(loadFile(configPath));
+            for (int i=0; i<kProgramCount; i++)
+            {
+                mPrograms[i] = tree.getChild(toString(i)).getValue<Program>();
+            }
+
+            string str = tree.getChild("ids").getValue();
+            for (int i=0; i<kHourCount; i++)
+            {
+                mProgIds[i] = tree.getChild("ids").getChild(toString(i)).getValue<int>();
+            }
+        }
+        catch (exception& e)
+        {
+            writeProgramSettings();
+        }
+    }
+
+    void writeProgramSettings()
+    {
+        XmlTree tree = XmlTree::createDoc();
+        for (int i=0; i<kProgramCount; i++)
+        {
+            XmlTree item(toString(i), toString(mPrograms[i]));
+            tree.push_back(item);
+        }
+        XmlTree ids("ids", "");
+        for (int i=0; i<kHourCount; i++)
+        {
+            ids.push_back(XmlTree(toString(i), toString(mProgIds[i])));
+        }
+        tree.push_back(ids);
+        
+        fs::path configPath = getAssetPath("") / kProgSettingFileName;
+        tree.write(writeFile(configPath));
     }
 
     void prepareSettings(Settings *settings)
     {
         readConfig();
+        readProgramSettings();
         
         settings->setWindowPos(0, 0);
         settings->setWindowSize(800, 800);
@@ -63,7 +174,10 @@ struct CiApp : public AppBasic
 
     void setup()
     {
-        mParams = params::InterfaceGl("params", Vec2i(300, getConfigUIHeight()));
+        mParams = params::InterfaceGl("params", Vec2i(300, getWindowHeight() * 0.95f));
+        setupConfigUI(&mParams);
+
+        mProbeProgram = -1;
 
         mCurrentCamDistance = -1;
 
@@ -71,9 +185,6 @@ struct CiApp : public AppBasic
         {
             mThreads.create_thread(bind(&asio::io_service::run, &mIoService));
         }
-
-        // MiniConfig.xml
-        setupConfigUI(&mParams);
 
         mCurrentAnim = 0;
 
@@ -92,6 +203,7 @@ struct CiApp : public AppBasic
                 if (fs::is_directory(*it))
                 {
                     AnimPtr anim = boost::make_shared<SequenceAnimGray>();
+                    anim->setOneshot(true);
                     if (!loadAnimFromDir(*it, anim))
                         continue;
                     mAnims[id].push_back(anim);
@@ -105,8 +217,19 @@ struct CiApp : public AppBasic
                 {
                     animNames.push_back(mAnims[id][i]->name);
                 }
-                mParams.removeParam("ANIMATION");
-                mParams.addParam("ANIMATION", animNames, &ANIMATION);
+                ADD_ENUM_TO_INT(mParams, ANIMATION, animNames);
+            }
+
+            mParams.addSeparator();
+            mParams.addText("Valid programs are 0/1/2/3/4/5");
+            mParams.addText("And -1 means no program in this hour");
+            for (int i=0; i<kHourCount; i++)
+            {
+                if (i >= 1 && i < 10)
+                {
+                    continue;
+                }
+                mParams.addParam("hour# " + toString(i), &mProgIds[i], "min=-1 max=6");
             }
         }
 
@@ -186,6 +309,7 @@ struct CiApp : public AppBasic
 
     void shutdown()
     {
+        writeProgramSettings();
         mIoService.stop();
         try
         {
@@ -227,6 +351,21 @@ struct CiApp : public AppBasic
     void update()
     {
         mIoService.poll();
+
+        if (mProbeProgram != PROBE_PROGRAM)
+        {
+            mProbeProgram = PROBE_PROGRAM;
+            mProgramGUI = params::InterfaceGl("program", Vec2i(300, getWindowHeight() * 0.5f));
+            Program& prog = mPrograms[PROBE_PROGRAM];
+            for (int i=0; i<kMovieCount; i++)
+            {
+                mProgramGUI.addText("movie# " + toString(i));
+                mProgramGUI.addParam("lightValue of # " + toString(i), &prog.movies[i].lightValue, "min=0");
+                mProgramGUI.addParam("lightValue2 of # " + toString(i), &prog.movies[i].lightValue2, "min=0");
+                mProgramGUI.addParam("loopCount of # " + toString(i), &prog.movies[i].loopCount, "min=0");
+            }
+            mProgramGUI.addParam("isKinectEnabled", &prog.isKinectEnabled);
+        }
 
         float delta = getElapsedSeconds() - mPrevSec;
         mPrevSec = getElapsedSeconds();
@@ -335,7 +474,6 @@ struct CiApp : public AppBasic
         }
         gl::popModelView();
 
-   
         // 2D
         gl::setMatricesWindow(getWindowSize());
         if (ANIM_COUNT_VISIBLE)
@@ -354,6 +492,7 @@ struct CiApp : public AppBasic
         }
 
         mParams.draw();
+        mProgramGUI.draw();
     }
 
     void safeLoadImage(fs::path imagePath, AnimPtr anim, size_t index)
@@ -362,7 +501,7 @@ struct CiApp : public AppBasic
         {
             anim->frames[index] = loadImage(imagePath);
         }
-        catch (std::exception& e)
+        catch (exception& e)
         {
 #ifdef _DEBUG
             console() << e.what() << endl;
@@ -403,6 +542,8 @@ struct CiApp : public AppBasic
 
 private:
     params::InterfaceGl mParams;
+    params::InterfaceGl mProgramGUI;
+
     osc::Listener   mListener;
     vector<Led>     mLeds;
     int             mCurrentCamDistance;
@@ -420,6 +561,9 @@ private:
     asio::io_service mIoService;
     asio::io_service::work mWork;
     boost::thread_group mThreads;
+
+    int             mProbeProgram;
+    Program*        mCurrentProgram;
 };
 
 CINDER_APP_BASIC(CiApp, RendererGl)

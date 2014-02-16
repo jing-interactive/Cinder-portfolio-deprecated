@@ -2,12 +2,11 @@ HugeSpaceLight with SuperNature
 
 TODO:
 - [x]speed up image loading with ASIO + thread_group
-- [ ]vbo of leds
 
 - [x]osc connection
 - [ ]kinect connection
 - [ ]gesture detection
 
-- [ ]save/load
+- [x]save/load
 
 - [ ]led mapping
