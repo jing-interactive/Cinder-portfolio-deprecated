@@ -1,6 +1,7 @@
 GROUP_DEF(RealWorld)
 ITEM_DEF(float, ANIM_SPEED, 10.0f)
 ITEM_DEF(int, ANIMATION, 0)
+ITEM_DEF(bool, GUI_VISIBLE, true)
 
 GROUP_DEF(VirtualWorld)
 ITEM_DEF(float, SPHERE_RADIUS, 0.9f)        // m
@@ -17,6 +18,5 @@ ITEM_DEF(bool,  ANIM_COUNT_VISIBLE, false)
 ITEM_DEF(bool,  LINES_VISIBLE, false)
 ITEM_DEF(bool,  REFERENCE_VISIBLE, true)
 
-GROUP_DEF(Program)
-ITEM_DEF_MINMAX(int, PROBE_PROGRAM, 0, 0, 5)
+ITEM_DEF(int, PROBE_PROGRAM, 0)
 
