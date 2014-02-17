@@ -4,6 +4,7 @@
 #include "cinder/Xml.h"
 #include "cinder/CinderMath.h"
 #include "cinder/Rand.h"
+#include "cinder/ip/Fill.h"
 
 #include "cinder/gl/Fbo.h"
 #include "cinder/params/Params.h"
@@ -11,8 +12,7 @@
 #include "cinder/Utilities.h"
 #include "cinder/Thread.h"
 
-#include "cinder/osc/OscListener.h"
-#include "cinder/osc/OscSender.h"
+#include "cinder/tuio/TuioClient.h"
 #include "../../../_common/MiniConfig.h"
 #include <fstream>
 #include <boost/foreach.hpp>
@@ -31,7 +31,7 @@ using namespace ci::app;
 using namespace std;
 
 const float kCamFov = 60.0f;
-const int kOscListenPort = 3333;
+const int kTuioKinectPort = 3333;
 const int kOscPadPort = 4444;
 const float kLedOffset = 225.0f;
 const int kThreadCount = 10;
@@ -48,6 +48,13 @@ struct Led
 };
 
 typedef shared_ptr<SequenceAnimGray> AnimPtr;
+
+static int getHour()
+{
+    SYSTEMTIME wtm;
+    ::GetLocalTime(&wtm);
+    return wtm.wHour;
+}
 
 // TODO: proto-buf?
 struct AnimConfig
@@ -200,7 +207,9 @@ struct CiApp : public AppBasic
         mParams = params::InterfaceGl("params - press F1 to hide", Vec2i(300, getWindowHeight()));
         setupConfigUI(&mParams);
 
+        mKinectChan = loadImage(getAssetPath("black-for-kinect.jpg"));
         mHour = -1;
+        mFrameDelta = 0;
         mProbeProgram = -1;
 
         mCurrentCamDistance = -1;
@@ -249,11 +258,12 @@ struct CiApp : public AppBasic
                 {
                     names.push_back("program# " + toString(i));
                 }
-                
+
                 ADD_ENUM_TO_INT(mParams, PROBE_PROGRAM, names);
             }
 
             mParams.addSeparator();
+            mParams.addParam("current_hour", &mHour, "", true);
             mParams.addText("Valid programs are 0/1/2/3/4/5");
             mParams.addText("And -1 means no program in this hour");
             for (int i=0; i<kHourCount; i++)
@@ -267,8 +277,10 @@ struct CiApp : public AppBasic
         }
 
         // osc setup
-        mListener.setup(kOscListenPort);
-        mListener.registerMessageReceived(this, &CiApp::onOscMessage);
+        mPadListener.setup(kOscPadPort);
+        mPadListener.registerMessageReceived(this, &CiApp::onOscMessage);
+
+        mTuioClient.connect(kTuioKinectPort);
 
         // parse leds.txt
         ifstream ifs(getAssetPath("leds.txt").string().c_str());
@@ -296,8 +308,6 @@ struct CiApp : public AppBasic
         }
 
         mAABB = AxisAlignedBox3f(minBound, maxBound);
-
-        mPrevSec = getElapsedSeconds();
 
         // wall
         {   
@@ -383,8 +393,8 @@ struct CiApp : public AppBasic
 
     void updateProgram()
     {
-        // current
-        int hour = 23; // TODO:
+        // current program
+        int hour = getHour();
         if (mHour != hour)
         {
             mHour = hour;
@@ -447,38 +457,66 @@ struct CiApp : public AppBasic
                 mAnims[i][mCurrentAnim]->reset();
             }
         }
+
+        for (size_t i=0; i<2; i++)
+        {
+            mAnims[i][mCurrentAnim]->update(mFrameDelta * ANIM_SPEED);
+        }
     }
 
     void update()
     {
+        static float sPrevSec = getElapsedSeconds();
+
         mIoService.poll();
 
         updateProgram();
         if (mCurrentProgram == NULL)
         {
-            // TODO: black screen?
+            BOOST_FOREACH(Led& led, mLeds)
+            {
+                led.value = 0; // TODO: black color?
+            }
             return;
         }
 
-        updateAnime();
-
-        float delta = getElapsedSeconds() - mPrevSec;
-        mPrevSec = getElapsedSeconds();
-
-        for (size_t i=0; i<2; i++)
+        vector<tuio::Cursor> cursors;
+        if (mCurrentProgram->isKinectEnabled)
         {
-            mAnims[i][mCurrentAnim]->update(delta * max<float>(ANIM_SPEED, 0));
+            cursors = mTuioClient.getCursors();
         }
 
-        const Channel& suf = mAnims[0][mCurrentAnim]->getFrame();
-        Vec3f aabbSize = mAABB.getSize();
-        Vec3f aabbMin = mAABB.getMin();
+        const Channel* pChannel = NULL;
+        if (cursors.size() == 2)
+        {
+            ip::fill(&mKinectChan, (uint8_t)0);
+            for (int i=0; i<2; i++)
+            {
+                Vec2f pos = cursors[i].getPos();
+                int width = (1.0f - pos.y) * mKinectChan.getWidth();
+                int halfH = mKinectChan.getHeight(); // TODO: global & cache
+                for (int x=0; x<width; x++)
+                {
+                    for (int y=halfH*i; y<(halfH*(i+1)); y++)
+                    {
+                        *mKinectChan.getData(x, y) = 122; // TODO: which value?
+                    }
+                }
+                // TODO: getSpeed()?
+                pChannel = &mKinectChan;
+            }
+        }
+        else
+        {
+            updateAnime();
+            pChannel = &mAnims[0][mCurrentAnim]->getFrame();
+        }
 
-        int32_t width = suf.getWidth();
-        int32_t height = suf.getHeight();
+        int32_t width = pChannel->getWidth();
+        int32_t height = pChannel->getHeight();
 
-        float kW = suf.getWidth() / 1029.0f;
-        float kH = suf.getHeight() / 124.0f;
+        float kW = pChannel->getWidth() / 1029.0f;
+        float kH = pChannel->getHeight() / 124.0f;
         BOOST_FOREACH(Led& led, mLeds)
         {
             // online solver
@@ -491,7 +529,7 @@ struct CiApp : public AppBasic
             //245  1  2
             //4070 1  122
             float cy = 0.031372549019608f * led.pos.x / REAL_TO_VIRTUAL - 5.686274509803920f;
-            uint8_t value = *suf.getData(Vec2i(kW * cx, kH * cy));
+            uint8_t value = *pChannel->getData(Vec2i(kW * cx, kH * cy));
             led.value = value / 255.f;
         }
 
@@ -501,11 +539,18 @@ struct CiApp : public AppBasic
             mCamera.setPerspective(kCamFov, getWindowAspectRatio(), 0.1f, 1000.0f);
             mCamera.lookAt(Vec3f(- mAABB.getMax().x * mCurrentCamDistance, mAABB.getMax().y * 0.5f, 0.0f), Vec3f::zero());
         }
+
+        mFrameDelta = getElapsedSeconds() - sPrevSec;
+        sPrevSec = getElapsedSeconds();
     }
 
     void drawLedMapping()
     {
         // TODO
+        BOOST_FOREACH(Led& led, mLeds)
+        {
+
+        }
     }
 
     void draw()
@@ -569,23 +614,27 @@ struct CiApp : public AppBasic
             }
             gl::disableAlphaBlending();
 
-            // wall
-            gl::Texture tex = mAnims[1][mCurrentAnim]->getTexture();
-            tex.enableAndBind();
-            gl::draw(mVboWall);
-            tex.disable();
+            if (mCurrentAnim != -1)
+            {
+                // TODO: state??
+                // wall
+                gl::Texture tex = mAnims[1][mCurrentAnim]->getTexture();
+                tex.enableAndBind();
+                gl::draw(mVboWall);
+                tex.disable();
+            }
         }
         gl::popModelView();
 
         // 2D
         gl::setMatricesWindow(getWindowSize());
-        if (ANIM_COUNT_VISIBLE)
+        if (ANIM_COUNT_VISIBLE && mCurrentAnim != -1)
         {
             gl::drawString(toString(mAnims[0][mCurrentAnim]->index), Vec2f(10, 10));
         }
         drawLedMapping();
 
-        if (REFERENCE_VISIBLE)
+        if (REFERENCE_VISIBLE && mCurrentAnim != -1)
         {
             const float kOffY = REFERENCE_OFFSET_Y;
             const Rectf kRefGlobeArea(28, 687 + kOffY, 28 + 636, 687 + 90 + kOffY);
@@ -651,7 +700,11 @@ private:
     params::InterfaceGl mParams;
     params::InterfaceGl mProgramGUI;
 
-    osc::Listener   mListener;
+    osc::Listener   mPadListener;
+    tuio::Client    mTuioClient;
+    float           mFrameDelta;
+    Channel         mKinectChan;
+
     vector<Led>     mLeds;
     int             mCurrentCamDistance;
     AxisAlignedBox3f mAABB;
@@ -660,8 +713,6 @@ private:
     vector<AnimPtr>    mAnims[2];
 
     int             mCurrentAnim;
-
-    float           mPrevSec;
 
     gl::VboMesh     mVboWall;
 
