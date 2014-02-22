@@ -140,7 +140,7 @@ struct CiApp : public AppBasic
     {
         for (int i=0; i<kHourCount; i++)
         {
-            if (i >= 1 && i < 10)
+            if (i > 1 && i < 10)
             {
                 mProgramIds[i] = -1;
             }
@@ -266,13 +266,9 @@ struct CiApp : public AppBasic
             mParams.addParam("current_hour", &mHour, "", true);
             mParams.addText("Valid programs are 0/1/2/3/4/5");
             mParams.addText("And -1 means no program in this hour");
-            for (int i=0; i<kHourCount; i++)
+            for (int i=10; i<26; i++)
             {
-                if (i >= 1 && i < 10)
-                {
-                    continue;
-                }
-                mParams.addParam("hour# " + toString(i), &mProgramIds[i], "min=-1 max=6");
+                mParams.addParam("hour# " + toString(i % kHourCount), &mProgramIds[i % kHourCount], "min=-1 max=5");
             }
         }
 
@@ -368,9 +364,15 @@ struct CiApp : public AppBasic
     {
         const string& addr = msg->getAddress();
 
-        if (addr == "/debug/movie")
+        if (addr == "/schedule")
         {
-            ANIMATION = msg->getArgAsInt32(0);
+            int hour = msg->getArgAsInt32(0);
+            int prog = msg->getArgAsInt32(1);
+            if (hour >=0 && hour < kHourCount 
+                && prog >= -1 && prog < kProgramCount)
+            {
+                mProgramIds[hour] = prog;
+            }
         }
     }
 
