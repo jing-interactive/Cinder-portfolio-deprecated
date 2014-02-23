@@ -59,6 +59,8 @@ static int getHour()
 // TODO: proto-buf?
 struct AnimConfig
 {
+    static const int kCount = 10;
+
     AnimConfig()
     {
         lightValue = 1000;
@@ -95,20 +97,20 @@ struct AnimConfig
     }
 };
 
-const int kAnimeCount = 10;
-struct HourlyProgram
+struct Config
 {
-    HourlyProgram()
+    static const int kCount = 6;
+    Config()
     {
         isKinectEnabled = false;
     }
 
-    AnimConfig animConfigs[kAnimeCount];
+    AnimConfig animConfigs[AnimConfig::kCount];
     bool isKinectEnabled;
 
-    friend ostream& operator<<(ostream& lhs, const HourlyProgram& rhs)
+    friend ostream& operator<<(ostream& lhs, const Config& rhs)
     {
-        for (int i=0; i<kAnimeCount; i++)
+        for (int i=0; i<AnimConfig::kCount; i++)
         {
             lhs << rhs.animConfigs[i] << " ";
         }
@@ -116,9 +118,9 @@ struct HourlyProgram
         return lhs;
     }
 
-    friend istream& operator>>(istream& lhs, HourlyProgram& rhs)
+    friend istream& operator>>(istream& lhs, Config& rhs)
     {
-        for (int i=0; i<kAnimeCount; i++)
+        for (int i=0; i<AnimConfig::kCount; i++)
         {
             lhs >> rhs.animConfigs[i] >> std::ws;
         }
@@ -128,13 +130,12 @@ struct HourlyProgram
 };
 
 const string kProgSettingFileName = "ProgramSettings.xml";
-const int kProgramCount = 6;
 const int kHourCount = 24; // valid hours for G9 are [10~23; 00; 01]
 
-struct CiApp : public AppBasic 
+struct CiApp : public AppBasic
 {
-    HourlyProgram mPrograms[kProgramCount];
-    int mProgramIds[kHourCount];
+    Config mConfigs[Config::kCount];
+    int mConfigIds[kHourCount];
 
     CiApp(): mWork(mIoService)
     {
@@ -142,11 +143,11 @@ struct CiApp : public AppBasic
         {
             if (i > 1 && i < 10)
             {
-                mProgramIds[i] = -1;
+                mConfigIds[i] = -1;
             }
             else
             {
-                mProgramIds[i] = rand() % kProgramCount;
+                mConfigIds[i] = rand() % Config::kCount;
             }
         }
     }
@@ -157,15 +158,15 @@ struct CiApp : public AppBasic
         try
         {
             XmlTree tree(loadFile(configPath));
-            for (int i=0; i<kProgramCount; i++)
+            for (int i=0; i<Config::kCount; i++)
             {
-                mPrograms[i] = tree.getChild(toString(i)).getValue<HourlyProgram>();
+                mConfigs[i] = tree.getChild(toString(i)).getValue<Config>();
             }
 
             string str = tree.getChild("ids").getValue();
             for (int i=0; i<kHourCount; i++)
             {
-                mProgramIds[i] = tree.getChild("ids").getChild(toString(i)).getValue<int>();
+                mConfigIds[i] = tree.getChild("ids").getChild(toString(i)).getValue<int>();
             }
         }
         catch (exception& e)
@@ -177,15 +178,15 @@ struct CiApp : public AppBasic
     void writeProgramSettings()
     {
         XmlTree tree = XmlTree::createDoc();
-        for (int i=0; i<kProgramCount; i++)
+        for (int i=0; i<Config::kCount; i++)
         {
-            XmlTree item(toString(i), toString(mPrograms[i]));
+            XmlTree item(toString(i), toString(mConfigs[i]));
             tree.push_back(item);
         }
         XmlTree ids("ids", "");
         for (int i=0; i<kHourCount; i++)
         {
-            ids.push_back(XmlTree(toString(i), toString(mProgramIds[i])));
+            ids.push_back(XmlTree(toString(i), toString(mConfigIds[i])));
         }
         tree.push_back(ids);
 
@@ -254,7 +255,7 @@ struct CiApp : public AppBasic
             {
                 mParams.addSeparator();
                 vector<string> names;
-                for (int i=0; i<kProgramCount; i++)
+                for (int i=0; i<Config::kCount; i++)
                 {
                     names.push_back("program# " + toString(i));
                 }
@@ -268,7 +269,7 @@ struct CiApp : public AppBasic
             mParams.addText("And -1 means no program in this hour");
             for (int i=10; i<26; i++)
             {
-                mParams.addParam("hour# " + toString(i % kHourCount), &mProgramIds[i % kHourCount], "min=-1 max=5");
+                mParams.addParam("hour# " + toString(i % kHourCount), &mConfigIds[i % kHourCount], "min=-1 max=5");
             }
         }
 
@@ -369,10 +370,31 @@ struct CiApp : public AppBasic
             int hour = msg->getArgAsInt32(0);
             int prog = msg->getArgAsInt32(1);
             if (hour >=0 && hour < kHourCount 
-                && prog >= -1 && prog < kProgramCount)
+                && prog >= -1 && prog < Config::kCount)
             {
-                mProgramIds[hour] = prog;
+                mConfigIds[hour] = prog;
             }
+            return;
+        }
+
+        if (addr == "/anim")
+        {
+            int cfg = msg->getArgAsInt32(0);
+            Config& config = mConfigs[cfg];
+            config.isKinectEnabled = msg->getArgAsInt32(1);
+            for (int i=0; i<AnimConfig::kCount; i++)
+            {
+                AnimConfig& animConfig = config.animConfigs[i];
+                bool isEnabled = msg->getArgAsInt32(1 + 4*i);
+                animConfig.loopCount = msg->getArgAsInt32(2 + 4*i);
+                if (!isEnabled)
+                {
+                    animConfig.loopCount = 0;
+                }
+                animConfig.lightValue = msg->getArgAsInt32(3 + 4*i);
+                animConfig.lightValue2 = msg->getArgAsInt32(4 + 4*i);
+            }
+            return;
         }
     }
 
@@ -402,10 +424,10 @@ struct CiApp : public AppBasic
             mHour = hour;
             ANIMATION = 0;
             mCurrentAnim = -1;
-            if (mProgramIds[mHour] != -1)
+            if (mConfigIds[mHour] != -1)
             {
-                int progId = constrain(mProgramIds[mHour], 0, kProgramCount - 1);
-                mCurrentProgram = &mPrograms[progId];
+                int progId = constrain(mConfigIds[mHour], 0, Config::kCount - 1);
+                mCurrentProgram = &mConfigs[progId];
                 mRemainingLoopForAnim = mCurrentProgram->animConfigs[ANIMATION].loopCount;
             }
             else
@@ -419,12 +441,12 @@ struct CiApp : public AppBasic
         {
             mProbeProgram = PROBE_PROGRAM;
             mProgramGUI = params::InterfaceGl("program# " + toString(mProbeProgram), Vec2i(300, getWindowHeight()));
-            HourlyProgram& prog = mPrograms[mProbeProgram];
+            Config& prog = mConfigs[mProbeProgram];
             mProgramGUI.addParam("isKinectEnabled", &prog.isKinectEnabled);
             mProgramGUI.addSeparator();
-            for (int i=0; i<kAnimeCount; i++)
+            for (int i=0; i<AnimConfig::kCount; i++)
             {
-                mProgramGUI.addText("movie# " + toString(i+1));
+                mProgramGUI.addText("anim# " + toString(i+1));
                 mProgramGUI.addParam("loopCount of # " + toString(i+1), &prog.animConfigs[i].loopCount, "min=0");
                 mProgramGUI.addParam("lightValue of # " + toString(i+1), &prog.animConfigs[i].lightValue, "min=0");
                 mProgramGUI.addParam("lightValue2 of # " + toString(i+1), &prog.animConfigs[i].lightValue2, "min=0");
@@ -432,7 +454,7 @@ struct CiApp : public AppBasic
         }
     }
 
-    void updateAnime()
+    void updateAnim()
     {
         // calculate ANIMATION
         if (!mAnims[0][ANIMATION]->isAlive() || 
@@ -445,7 +467,7 @@ struct CiApp : public AppBasic
             }
             else
             {
-                ANIMATION = (ANIMATION + 1) % kAnimeCount;
+                ANIMATION = (ANIMATION + 1) % AnimConfig::kCount;
                 mRemainingLoopForAnim = mCurrentProgram->animConfigs[ANIMATION].loopCount;
             }
         }
@@ -510,7 +532,7 @@ struct CiApp : public AppBasic
         }
         else
         {
-            updateAnime();
+            updateAnim();
             pChannel = &mAnims[0][mCurrentAnim]->getFrame();
         }
 
@@ -723,7 +745,7 @@ private:
     boost::thread_group mThreads;
 
     int             mProbeProgram;
-    HourlyProgram*  mCurrentProgram;
+    Config*  mCurrentProgram;
 
     Color           mLedColor;
     int             mHour;
