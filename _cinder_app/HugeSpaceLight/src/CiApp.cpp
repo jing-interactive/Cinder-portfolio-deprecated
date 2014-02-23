@@ -379,20 +379,21 @@ struct CiApp : public AppBasic
 
         if (addr == "/anim")
         {
-            int cfg = msg->getArgAsInt32(0);
+            int idx = 0;
+            int cfg = msg->getArgAsInt32(idx++);
             Config& config = mConfigs[cfg];
-            config.isKinectEnabled = msg->getArgAsInt32(1);
+            config.isKinectEnabled = msg->getArgAsInt32(idx++);
             for (int i=0; i<AnimConfig::kCount; i++)
             {
                 AnimConfig& animConfig = config.animConfigs[i];
-                bool isEnabled = msg->getArgAsInt32(1 + 4*i);
-                animConfig.loopCount = msg->getArgAsInt32(2 + 4*i);
+                bool isEnabled = msg->getArgAsInt32(idx++);
+                animConfig.loopCount = msg->getArgAsInt32(idx++);
                 if (!isEnabled)
                 {
                     animConfig.loopCount = 0;
                 }
-                animConfig.lightValue = msg->getArgAsInt32(3 + 4*i);
-                animConfig.lightValue2 = msg->getArgAsInt32(4 + 4*i);
+                animConfig.lightValue = msg->getArgAsInt32(idx++);
+                animConfig.lightValue2 = msg->getArgAsInt32(idx++);
             }
             return;
         }
