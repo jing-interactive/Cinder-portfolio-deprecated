@@ -63,7 +63,7 @@ struct AnimConfig
 
     AnimConfig()
     {
-        lightValue = 1000;
+        lightValue = 0.5f;
         lightValue2 = 0;
         loopCount = 1;
     }
@@ -73,15 +73,15 @@ struct AnimConfig
         // TODO: correct the mapping
         if (lightValue2 != 0)
         {
-            return Color(randFloat(), 1, 1);
+            return Color(randFloat(), 1.0f, 1.0f);
         }
         else
         {
-            return Color(1, 1, 1);
+            return Color(lightValue, 1.0f, 1.0f - lightValue);
         }
     }
-    int lightValue;
-    int lightValue2; // if non-zero, then random light value from (lightValue, lightValue2)
+    float lightValue;
+    float lightValue2; // if non-zero, then random light value from (lightValue, lightValue2)
     int loopCount; // bigger than 1, or zero means don't play
 
     friend ostream& operator<<(ostream& lhs, const AnimConfig& rhs)
@@ -392,8 +392,8 @@ struct CiApp : public AppBasic
                 {
                     animConfig.loopCount = 0;
                 }
-                animConfig.lightValue = msg->getArgAsInt32(idx++);
-                animConfig.lightValue2 = msg->getArgAsInt32(idx++);
+                animConfig.lightValue = msg->getArgAsFloat(idx++);
+                animConfig.lightValue2 = msg->getArgAsFloat(idx++);
             }
             return;
         }
