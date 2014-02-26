@@ -536,7 +536,7 @@ struct CiApp : public AppBasic
         cam.lookAt(Vec3f(0, CAM_Y, CAM_Z), Vec3f(0, CAM_Y, 0));
         gl::setModelView(cam);
 
-        //gl::rotate(ROTATION);
+        gl::rotate(ROTATION);
         
         gl::drawCoordinateFrame();
 

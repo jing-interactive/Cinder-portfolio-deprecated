@@ -11,5 +11,6 @@ ITEM_DEF(float,     FRAME_PER_SEC,      24)
 ITEM_DEF(bool,      HERO_WIREFRAME,     false)
 ITEM_DEF(float,     CAM_Y,              100.0f)
 ITEM_DEF(float,     CAM_Z,              400.0f)
+ITEM_DEF(Quatf,     ROTATION,           Quatf())
 
 
