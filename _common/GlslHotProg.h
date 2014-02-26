@@ -19,16 +19,16 @@ class GlslHotProg
     ci::gl::GlslProg mProg;
     
     bool loadFile();
-    
-public:
-    GlslHotProg() {}
-    /* !!! NOTE: only works with asset paths */
-    GlslHotProg( const char* vertPath, const char* fragPath );
-    
     //-----------------------------------------------------------------  
     bool update();
-    bool hasChanged();
+    bool hasChanged() const;
     bool reload();
+
+public:
+    GlslHotProg() {}
+
+    // TODO: only works with asset paths
+    bool load( const char* vertPath, const char* fragPath );
     
     //-----------------------------------------------------------------  
     ci::gl::GlslProg& getProg() { return mProg; }

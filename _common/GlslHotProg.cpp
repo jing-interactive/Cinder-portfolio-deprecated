@@ -13,11 +13,14 @@ using namespace ci;
 using namespace std;
 using namespace ci::app;
 
-GlslHotProg::GlslHotProg( const char* vertPath, const char* fragPath )
+bool GlslHotProg::load( const char* vertPath, const char* fragPath )
 {    
     mVertPath       = vertPath;
     mFragPath       = fragPath;
-    loadFile();
+
+    App::get()->getSignalUpdate().connect( std::bind( &GlslHotProg::update, this ) );
+
+    return loadFile();
 }
 
 bool GlslHotProg::loadFile()
@@ -39,7 +42,7 @@ bool GlslHotProg::loadFile()
     return true;
 }
 
-bool GlslHotProg::hasChanged()
+bool GlslHotProg::hasChanged() const
 {
     return fs::last_write_time( getAssetPath( mVertPath ) ) > mLastVertTime || 
         fs::last_write_time( getAssetPath( mFragPath ) ) > mLastFragTime;
