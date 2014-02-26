@@ -21,7 +21,7 @@ void main()
         uBoneMatrices[int(JOINT.z)] * pos * WEIGHT.z +
         uBoneMatrices[int(JOINT.w)] * pos * (1.0 - WEIGHT.x - WEIGHT.y - WEIGHT.z);
     pos.w = 1.0;
-
+    
     aPositionW = (gl_ModelViewMatrix * pos).xyz;
     aNormal = normalize(gl_NormalMatrix * NORMAL); // TODO: transform normal
     aTexcoord = TEXCOORD_0;

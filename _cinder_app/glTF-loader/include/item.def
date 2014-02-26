@@ -13,4 +13,3 @@ ITEM_DEF(float,     CAM_Y,              100.0f)
 ITEM_DEF(float,     CAM_Z,              400.0f)
 
 
-

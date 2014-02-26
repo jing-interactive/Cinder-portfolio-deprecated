@@ -4,7 +4,6 @@
 #include "cinder/Json.h"
 #include "cinder/Text.h"
 #include "cinder/Utilities.h"
-#include "cinder/Arcball.h"
 
 #include "cinder/ip/Flip.h"
 
@@ -287,16 +286,16 @@ struct Hero
         }
     };
 
-    struct Joint
+    struct JointInfo
     {
         string name;
         int parentId;
         Matrix44f invBindPose;
     };
 
-    struct Skelton
+    struct SkeltonInfo
     {
-        vector<Joint> joints;
+        vector<JointInfo> joints;
     };
 
     struct AnimTrack
@@ -308,11 +307,11 @@ struct Hero
             // Vec3f scale;
         };
 
-        void interpolate(float timePos, const Skelton& skeleton, vector<Matrix44f>& localTransforms)
+        void interpolate(float timePos, const SkeltonInfo& skeleton, vector<Matrix44f>& localTransforms)
         {
             size_t index = timePos; // TODO
-            index %= skeletonPoses.size();
-            const vector<JointPose>& poses = skeletonPoses[index].jointPoses;
+            index %= poseSamples.size();
+            const vector<JointPose>& poses = poseSamples[index].jointPoses;
 
             for (size_t i=0; i<skeleton.joints.size(); i++)
             {
@@ -322,12 +321,12 @@ struct Hero
 
         struct SkeletonPose
         {
-            float time;
+            float time; // TODO: unused
             vector<JointPose> jointPoses;  
         };
-        vector<SkeletonPose> skeletonPoses;
+        vector<SkeletonPose> poseSamples;
 
-        void update(float timePos, const Skelton& skeleton, vector<Matrix44f>& boneMatrices)
+        void update(float timePos, const SkeltonInfo& skeleton, vector<Matrix44f>& boneMatrices)
         {
             boneMatrices.resize(skeleton.joints.size());
 
@@ -394,7 +393,7 @@ struct Hero
     map<string, Scene>                      mScenes;
 
     map<string, AnimTrack>                  mAnimTracks;
-    Skelton                                 mSkeleton;
+    SkeltonInfo                                 mSkeleton;
 };
 
 struct CiApp : public AppBasic 
@@ -409,14 +408,19 @@ struct CiApp : public AppBasic
 
     void setup()
     {
-        // TODO: bad design of GlslHotProg
-        gShader = GlslHotProg("dota2-hero.vs", "dota2-hero.fs");
+        gShader.load("dota2-hero.vs", "dota2-hero.fs");
 
         mParams = params::InterfaceGl("params", Vec2i(300, getConfigUIHeight()));
         setupConfigUI(&mParams);
 
         // parse dota2hero-gh-pages/heroes
         mHeroesFolder = fs::path(HEROES_PATH);
+        if (!fs::exists(mHeroesFolder))
+        {
+            console() << mHeroesFolder << " doesn't exist" << endl;
+            quit();
+            return;
+        }
         for (fs::directory_iterator it(mHeroesFolder); it != kEndIt; ++it)
         {
             if (fs::is_directory(*it))
@@ -433,8 +437,8 @@ struct CiApp : public AppBasic
         // functios
 #define BIND_PAIR(name, handler) do \
         {\
-        JsonHandler childF = bind(&CiApp::handler, this, _1);\
-        JsonHandler parentF = bind(&CiApp::handleChildren, this, _1, childF);\
+        JsonHandler childF = bind(&CiApp::handler, this, std::_1);\
+        JsonHandler parentF = bind(&CiApp::handleChildren, this, std::_1, childF);\
         mCategories.push_back(make_pair(name, parentF));\
         } while (0);
         BIND_PAIR("buffers",        handleBuffer);
@@ -484,30 +488,6 @@ struct CiApp : public AppBasic
 #undef ADD_ENUM
     }
 
-    void resize(ResizeEvent event)
-    {
-        mArcball.setWindowSize(getWindowSize());
-        mArcball.setCenter(Vec2f(getWindowWidth() / 2.0f, getWindowHeight() / 2.0f));
-        mArcball.setRadius(150);
-    }
-
-    Vec2i getMousePos(MouseEvent event)
-    {
-        Vec2i pos = event.getPos();
-        pos.y = getWindowHeight() - pos.y;
-        return pos;
-    }
-
-    void mouseDown(MouseEvent event)
-    {
-        mArcball.mouseDown(getMousePos(event));
-    }
-
-    void mouseDrag(MouseEvent event)
-    {	
-        mArcball.mouseDrag(getMousePos(event));
-    }
-
     void keyUp(KeyEvent event)
     {
         if (event.getCode() == KeyEvent::KEY_ESCAPE)
@@ -518,23 +498,23 @@ struct CiApp : public AppBasic
 
     void update()
     {
-        gShader.update();
-
-        if (gShader.getProg() && mCurrentHero != CURRENT_HERO)
+        if (mCurrentHero != CURRENT_HERO)
         {
             mCurrentHero = CURRENT_HERO;
-            if (loadHero(mHeroNames[mCurrentHero]))
+            if (!loadHero(mHeroNames[mCurrentHero]))
             {
-                mCurrentNode = -1;
-                CURRENT_NODE = 0;
-                mParams.removeParam("CURRENT_NODE");
-                mParams.addParam("CURRENT_NODE", mNodeNames, &CURRENT_NODE);
-
-                mCurrentAnim = -1;
-                CURRENT_ANIM = 0;
-                mParams.removeParam("CURRENT_ANIM");
-                mParams.addParam("CURRENT_ANIM", mAnimNames, &CURRENT_ANIM);
+                quit();
+                return;
             }
+            mCurrentNode = -1;
+            CURRENT_NODE = 0;
+            mParams.removeParam("CURRENT_NODE");
+            mParams.addParam("CURRENT_NODE", mNodeNames, &CURRENT_NODE);
+
+            mCurrentAnim = -1;
+            CURRENT_ANIM = 0;
+            mParams.removeParam("CURRENT_ANIM");
+            mParams.addParam("CURRENT_ANIM", mAnimNames, &CURRENT_ANIM);
         }
 
         if (mCurrentNode != CURRENT_NODE)
@@ -556,14 +536,11 @@ struct CiApp : public AppBasic
         cam.lookAt(Vec3f(0, CAM_Y, CAM_Z), Vec3f(0, CAM_Y, 0));
         gl::setModelView(cam);
 
-        gl::rotate(mArcball.getQuat());
+        //gl::rotate(ROTATION);
         
         gl::drawCoordinateFrame();
 
-        if (gShader.getProg())
-        {
-            drawHero();
-        }
+        drawHero();
 
         mParams.draw();
     }
@@ -1069,7 +1046,7 @@ private:
         while (line != "end")
         {
             // TODO: skeleton is unique for every hero, so only needs to be initialized once
-            Hero::Joint joint;
+            Hero::JointInfo joint;
             stringstream(line) >> dummy >> joint.name >> joint.parentId;
             mHero.mSkeleton.joints.push_back(joint);
             getline(ifs, line);
@@ -1077,7 +1054,7 @@ private:
 
         for (size_t i=0; i<mHero.mSkeleton.joints.size(); i++)
         {
-            Hero::Joint& joint = mHero.mSkeleton.joints[i];
+            Hero::JointInfo& joint = mHero.mSkeleton.joints[i];
             const Hero::Node& node = mHero.mNodes[joint.name];
             Matrix44f inv = node.matrix.inverted();
 
@@ -1087,7 +1064,7 @@ private:
             }
             else
             {
-                Hero::Joint& parent = mHero.mSkeleton.joints[joint.parentId];
+                Hero::JointInfo& parent = mHero.mSkeleton.joints[joint.parentId];
                 joint.invBindPose = inv * parent.invBindPose;
             }
         }
@@ -1101,7 +1078,7 @@ private:
             {
                 if (!skelPose.jointPoses.empty())
                 {
-                    anim.skeletonPoses.push_back(skelPose);
+                    anim.poseSamples.push_back(skelPose);
                 }
                 skelPose = Hero::AnimTrack::SkeletonPose();
                 stringstream(line) >> dummy >> skelPose.time;
@@ -1117,7 +1094,7 @@ private:
             getline(ifs, line);
         }
 
-        anim.skeletonPoses.push_back(skelPose);
+        anim.poseSamples.push_back(skelPose);
 
         mHero.mAnimTracks[name] = anim;
     }
@@ -1188,8 +1165,6 @@ private:
     NameEnumMap             mGlNameMap;
 
     Hero                    mHero;
-
-    Arcball                 mArcball;
 
     // params
     vector<string>          mHeroNames;
