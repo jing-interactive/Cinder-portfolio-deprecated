@@ -519,6 +519,8 @@ void CTwGraphOpenGLCore::EndDraw()
     glBindTexture(GL_TEXTURE_2D, m_PrevTexture); CHECK_GL_ERROR;
 
     glUseProgram(m_PrevProgramObject); CHECK_GL_ERROR;
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0); CHECK_GL_ERROR;
     
     glBindVertexArray(m_PrevVArray); CHECK_GL_ERROR;
 

@@ -13,49 +13,45 @@ using namespace ci;
 using namespace std;
 using namespace ci::app;
 
-bool GlslHotProg::load( const char* vertPath, const char* fragPath )
+bool GlslHotProg::load(const char* vertPath, const char* fragPath)
 {    
     mVertPath       = vertPath;
     mFragPath       = fragPath;
 
-    App::get()->getSignalUpdate().connect( std::bind( &GlslHotProg::update, this ) );
+    App::get()->getSignalUpdate().connect(std::bind(&GlslHotProg::update, this));
 
     return loadFile();
 }
 
 bool GlslHotProg::loadFile()
 {   
-    mLastVertTime   = fs::last_write_time( getAssetPath( mVertPath ) );
-    mLastFragTime   = fs::last_write_time( getAssetPath( mFragPath ) );
+    mLastVertTime   = fs::last_write_time(getAssetPath(mVertPath));
+    mLastFragTime   = fs::last_write_time(getAssetPath(mFragPath));
     console() << "Refreshing shaders: " << mVertPath << ", " << mFragPath << endl;
     try
     {
-        sleep(500);
-        mProg = gl::GlslProg( loadAsset( mVertPath ), loadAsset( mFragPath ) );
+        sleep(500); // TODO: why 500?
+        mProg = gl::GlslProg(loadAsset(mVertPath), loadAsset(mFragPath));
     }
-    catch (exception& e)
+    catch (const exception& e)
     {
         console() << e.what() << endl;
         return false;
     }
-    
+
     return true;
 }
 
 bool GlslHotProg::hasChanged() const
 {
-    return fs::last_write_time( getAssetPath( mVertPath ) ) > mLastVertTime || 
-        fs::last_write_time( getAssetPath( mFragPath ) ) > mLastFragTime;
+    return fs::last_write_time(getAssetPath(mVertPath)) > mLastVertTime || 
+        fs::last_write_time(getAssetPath(mFragPath)) > mLastFragTime;
 }
 
-bool GlslHotProg::update(){
-    try 
+void GlslHotProg::update()
+{
+    if (hasChanged())
     {
-        if( hasChanged() )
-        {
-            return loadFile();
-        }
+        loadFile();
     }
-    catch( ... ){}
-    return false;
 }

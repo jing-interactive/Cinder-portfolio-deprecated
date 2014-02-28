@@ -17,19 +17,16 @@ class GlslHotProg
     std::time_t mLastVertTime;
     std::time_t mLastFragTime;
     ci::gl::GlslProg mProg;
-    
+
     bool loadFile();
-    //-----------------------------------------------------------------  
-    bool update();
+    void update();
     bool hasChanged() const;
-    bool reload();
 
 public:
     GlslHotProg() {}
 
     // TODO: only works with asset paths
-    bool load( const char* vertPath, const char* fragPath );
-    
-    //-----------------------------------------------------------------  
+    bool load(const char* vertPath, const char* fragPath);
+
     ci::gl::GlslProg& getProg() { return mProg; }
 };
