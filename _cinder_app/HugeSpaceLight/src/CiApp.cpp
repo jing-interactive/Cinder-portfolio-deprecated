@@ -12,6 +12,8 @@
 #include "cinder/Utilities.h"
 #include "cinder/Thread.h"
 
+#include "cinder/qtime/QuickTime.h"
+
 #include "cinder/tuio/TuioClient.h"
 #include "../../../_common/MiniConfig.h"
 #include <fstream>
@@ -59,7 +61,8 @@ static int getHour()
 // TODO: proto-buf?
 struct AnimConfig
 {
-    static const int kCount = 10;
+    static const int kCount = 11; // anim: [0, 9), kinect: 10
+    static const int kKinect = kCount - 1;
 
     AnimConfig()
     {
@@ -82,6 +85,7 @@ struct AnimConfig
     }
     float lightValue;
     float lightValue2; // if non-zero, then random light value from (lightValue, lightValue2)
+                        // see getColor()
     int loopCount; // bigger than 1, or zero means don't play
 
     friend ostream& operator<<(ostream& lhs, const AnimConfig& rhs)
@@ -100,13 +104,8 @@ struct AnimConfig
 struct Config
 {
     static const int kCount = 6;
-    Config()
-    {
-        isKinectEnabled = false;
-    }
 
     AnimConfig animConfigs[AnimConfig::kCount];
-    bool isKinectEnabled;
 
     friend ostream& operator<<(ostream& lhs, const Config& rhs)
     {
@@ -114,7 +113,6 @@ struct Config
         {
             lhs << rhs.animConfigs[i] << " ";
         }
-        lhs << rhs.isKinectEnabled;
         return lhs;
     }
 
@@ -124,7 +122,6 @@ struct Config
         {
             lhs >> rhs.animConfigs[i] >> std::ws;
         }
-        lhs >> rhs.isKinectEnabled;
         return lhs;
     }
 };
@@ -147,7 +144,7 @@ struct CiApp : public AppBasic
             }
             else
             {
-                mConfigIds[i] = rand() % Config::kCount;
+                mConfigIds[i] = 0;
             }
         }
     }
@@ -382,16 +379,10 @@ struct CiApp : public AppBasic
             int idx = 0;
             int cfg = msg->getArgAsInt32(idx++);
             Config& config = mConfigs[cfg];
-            config.isKinectEnabled = msg->getArgAsInt32(idx++);
             for (int i=0; i<AnimConfig::kCount; i++)
             {
                 AnimConfig& animConfig = config.animConfigs[i];
-                bool isEnabled = msg->getArgAsInt32(idx++);
                 animConfig.loopCount = msg->getArgAsInt32(idx++);
-                if (!isEnabled)
-                {
-                    animConfig.loopCount = 0;
-                }
                 animConfig.lightValue = msg->getArgAsFloat(idx++);
                 animConfig.lightValue2 = msg->getArgAsFloat(idx++);
             }
@@ -443,11 +434,17 @@ struct CiApp : public AppBasic
             mProbeProgram = PROBE_PROGRAM;
             mProgramGUI = params::InterfaceGl("program# " + toString(mProbeProgram), Vec2i(300, getWindowHeight()));
             Config& prog = mConfigs[mProbeProgram];
-            mProgramGUI.addParam("isKinectEnabled", &prog.isKinectEnabled);
             mProgramGUI.addSeparator();
             for (int i=0; i<AnimConfig::kCount; i++)
             {
-                mProgramGUI.addText("anim# " + toString(i+1));
+                if (i == AnimConfig::kKinect)
+                {
+                    mProgramGUI.addText("Kinect");
+                }
+                else
+                {
+                    mProgramGUI.addText("Anim# " + toString(i+1));
+                }
                 mProgramGUI.addParam("loopCount of # " + toString(i+1), &prog.animConfigs[i].loopCount, "min=0");
                 mProgramGUI.addParam("lightValue of # " + toString(i+1), &prog.animConfigs[i].lightValue, "min=0");
                 mProgramGUI.addParam("lightValue2 of # " + toString(i+1), &prog.animConfigs[i].lightValue2, "min=0");
@@ -468,7 +465,7 @@ struct CiApp : public AppBasic
             }
             else
             {
-                ANIMATION = (ANIMATION + 1) % AnimConfig::kCount;
+                ANIMATION = (ANIMATION + 1) % AnimConfig::kKinect;
                 mRemainingLoopForAnim = mCurrentProgram->animConfigs[ANIMATION].loopCount;
             }
         }
@@ -506,7 +503,7 @@ struct CiApp : public AppBasic
         }
 
         vector<tuio::Cursor> cursors;
-        if (mCurrentProgram->isKinectEnabled)
+        if (mCurrentProgram->animConfigs[AnimConfig::kKinect].loopCount > 0)
         {
             cursors = mTuioClient.getCursors();
         }
