@@ -16,10 +16,14 @@ varying vec2 aTexcoord;
 void main()
 {
     vec4 pos = vec4(POSITION, 1.0);
+#if 0
+    pos = uBoneMatrices[19] * pos;
+#else
     pos = uBoneMatrices[int(JOINT.x)] * pos * WEIGHT.x +
         uBoneMatrices[int(JOINT.y)] * pos * WEIGHT.y +
         uBoneMatrices[int(JOINT.z)] * pos * WEIGHT.z +
         uBoneMatrices[int(JOINT.w)] * pos * (1.0 - WEIGHT.x - WEIGHT.y - WEIGHT.z);
+#endif
     pos.w = 1.0;
     
     aPositionW = (gl_ModelViewMatrix * pos).xyz;
