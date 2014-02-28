@@ -3,6 +3,7 @@
 #include "cinder/gl/Texture.h"
 #include "cinder/gl/Vbo.h"
 #include "cinder/gl/GlslProg.h"
+#include "cinder/qtime/QuickTime.h"
 #include <string>
 #include <vector>
 
@@ -21,4 +22,8 @@ namespace am // am -> asset manager
     std::string& str(const std::string& relativeName);
 
     std::vector<std::string> files(const std::string& relativeFolderName);
+
+    ci::qtime::MovieSurface& movieSurface(const std::string& relativeName);
+
+    ci::qtime::MovieGl& movieGl(const std::string& relativeName);
 }

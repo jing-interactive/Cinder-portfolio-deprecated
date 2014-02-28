@@ -25,8 +25,8 @@ namespace
 
         try
         {
-            fs::path aPath = getAssetPath(".") / relativeName;
-            fs::path bPath = getAssetPath(".") / relativeNameB;
+            fs::path aPath = getAssetPath("") / relativeName;
+            fs::path bPath = getAssetPath("") / relativeNameB;
             return sMap[relativeName] = loadFunc(aPath.string(), bPath.string());
         }
         catch (Exception& e)
@@ -85,8 +85,7 @@ namespace am
 
     static gl::GlslProg loadGlslProg(const string& vsAbsoluteName, const string& fsAbsoluteName)
     {
-        gl::GlslProg glsl(DataSourcePath::create(vsAbsoluteName), DataSourcePath::create(fsAbsoluteName));
-        return glsl;
+        return gl::GlslProg(DataSourcePath::create(vsAbsoluteName), DataSourcePath::create(fsAbsoluteName));
     }
 
     gl::GlslProg& glslProg(const string& vsFileName, const string& fsFileName)
@@ -110,9 +109,10 @@ namespace am
         fs::directory_iterator kEnd;
         for (fs::directory_iterator it(absoluteFolderName); it != kEnd; ++it)
         {
-            if (fs::is_regular_file(*it))
+            if (fs::is_regular_file(*it) && it->path().extension() != ".db")
             {
-                files.push_back(it->path().string());
+                console() << it->path() << endl;
+                files.push_back(it->path().generic_string());
             }
         }
         return files;
@@ -123,4 +123,23 @@ namespace am
         return getAssetResource<vector<string>>(relativeFolderName, loadFiles);
     }
 
+    static qtime::MovieSurface loadMovieSurface(const string& absoluteName, const string&)
+    {
+        return qtime::MovieSurface(absoluteName);
+    }
+
+    qtime::MovieSurface& movieSurface(const std::string& relativeName)
+    {
+        return getAssetResource<qtime::MovieSurface>(relativeName, loadMovieSurface);
+    }
+
+    static qtime::MovieGl loadMovieGl(const string& absoluteName, const string&)
+    {
+        return qtime::MovieGl(absoluteName);
+    }
+
+    qtime::MovieGl& movieGl(const std::string& relativeName)
+    {
+        return getAssetResource<qtime::MovieGl>(relativeName, loadMovieGl);
+    }
 }
