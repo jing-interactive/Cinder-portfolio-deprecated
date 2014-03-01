@@ -21,10 +21,6 @@
 #include <boost/make_shared.hpp>
 
 #include "../../../_common/AssetManager.h"
-#include "../../../_common/SequenceAnim.h"
-
-#define ASIO_DISABLE_BOOST_REGEX 0
-#include "../../../_common/asio/asio.hpp"
 
 #pragma warning(disable: 4244)
 
@@ -40,6 +36,14 @@ const int kThreadCount = 10;
 
 fs::directory_iterator kEndIt;
 
+static void updateTextureFromSurface(gl::Texture& tex, const Surface& surf)
+{
+    if (tex && surf.getSize() == tex.getSize())
+        tex.update(surf);
+    else
+        tex = gl::Texture(surf);
+}
+
 size_t gIdCount = 0;
 struct Led
 {
@@ -48,8 +52,6 @@ struct Led
     float value;
     size_t id;
 };
-
-typedef shared_ptr<SequenceAnimGray> AnimPtr;
 
 static int getHour()
 {
@@ -85,7 +87,7 @@ struct AnimConfig
     }
     float lightValue;
     float lightValue2; // if non-zero, then random light value from (lightValue, lightValue2)
-                        // see getColor()
+    // see getColor()
     int loopCount; // bigger than 1, or zero means don't play
 
     friend ostream& operator<<(ostream& lhs, const AnimConfig& rhs)
@@ -134,7 +136,7 @@ struct CiApp : public AppBasic
     Config mConfigs[Config::kCount];
     int mConfigIds[kHourCount];
 
-    CiApp(): mWork(mIoService)
+    CiApp()
     {
         for (int i=0; i<kHourCount; i++)
         {
@@ -207,15 +209,9 @@ struct CiApp : public AppBasic
 
         mKinectChan = loadImage(getAssetPath("black-for-kinect.jpg"));
         mHour = -1;
-        mFrameDelta = 0;
-        mProbeProgram = -1;
+        mProbeConfig = -1;
 
         mCurrentCamDistance = -1;
-
-        for (int i = 0; i < kThreadCount; ++i)
-        {
-            mThreads.create_thread(bind(&asio::io_service::run, &mIoService));
-        }
 
         for (int id=0; id<2; id++)
         {
@@ -229,45 +225,40 @@ struct CiApp : public AppBasic
             fs::path root = getAssetPath(kAnimFolderNames[id]);
             for (fs::directory_iterator it(root); it != kEndIt; ++it)
             {
-                if (fs::is_directory(*it))
+                if (fs::is_regular_file(*it))
                 {
-                    AnimPtr anim = boost::make_shared<SequenceAnimGray>();
-                    anim->setOneshot(true);
-                    if (!loadAnimFromDir(*it, anim))
-                        continue;
-                    mAnims[id].push_back(anim);
+                    try
+                    {
+                        qtime::MovieSurface anim = qtime::MovieSurface(it->path());
+                        anim.setLoop(false);
+                        mAnims[id].push_back(anim);
+                    }
+                    catch (const exception& e)
+                    {
+                        console() << e.what() << endl;
+                    }
                 }
             }
+        }
 
-            if (id == 0 && !mAnims[id].empty())
-            {
-                vector<string> animNames;
-                for (size_t i=0; i<mAnims[id].size(); i++)
-                {
-                    animNames.push_back(mAnims[id][i]->name);
-                }
-                ADD_ENUM_TO_INT(mParams, ANIMATION, animNames);
-            }
-
-            {
-                mParams.addSeparator();
-                vector<string> names;
-                for (int i=0; i<Config::kCount; i++)
-                {
-                    names.push_back("program# " + toString(i));
-                }
-
-                ADD_ENUM_TO_INT(mParams, PROBE_PROGRAM, names);
-            }
-
+        mParams.addParam("ANIMATION", &ANIMATION, "", true);
+        {
             mParams.addSeparator();
-            mParams.addParam("current_hour", &mHour, "", true);
-            mParams.addText("Valid programs are 0/1/2/3/4/5");
-            mParams.addText("And -1 means no program in this hour");
-            for (int i=10; i<26; i++)
+            vector<string> names;
+            for (int i=0; i<Config::kCount; i++)
             {
-                mParams.addParam("hour# " + toString(i % kHourCount), &mConfigIds[i % kHourCount], "min=-1 max=5");
+                names.push_back("cfg# " + toString(i));
             }
+
+            ADD_ENUM_TO_INT(mParams, PROBE_CONFIG, names);
+        }
+
+        mParams.addParam("current_hour", &mHour, "", true);
+        mParams.addText("Valid config are 0/1/2/3/4/5");
+        mParams.addText("And -1 means no config in this hour");
+        for (int i=10; i<26; i++)
+        {
+            mParams.addParam("hour# " + toString(i % kHourCount), &mConfigIds[i % kHourCount], "min=-1 max=5");
         }
 
         // osc setup
@@ -347,15 +338,6 @@ struct CiApp : public AppBasic
     void shutdown()
     {
         writeProgramSettings();
-        mIoService.stop();
-        try
-        {
-            mThreads.join_all();
-        }
-        catch (...)
-        {
-
-        }
     }
 
     void onOscMessage(const osc::Message* msg)
@@ -419,21 +401,21 @@ struct CiApp : public AppBasic
             if (mConfigIds[mHour] != -1)
             {
                 int progId = constrain(mConfigIds[mHour], 0, Config::kCount - 1);
-                mCurrentProgram = &mConfigs[progId];
-                mRemainingLoopForAnim = mCurrentProgram->animConfigs[ANIMATION].loopCount;
+                mCurrentConfig = &mConfigs[progId];
+                mRemainingLoopForAnim = mCurrentConfig->animConfigs[ANIMATION].loopCount;
             }
             else
             {
-                mCurrentProgram = NULL;
+                mCurrentConfig = NULL;
             }
         }
 
         // probe
-        if (mProbeProgram != PROBE_PROGRAM)
+        if (mProbeConfig != PROBE_CONFIG)
         {
-            mProbeProgram = PROBE_PROGRAM;
-            mProgramGUI = params::InterfaceGl("program# " + toString(mProbeProgram), Vec2i(300, getWindowHeight()));
-            Config& prog = mConfigs[mProbeProgram];
+            mProbeConfig = PROBE_CONFIG;
+            mProgramGUI = params::InterfaceGl("cfg# " + toString(mProbeConfig), Vec2i(300, getWindowHeight()));
+            Config& prog = mConfigs[mProbeConfig];
             mProgramGUI.addSeparator();
             for (int i=0; i<AnimConfig::kCount; i++)
             {
@@ -443,11 +425,11 @@ struct CiApp : public AppBasic
                 }
                 else
                 {
-                    mProgramGUI.addText("Anim# " + toString(i+1));
+                    mProgramGUI.addText("Anim# " + toString(i));
                 }
-                mProgramGUI.addParam("loopCount of # " + toString(i+1), &prog.animConfigs[i].loopCount, "min=0");
-                mProgramGUI.addParam("lightValue of # " + toString(i+1), &prog.animConfigs[i].lightValue, "min=0");
-                mProgramGUI.addParam("lightValue2 of # " + toString(i+1), &prog.animConfigs[i].lightValue2, "min=0");
+                mProgramGUI.addParam("loopCount of # " + toString(i), &prog.animConfigs[i].loopCount, "min=0");
+                mProgramGUI.addParam("lightValue of # " + toString(i), &prog.animConfigs[i].lightValue, "min=0");
+                mProgramGUI.addParam("lightValue2 of # " + toString(i), &prog.animConfigs[i].lightValue2, "min=0");
             }
         }
     }
@@ -455,10 +437,12 @@ struct CiApp : public AppBasic
     void updateAnim()
     {
         // calculate ANIMATION
-        if (!mAnims[0][ANIMATION]->isAlive() || 
-            (mRemainingLoopForAnim < 1 && mAnims[0][ANIMATION]->isAlive()))
+        const float time = mAnims[0][ANIMATION].getCurrentTime();
+        const float duration = mAnims[0][ANIMATION].getDuration();
+
+        if (time > duration - FLT_EPSILON)
         {
-            if (mRemainingLoopForAnim > 0)
+            if (mRemainingLoopForAnim > 1)
             {
                 mCurrentAnim = -1;  // manually invalidate
                 mRemainingLoopForAnim--;
@@ -466,23 +450,23 @@ struct CiApp : public AppBasic
             else
             {
                 ANIMATION = (ANIMATION + 1) % AnimConfig::kKinect;
-                mRemainingLoopForAnim = mCurrentProgram->animConfigs[ANIMATION].loopCount;
+                mRemainingLoopForAnim = mCurrentConfig->animConfigs[ANIMATION].loopCount;
             }
         }
 
         if (mCurrentAnim != ANIMATION)
         {
             mCurrentAnim = ANIMATION;
-            mLedColor = mCurrentProgram->animConfigs[mCurrentAnim].getColor();
+            mLedColor = mCurrentConfig->animConfigs[mCurrentAnim].getColor();
             for (size_t i=0; i<2; i++)
             {
-                mAnims[i][mCurrentAnim]->reset();
+                mAnims[i][mCurrentAnim].seekToStart();
+                mAnims[i][mCurrentAnim].play();
+                while (!mAnims[i][mCurrentAnim].checkNewFrame())
+                {
+                    sleep(30);
+                }
             }
-        }
-
-        for (size_t i=0; i<2; i++)
-        {
-            mAnims[i][mCurrentAnim]->update(mFrameDelta * ANIM_SPEED);
         }
     }
 
@@ -490,10 +474,8 @@ struct CiApp : public AppBasic
     {
         static float sPrevSec = getElapsedSeconds();
 
-        mIoService.poll();
-
         updateProgram();
-        if (mCurrentProgram == NULL)
+        if (mCurrentConfig == NULL)
         {
             BOOST_FOREACH(Led& led, mLeds)
             {
@@ -503,15 +485,15 @@ struct CiApp : public AppBasic
         }
 
         vector<tuio::Cursor> cursors;
-        if (mCurrentProgram->animConfigs[AnimConfig::kKinect].loopCount > 0)
+        if (mCurrentConfig->animConfigs[AnimConfig::kKinect].loopCount > 0)
         {
             cursors = mTuioClient.getCursors();
         }
 
-        const Channel* pChannel = NULL;
+        const Surface* pSurface = NULL;
         if (cursors.size() == 2)
         {
-            ip::fill(&mKinectChan, (uint8_t)0);
+            ip::fill(&mKinectChan, Color::black());
             for (int i=0; i<2; i++)
             {
                 Vec2f pos = cursors[i].getPos();
@@ -521,24 +503,24 @@ struct CiApp : public AppBasic
                 {
                     for (int y=halfH*i; y<(halfH*(i+1)); y++)
                     {
-                        *mKinectChan.getData(x, y) = 122; // TODO: which value?
+                        *mKinectChan.getData(Vec2i(x, y)) = 122; // TODO: which value?
                     }
                 }
                 // TODO: getSpeed()?
-                pChannel = &mKinectChan;
+                pSurface = &mKinectChan;
             }
         }
         else
         {
             updateAnim();
-            pChannel = &mAnims[0][mCurrentAnim]->getFrame();
+            pSurface = &mAnims[0][mCurrentAnim].getSurface();
         }
 
-        int32_t width = pChannel->getWidth();
-        int32_t height = pChannel->getHeight();
+        int32_t width = pSurface->getWidth();
+        int32_t height = pSurface->getHeight();
 
-        float kW = pChannel->getWidth() / 1029.0f;
-        float kH = pChannel->getHeight() / 124.0f;
+        float kW = pSurface->getWidth() / 1029.0f;
+        float kH = pSurface->getHeight() / 124.0f;
         BOOST_FOREACH(Led& led, mLeds)
         {
             // online solver
@@ -551,7 +533,7 @@ struct CiApp : public AppBasic
             //245  1  2
             //4070 1  122
             float cy = 0.031372549019608f * led.pos.x / REAL_TO_VIRTUAL - 5.686274509803920f;
-            uint8_t value = *pChannel->getData(Vec2i(kW * cx, kH * cy));
+            uint8_t value = *pSurface->getData(Vec2i(kW * cx, kH * cy));
             led.value = value / 255.f;
         }
 
@@ -562,7 +544,6 @@ struct CiApp : public AppBasic
             mCamera.lookAt(Vec3f(- mAABB.getMax().x * mCurrentCamDistance, mAABB.getMax().y * 0.5f, 0.0f), Vec3f::zero());
         }
 
-        mFrameDelta = getElapsedSeconds() - sPrevSec;
         sPrevSec = getElapsedSeconds();
     }
 
@@ -583,7 +564,7 @@ struct CiApp : public AppBasic
         gl::clear(ColorA::gray(43 / 255.f));
         gl::setMatrices(mCamera);
 
-        if (mCurrentProgram == NULL)
+        if (mCurrentConfig == NULL)
         {
             if (GUI_VISIBLE)
             {
@@ -594,16 +575,6 @@ struct CiApp : public AppBasic
         }
 
         float kSceneOffsetY = 0;//SCENE_OFFSET_Y * REAL_TO_VIRTUAL;
-
-        if (COORD_FRAME_VISIBLE)
-        {
-            gl::pushModelView();
-            gl::translate(0, mAABB.getSize().y * -0.5f, kSceneOffsetY);
-            gl::rotate(CAM_ROTATION);
-            gl::scale(50, 50, 50);
-            gl::drawCoordinateFrame();
-            gl::popModelView();
-        }
 
         gl::pushModelView();
         {
@@ -640,20 +611,17 @@ struct CiApp : public AppBasic
             {
                 // TODO: state??
                 // wall
-                gl::Texture tex = mAnims[1][mCurrentAnim]->getTexture();
-                tex.enableAndBind();
+                updateTextureFromSurface(mRefTexures[1], mAnims[1][mCurrentAnim].getSurface());
+                mRefTexures[1].enableAndBind();
                 gl::draw(mVboWall);
-                tex.disable();
+                mRefTexures[1].disable();
             }
         }
         gl::popModelView();
 
         // 2D
         gl::setMatricesWindow(getWindowSize());
-        if (ANIM_COUNT_VISIBLE && mCurrentAnim != -1)
-        {
-            gl::drawString(toString(mAnims[0][mCurrentAnim]->index), Vec2f(10, 10));
-        }
+
         drawLedMapping();
 
         if (REFERENCE_VISIBLE && mCurrentAnim != -1)
@@ -662,8 +630,9 @@ struct CiApp : public AppBasic
             const Rectf kRefGlobeArea(28, 687 + kOffY, 28 + 636, 687 + 90 + kOffY);
             const Rectf kRefWallArea(689, 631 + kOffY, 689 + 84, 631 + 209 + kOffY);
 
-            gl::draw(mAnims[0][mCurrentAnim]->getTexture(), kRefGlobeArea);
-            gl::draw(mAnims[1][mCurrentAnim]->getTexture(), kRefWallArea);
+            updateTextureFromSurface(mRefTexures[0], mAnims[0][mCurrentAnim].getSurface());
+            gl::draw(mRefTexures[0], kRefGlobeArea);
+            gl::draw(mRefTexures[1], kRefWallArea);
         }
 
         if (GUI_VISIBLE)
@@ -673,81 +642,34 @@ struct CiApp : public AppBasic
         }
     }
 
-    void safeLoadImage(fs::path imagePath, AnimPtr anim, size_t index)
-    {
-        try
-        {
-            anim->frames[index] = loadImage(imagePath);
-        }
-        catch (exception& e)
-        {
-#ifdef _DEBUG
-            console() << e.what() << endl;
-#endif
-        }
-#ifdef _DEBUG
-        //console() << imagePath << endl;
-#endif
-    }
-
-    bool loadAnimFromDir(fs::path dir, AnimPtr anim) 
-    {
-        double startTime = getElapsedSeconds();
-
-        anim->name = dir.filename().string();
-
-        int fileCount = distance(fs::directory_iterator(dir), kEndIt);
-        anim->frames.resize(fileCount);
-
-        size_t index = 0;
-        for (fs::directory_iterator it(dir); it != kEndIt; ++it, ++index)
-        {
-            if (!fs::is_regular_file(*it))
-                continue;
-
-            mIoService.post(boost::bind(&CiApp::safeLoadImage, this, *it, anim, index));
-        }
-
-        if (anim->frames.empty())
-        {
-            return false;
-        }
-
-        console() << dir << ": " << getElapsedSeconds() - startTime << endl;
-
-        return true;
-    }
-
 private:
     params::InterfaceGl mParams;
     params::InterfaceGl mProgramGUI;
 
     osc::Listener   mPadListener;
     tuio::Client    mTuioClient;
-    float           mFrameDelta;
-    Channel         mKinectChan;
+    Surface         mKinectChan;
 
     vector<Led>     mLeds;
     int             mCurrentCamDistance;
     AxisAlignedBox3f mAABB;
     CameraPersp     mCamera;
 
-    vector<AnimPtr>    mAnims[2];
+    vector<qtime::MovieSurface>    mAnims[2];
 
     int             mCurrentAnim;
+    int             ANIMATION;
 
     gl::VboMesh     mVboWall;
 
-    asio::io_service mIoService;
-    asio::io_service::work mWork;
-    boost::thread_group mThreads;
-
-    int             mProbeProgram;
-    Config*  mCurrentProgram;
+    int             mProbeConfig;
+    Config*         mCurrentConfig;
 
     Color           mLedColor;
     int             mHour;
     int             mRemainingLoopForAnim;
+
+    gl::Texture     mRefTexures[2];
 };
 
 CINDER_APP_BASIC(CiApp, RendererGl)

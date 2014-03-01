@@ -941,6 +941,18 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="qtime"
+				>
+				<File
+					RelativePath="..\src\cinder\qtime\QuickTime.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\cinder\qtime\QuickTimeUtils.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -1579,6 +1591,22 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="qtime"
+				>
+				<File
+					RelativePath="..\include\cinder\qtime\MovieWriter.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\qtime\QuickTime.h"
+					>
+				</File>
+				<File
+					RelativePath="..\include\cinder\qtime\QuickTimeUtils.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -1603,6 +1631,94 @@
 			</File>
 			<File
 				RelativePath="..\include\glew\wglew.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="irrKlang"
+			>
+			<File
+				RelativePath="..\include\irrKlang\ik_ESoundEngineOptions.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\ik_ESoundOutputDrivers.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\ik_EStreamModes.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\ik_IAudioRecorder.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\ik_IAudioStream.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\ik_IAudioStreamLoader.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\ik_IFileFactory.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\ik_IFileReader.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\ik_IRefCounted.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\ik_irrKlangTypes.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\ik_ISound.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\ik_ISoundDeviceList.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\ik_ISoundEffectControl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\ik_ISoundEngine.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\ik_ISoundMixedOutputReceiver.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\ik_ISoundSource.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\ik_ISoundStopEventReceiver.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\ik_IVirtualRefCounted.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\ik_SAudioStreamFormat.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\ik_vec3d.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\irrKlang\irrKlang.h"
 				>
 			</File>
 		</Filter>

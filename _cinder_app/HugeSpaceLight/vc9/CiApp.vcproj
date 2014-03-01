@@ -188,6 +188,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\..\QuickTimeSDK-7.3\Libraries\CVClient.lib"
+			>
+		</File>
+		<File
 			RelativePath="..\include\item.def"
 			>
 		</File>
@@ -200,7 +204,7 @@
 			>
 		</File>
 		<File
-			RelativePath="..\..\..\_common\SequenceAnim.h"
+			RelativePath="..\..\..\QuickTimeSDK-7.3\Libraries\QTMLClient.lib"
 			>
 		</File>
 	</Files>
