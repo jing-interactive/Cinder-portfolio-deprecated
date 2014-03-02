@@ -15,6 +15,8 @@
 #include "cinder/qtime/QuickTime.h"
 
 #include "cinder/tuio/TuioClient.h"
+#include "cinder/osc/OscSender.h"
+
 #include "../../../_common/MiniConfig.h"
 #include <fstream>
 #include <boost/foreach.hpp>
@@ -344,6 +346,21 @@ struct CiApp : public AppBasic
     {
         const string& addr = msg->getAddress();
 
+        static bool sIsFirst = true;
+        if (sIsFirst)
+        {
+            console() << "Remote IP: " << msg->getRemoteIp() << endl;
+            sIsFirst = false;
+            mPadSender.setup(msg->getRemoteIp(), kOscPadPort);
+        }
+
+        {
+            osc::Message msg;
+            msg.setAddress("/msgBox");
+            msg.addStringArg("Message received.");
+            mPadSender.sendMessage(msg);
+        }
+
         if (addr == "/schedule")
         {
             int hour = msg->getArgAsInt32(0);
@@ -369,6 +386,11 @@ struct CiApp : public AppBasic
                 animConfig.lightValue2 = msg->getArgAsFloat(idx++);
             }
             return;
+        }
+
+        if (addr == "/WORLD_VISIBLE")
+        {
+            WORLD_VISIBLE = msg->getArgAsInt32(0);
         }
     }
 
@@ -562,8 +584,46 @@ struct CiApp : public AppBasic
         gl::enableDepthWrite();
 
         gl::clear(ColorA::gray(43 / 255.f));
-        gl::setMatrices(mCamera);
 
+        if (REFERENCE_VISIBLE)
+        {
+            gl::setMatrices(mCamera);
+            draw3D();
+
+            gl::setMatricesWindow(getWindowSize());
+            draw2D();
+        }
+
+        if (WORLD_VISIBLE)
+        {
+            gl::setMatricesWindow(getWindowSize());
+            drawLedMapping();
+        }
+
+        if (GUI_VISIBLE)
+        {
+            mParams.draw();
+            mProgramGUI.draw();
+        }
+    }
+
+    void draw2D() 
+    {
+        if (mCurrentAnim != -1)
+        {
+            const float kOffY = REFERENCE_OFFSET_Y;
+            const Rectf kRefGlobeArea(28, 687 + kOffY, 28 + 636, 687 + 90 + kOffY);
+            const Rectf kRefWallArea(689, 631 + kOffY, 689 + 84, 631 + 209 + kOffY);
+
+            updateTextureFromSurface(mRefTexures[0], mAnims[0][mCurrentAnim].getSurface());
+            gl::draw(mRefTexures[0], kRefGlobeArea);
+            gl::draw(mRefTexures[1], kRefWallArea);
+        }
+    }
+
+
+    void draw3D() 
+    {
         if (mCurrentConfig == NULL)
         {
             if (GUI_VISIBLE)
@@ -618,28 +678,6 @@ struct CiApp : public AppBasic
             }
         }
         gl::popModelView();
-
-        // 2D
-        gl::setMatricesWindow(getWindowSize());
-
-        drawLedMapping();
-
-        if (REFERENCE_VISIBLE && mCurrentAnim != -1)
-        {
-            const float kOffY = REFERENCE_OFFSET_Y;
-            const Rectf kRefGlobeArea(28, 687 + kOffY, 28 + 636, 687 + 90 + kOffY);
-            const Rectf kRefWallArea(689, 631 + kOffY, 689 + 84, 631 + 209 + kOffY);
-
-            updateTextureFromSurface(mRefTexures[0], mAnims[0][mCurrentAnim].getSurface());
-            gl::draw(mRefTexures[0], kRefGlobeArea);
-            gl::draw(mRefTexures[1], kRefWallArea);
-        }
-
-        if (GUI_VISIBLE)
-        {
-            mParams.draw();
-            mProgramGUI.draw();
-        }
     }
 
 private:
@@ -647,6 +685,7 @@ private:
     params::InterfaceGl mProgramGUI;
 
     osc::Listener   mPadListener;
+    osc::Sender     mPadSender;
     tuio::Client    mTuioClient;
     Surface         mKinectChan;
 
