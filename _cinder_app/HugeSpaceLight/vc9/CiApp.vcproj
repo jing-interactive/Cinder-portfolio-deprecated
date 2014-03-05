@@ -139,6 +139,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="cinder.lib"
+				OutputFile="$(OutDir)\g9-led.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\cinder_0.8.3_vc2008\lib;..\..\..\cinder_0.8.3_vc2008\lib\msw"
 				GenerateDebugInformation="true"

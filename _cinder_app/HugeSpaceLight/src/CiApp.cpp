@@ -32,7 +32,8 @@ using namespace std;
 
 const float kCamFov = 60.0f;
 const int kTuioKinectPort = 3333;
-const int kOscPadPort = 4444;
+const int kOscPort = 4444;
+const int kPadPort = 5555;
 const float kLedOffset = 225.0f;
 const int kThreadCount = 10;
 
@@ -264,7 +265,7 @@ struct CiApp : public AppBasic
         }
 
         // osc setup
-        mPadListener.setup(kOscPadPort);
+        mPadListener.setup(kOscPort);
         mPadListener.registerMessageReceived(this, &CiApp::onOscMessage);
 
         mTuioClient.connect(kTuioKinectPort);
@@ -351,9 +352,10 @@ struct CiApp : public AppBasic
         {
             console() << "Remote IP: " << msg->getRemoteIp() << endl;
             sIsFirst = false;
-            mPadSender.setup(msg->getRemoteIp(), kOscPadPort);
+            mPadSender.setup(msg->getRemoteIp(), kPadPort);
         }
 
+        if (addr == "/ACK")
         {
             osc::Message msg;
             msg.setAddress("/msgBox");
