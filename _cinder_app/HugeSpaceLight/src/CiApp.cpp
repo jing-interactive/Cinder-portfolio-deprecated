@@ -461,8 +461,8 @@ struct CiApp : public AppBasic
                     mProgramGUI.addText("Anim# " + toString(i));
                 }
                 mProgramGUI.addParam("loopCount of # " + toString(i), &prog.animConfigs[i].loopCount, "min=0");
-                mProgramGUI.addParam("lightValue of # " + toString(i), &prog.animConfigs[i].lightValue, "min=0");
-                mProgramGUI.addParam("lightValue2 of # " + toString(i), &prog.animConfigs[i].lightValue2, "min=0");
+                mProgramGUI.addParam("lightValue of # " + toString(i), &prog.animConfigs[i].lightValue, "min=0 max=1 step=0.01");
+                mProgramGUI.addParam("lightValue2 of # " + toString(i), &prog.animConfigs[i].lightValue2, "min=0  max=1 step=0.01");
             }
         }
     }
@@ -473,7 +473,7 @@ struct CiApp : public AppBasic
         const float time = mAnims[0][ANIMATION].getCurrentTime();
         const float duration = mAnims[0][ANIMATION].getDuration();
 
-        if (time > duration - FLT_EPSILON)
+        if (time > duration - FLT_EPSILON || mRemainingLoopForAnim == 0)
         {
             if (mRemainingLoopForAnim > 1)
             {
@@ -487,10 +487,11 @@ struct CiApp : public AppBasic
             }
         }
 
+        mLedColor = mCurrentConfig->animConfigs[mCurrentAnim].getColor();
+
         if (mCurrentAnim != ANIMATION)
         {
             mCurrentAnim = ANIMATION;
-            mLedColor = mCurrentConfig->animConfigs[mCurrentAnim].getColor();
             for (size_t i=0; i<2; i++)
             {
                 mAnims[i][mCurrentAnim].seekToStart();
