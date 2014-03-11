@@ -36,6 +36,9 @@ const int kOscPort = 4444;
 const int kPadPort = 5555;
 const float kLedOffset = 225.0f;
 const int kThreadCount = 10;
+const Vec2i kGlobePhysicsSize(257, 18);
+const Vec2i kWallPhysicsPos(kGlobePhysicsSize.x, 0);
+const Vec2i kWallPhysicsSize(21, 56);
 
 fs::directory_iterator kEndIt;
 
@@ -52,6 +55,7 @@ struct Led
 {
     Led(const Vec3f& aPos, float aValue = 1.0f): pos(aPos), value(aValue), id(gIdCount++){}
     Vec3f pos;
+    Vec2i pos2d;
     float value;
     size_t id;
 };
@@ -78,15 +82,20 @@ struct AnimConfig
 
     Color getColor() const
     {
+        float value = lightValue;
         // TODO: correct the mapping
         if (lightValue2 != 0)
         {
-            return Color(randFloat(), 1.0f, 1.0f);
+            if (lightValue2 > lightValue)
+            {
+                value = randFloat(lightValue, lightValue2);
+            }
+            else
+            {
+                value = randFloat(lightValue2, lightValue);
+            }
         }
-        else
-        {
-            return Color(lightValue, 1.0f, 1.0f - lightValue);
-        }
+        return Color(value, 0.0f, 1.0f - value);
     }
     float lightValue;
     float lightValue2; // if non-zero, then random light value from (lightValue, lightValue2)
@@ -557,7 +566,11 @@ struct CiApp : public AppBasic
             //245  1  2
             //4070 1  122
             float cy = 0.031372549019608f * led.pos.x / REAL_TO_VIRTUAL - 5.686274509803920f;
-            uint8_t value = *pSurface->getData(Vec2i(kW * cx, kH * cy));
+
+            Vec2i sample2D(kW * cx, kH * cy);
+            uint8_t value = *pSurface->getData(sample2D);
+
+            led.pos2d = sample2D * kGlobePhysicsSize / pSurface->getSize();
             led.value = value / 255.f;
         }
 
@@ -573,11 +586,22 @@ struct CiApp : public AppBasic
 
     void drawLedMapping()
     {
-        // TODO
+        gl::enableAlphaBlending();
         BOOST_FOREACH(Led& led, mLeds)
         {
-
+            gl::color(ColorA(mLedColor, led.value));
+            gl::drawPoint(led.pos2d);
         }
+        gl::disableAlphaBlending();
+
+        gl::color(Color(mLedColor));
+
+        if (mCurrentAnim != -1 && mAnims[1][mCurrentAnim].checkNewFrame())
+        {
+            // TODO: use pSurface
+            updateTextureFromSurface(mWallTexture, mAnims[1][mCurrentAnim].getSurface());
+        }
+        gl::draw(mWallTexture, Rectf(kWallPhysicsPos, kWallPhysicsPos + kWallPhysicsSize));
     }
 
     void draw()
@@ -617,12 +641,11 @@ struct CiApp : public AppBasic
             const Rectf kRefGlobeArea(28, 687 + kOffY, 28 + 636, 687 + 90 + kOffY);
             const Rectf kRefWallArea(689, 631 + kOffY, 689 + 84, 631 + 209 + kOffY);
 
-            updateTextureFromSurface(mRefTexures[0], mAnims[0][mCurrentAnim].getSurface());
-            gl::draw(mRefTexures[0], kRefGlobeArea);
-            gl::draw(mRefTexures[1], kRefWallArea);
+            updateTextureFromSurface(mGlobeTexture, mAnims[0][mCurrentAnim].getSurface());
+            gl::draw(mGlobeTexture, kRefGlobeArea);
+            gl::draw(mWallTexture, kRefWallArea);
         }
     }
-
 
     void draw3D() 
     {
@@ -673,10 +696,10 @@ struct CiApp : public AppBasic
             {
                 // TODO: state??
                 // wall
-                updateTextureFromSurface(mRefTexures[1], mAnims[1][mCurrentAnim].getSurface());
-                mRefTexures[1].enableAndBind();
+                updateTextureFromSurface(mWallTexture, mAnims[1][mCurrentAnim].getSurface());
+                mWallTexture.enableAndBind();
                 gl::draw(mVboWall);
-                mRefTexures[1].disable();
+                mWallTexture.disable();
             }
         }
         gl::popModelView();
@@ -710,7 +733,7 @@ private:
     int             mHour;
     int             mRemainingLoopForAnim;
 
-    gl::Texture     mRefTexures[2];
+    gl::Texture     mGlobeTexture, mWallTexture;
 };
 
 CINDER_APP_BASIC(CiApp, RendererGl)
