@@ -2,17 +2,18 @@ GROUP_DEF(RealWorld)
 ITEM_DEF(bool, GUI_VISIBLE, true)
 ITEM_DEF(bool, REFERENCE_VISIBLE, true)
 ITEM_DEF(bool, WORLD_VISIBLE, true)
+ITEM_DEF(float, RANDOM_COLOR_SPEED, 0.001)
+ITEM_DEF(bool, DEBUG_MODE, false)
+ITEM_DEF(int, DEBUG_ANIM, 0)
+ITEM_DEF(float, BULLET_SPEED, 0.01)
+
+GROUP_DEF(Offset)
+ITEM_DEF(float, GLOBE_X, 0)
+ITEM_DEF(float, GLOBE_Y, 0)
+ITEM_DEF(float, WALL_X, 280)
+ITEM_DEF(float, WALL_Y, 0)
 
 GROUP_DEF(VirtualWorld)
-ITEM_DEF(float, SPHERE_RADIUS, 0.9f)        // m
-ITEM_DEF(float, REAL_TO_VIRTUAL, 0.01f)   // mm -> m
-ITEM_DEF(float, CEILING_HEIGHT, 104.0f)      // m
-ITEM_DEF(float, SPHERE_MIN_ALPHA, 0.03f)    // alpha of dark spheres 
-ITEM_DEF(float, CAM_DISTANCE,   9.0f)
-ITEM_DEF(float, REFERENCE_OFFSET_Y, -620.0f)
 ITEM_DEF(Quatf, CAM_ROTATION, Quatf());
-
-GROUP_DEF(ButtonS)
-ITEM_DEF(bool,  LINES_VISIBLE, false)
 ITEM_DEF(int,   PROBE_CONFIG, 0)
 

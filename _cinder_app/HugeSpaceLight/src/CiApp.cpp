@@ -37,8 +37,21 @@ const int kPadPort = 5555;
 const float kLedOffset = 225.0f;
 const int kThreadCount = 10;
 const Vec2i kGlobePhysicsSize(257, 18);
-const Vec2i kWallPhysicsPos(kGlobePhysicsSize.x, 0);
 const Vec2i kWallPhysicsSize(21, 56);
+
+const float SPHERE_RADIUS = 0.9f;        // m
+const float REAL_TO_VIRTUAL = 0.01f;   // mm -> m
+const float CEILING_HEIGHT = 104.0f;      // m
+const float SPHERE_MIN_ALPHA = 0.03f;    // alpha of dark spheres 
+const float CAM_DISTANCE =   9.0f;
+const float REFERENCE_OFFSET_Y = -620.0f;
+const bool LINES_VISIBLE = false;
+
+// to save key strokes
+int             mRemainingLoopForAnim;
+float           mRandomColorIndex;
+int             mHour;
+int             mCurrentHour;
 
 fs::directory_iterator kEndIt;
 
@@ -82,20 +95,22 @@ struct AnimConfig
 
     Color getColor() const
     {
-        float value = lightValue;
-        // TODO: correct the mapping
+        float value = 0;
         if (lightValue2 != 0)
         {
-            if (lightValue2 > lightValue)
+            const float range = math<float>::max(lightValue2 - lightValue, 0.1f);
+            int k = mRandomColorIndex / range;
+            value = (mRandomColorIndex - k * range) / range;
+            if (k % 2 == 1)
             {
-                value = randFloat(lightValue, lightValue2);
-            }
-            else
-            {
-                value = randFloat(lightValue2, lightValue);
+                value = 1.0f - value;
             }
         }
-        return Color(value, 0.0f, 1.0f - value);
+        else
+        {
+            value = lightValue;
+        }
+        return Color(0.0f, value, 1.0f - value);
     }
     float lightValue;
     float lightValue2; // if non-zero, then random light value from (lightValue, lightValue2)
@@ -211,13 +226,14 @@ struct CiApp : public AppBasic
         readProgramSettings();
 
         settings->setWindowPos(0, 0);
-        settings->setWindowSize(800, 800);
+        settings->setWindowSize(Display::getMainDisplay()->getWidth(), Display::getMainDisplay()->getHeight());
     }
 
     void setup()
     {
-        mParams = params::InterfaceGl("params - press F1 to hide", Vec2i(300, getWindowHeight()));
-        setupConfigUI(&mParams);
+        mMainGUI = params::InterfaceGl("params - press F1 to hide", Vec2i(300, getWindowHeight()));
+        setupConfigUI(&mMainGUI);
+        mMainGUI.setPosition(Vec2i(10, 100));
 
         mKinectChan = loadImage(getAssetPath("black-for-kinect.jpg"));
         mHour = -1;
@@ -253,24 +269,24 @@ struct CiApp : public AppBasic
             }
         }
 
-        mParams.addParam("ANIMATION", &ANIMATION, "", true);
+        mMainGUI.addParam("ANIMATION", &ANIMATION, "", true);
         {
-            mParams.addSeparator();
+            mMainGUI.addSeparator();
             vector<string> names;
             for (int i=0; i<Config::kCount; i++)
             {
                 names.push_back("cfg# " + toString(i));
             }
 
-            ADD_ENUM_TO_INT(mParams, PROBE_CONFIG, names);
+            ADD_ENUM_TO_INT(mMainGUI, PROBE_CONFIG, names);
         }
 
-        mParams.addParam("current_hour", &mHour, "", true);
-        mParams.addText("Valid config are 0/1/2/3/4/5");
-        mParams.addText("And -1 means no config in this hour");
+        mMainGUI.addParam("current_hour", &mHour, "", true);
+        mMainGUI.addText("Valid config are 0/1/2/3/4/5");
+        mMainGUI.addText("And -1 means no config in this hour");
         for (int i=10; i<26; i++)
         {
-            mParams.addParam("hour# " + toString(i % kHourCount), &mConfigIds[i % kHourCount], "min=-1 max=5");
+            mMainGUI.addParam("hour# " + toString(i % kHourCount), &mConfigIds[i % kHourCount], "min=-1 max=5");
         }
 
         // osc setup
@@ -379,6 +395,11 @@ struct CiApp : public AppBasic
             if (hour >=0 && hour < kHourCount 
                 && prog >= -1 && prog < Config::kCount)
             {
+                if (mCurrentHour == hour && mConfigIds[hour] != prog)
+                {
+                    // invalidate current hour, refer to updateProgram()
+                    mHour = -1;
+                }
                 mConfigIds[hour] = prog;
             }
             return;
@@ -392,7 +413,12 @@ struct CiApp : public AppBasic
             for (int i=0; i<AnimConfig::kCount; i++)
             {
                 AnimConfig& animConfig = config.animConfigs[i];
-                animConfig.loopCount = msg->getArgAsInt32(idx++);
+                int loopCount = msg->getArgAsInt32(idx++);
+                if (animConfig.loopCount != loopCount && mCurrentAnim == i)
+                {
+                    mRemainingLoopForAnim = 0; // refer to updateAnim()
+                    animConfig.loopCount = loopCount;
+                }
                 animConfig.lightValue = msg->getArgAsFloat(idx++);
                 animConfig.lightValue2 = msg->getArgAsFloat(idx++);
             }
@@ -425,10 +451,9 @@ struct CiApp : public AppBasic
     void updateProgram()
     {
         // current program
-        int hour = getHour();
-        if (mHour != hour)
+        if (mHour != mCurrentHour)
         {
-            mHour = hour;
+            mHour = mCurrentHour;
             ANIMATION = 0;
             mCurrentAnim = -1;
             if (mConfigIds[mHour] != -1)
@@ -448,6 +473,8 @@ struct CiApp : public AppBasic
         {
             mProbeConfig = PROBE_CONFIG;
             mProgramGUI = params::InterfaceGl("cfg# " + toString(mProbeConfig), Vec2i(300, getWindowHeight()));
+            mProgramGUI.setPosition(Vec2i(1058, 10));
+
             Config& prog = mConfigs[mProbeConfig];
             mProgramGUI.addSeparator();
             for (int i=0; i<AnimConfig::kCount; i++)
@@ -473,17 +500,26 @@ struct CiApp : public AppBasic
         const float time = mAnims[0][ANIMATION].getCurrentTime();
         const float duration = mAnims[0][ANIMATION].getDuration();
 
-        if (time > duration - FLT_EPSILON || mRemainingLoopForAnim == 0)
+        if (DEBUG_MODE)
         {
-            if (mRemainingLoopForAnim > 1)
+            DEBUG_ANIM = constrain(DEBUG_ANIM, 0, AnimConfig::kKinect - 1);
+            ANIMATION = DEBUG_ANIM;
+            mRemainingLoopForAnim = 1;
+        }
+        else
+        {
+            if (time > duration - FLT_EPSILON || mRemainingLoopForAnim <= 0)
             {
-                mCurrentAnim = -1;  // manually invalidate
-                mRemainingLoopForAnim--;
-            }
-            else
-            {
-                ANIMATION = (ANIMATION + 1) % AnimConfig::kKinect;
-                mRemainingLoopForAnim = mCurrentConfig->animConfigs[ANIMATION].loopCount;
+                if (mRemainingLoopForAnim > 1)
+                {
+                    mCurrentAnim = -1;  // manually invalidate
+                    mRemainingLoopForAnim--;
+                }
+                else
+                {
+                    ANIMATION = (ANIMATION + 1) % AnimConfig::kKinect;
+                    mRemainingLoopForAnim = mCurrentConfig->animConfigs[ANIMATION].loopCount;
+                }
             }
         }
 
@@ -507,6 +543,9 @@ struct CiApp : public AppBasic
     void update()
     {
         static float sPrevSec = getElapsedSeconds();
+        mRandomColorIndex += RANDOM_COLOR_SPEED;
+
+        mCurrentHour = getHour();
 
         updateProgram();
         if (mCurrentConfig == NULL)
@@ -519,7 +558,8 @@ struct CiApp : public AppBasic
         }
 
         vector<tuio::Cursor> cursors;
-        if (mCurrentConfig->animConfigs[AnimConfig::kKinect].loopCount > 0)
+        const AnimConfig& kinectCfg = mCurrentConfig->animConfigs[AnimConfig::kKinect];
+        if (kinectCfg.loopCount > 0)
         {
             cursors = mTuioClient.getCursors();
         }
@@ -527,17 +567,21 @@ struct CiApp : public AppBasic
         const Surface* pSurface = NULL;
         if (cursors.size() == 2)
         {
+            Color8u clr = kinectCfg.getColor();
             ip::fill(&mKinectChan, Color::black());
-            for (int i=0; i<2; i++)
+            for (int i=0; i<cursors.size(); i++)
             {
                 Vec2f pos = cursors[i].getPos();
                 int width = (1.0f - pos.y) * mKinectChan.getWidth();
-                int halfH = mKinectChan.getHeight(); // TODO: global & cache
+                const int halfH = mKinectChan.getHeight(); // TODO: global & cache
                 for (int x=0; x<width; x++)
                 {
                     for (int y=halfH*i; y<(halfH*(i+1)); y++)
                     {
-                        *mKinectChan.getData(Vec2i(x, y)) = 122; // TODO: which value?
+                        uint8_t* ptr = mKinectChan.getData(Vec2i(x, y));
+                        ptr[0] = clr.r;
+                        ptr[1] = clr.g;
+                        ptr[2] = clr.b;
                     }
                 }
                 // TODO: getSpeed()?
@@ -549,9 +593,6 @@ struct CiApp : public AppBasic
             updateAnim();
             pSurface = &mAnims[0][mCurrentAnim].getSurface();
         }
-
-        int32_t width = pSurface->getWidth();
-        int32_t height = pSurface->getHeight();
 
         float kW = pSurface->getWidth() / 1029.0f;
         float kH = pSurface->getHeight() / 124.0f;
@@ -591,18 +632,21 @@ struct CiApp : public AppBasic
         BOOST_FOREACH(Led& led, mLeds)
         {
             gl::color(ColorA(mLedColor, led.value));
-            gl::drawPoint(led.pos2d);
+            gl::drawPoint(Vec2i(GLOBE_X, GLOBE_Y) + (kGlobePhysicsSize - led.pos2d));
         }
         gl::disableAlphaBlending();
 
         gl::color(Color(mLedColor));
 
-        if (mCurrentAnim != -1 && mAnims[1][mCurrentAnim].checkNewFrame())
+        if (mCurrentAnim != -1)
         {
             // TODO: use pSurface
-            updateTextureFromSurface(mWallTexture, mAnims[1][mCurrentAnim].getSurface());
+            if (mAnims[1][mCurrentAnim].checkNewFrame())
+            {
+                updateTextureFromSurface(mWallTexture, mAnims[1][mCurrentAnim].getSurface());
+            }
+            gl::draw(mWallTexture, Rectf(WALL_X, WALL_Y, WALL_X + kWallPhysicsSize.x, WALL_Y + kWallPhysicsSize.y));
         }
-        gl::draw(mWallTexture, Rectf(kWallPhysicsPos, kWallPhysicsPos + kWallPhysicsSize));
     }
 
     void draw()
@@ -610,7 +654,7 @@ struct CiApp : public AppBasic
         gl::enableDepthRead();
         gl::enableDepthWrite();
 
-        gl::clear(ColorA::gray(43 / 255.f));
+        gl::clear(ColorA::black());
 
         if (REFERENCE_VISIBLE)
         {
@@ -629,7 +673,7 @@ struct CiApp : public AppBasic
 
         if (GUI_VISIBLE)
         {
-            mParams.draw();
+            mMainGUI.draw();
             mProgramGUI.draw();
         }
     }
@@ -654,7 +698,7 @@ struct CiApp : public AppBasic
         {
             if (GUI_VISIBLE)
             {
-                mParams.draw();
+                mMainGUI.draw();
                 mProgramGUI.draw();
             }
             return;
@@ -707,7 +751,7 @@ struct CiApp : public AppBasic
     }
 
 private:
-    params::InterfaceGl mParams;
+    params::InterfaceGl mMainGUI;
     params::InterfaceGl mProgramGUI;
 
     osc::Listener   mPadListener;
@@ -731,8 +775,6 @@ private:
     Config*         mCurrentConfig;
 
     Color           mLedColor;
-    int             mHour;
-    int             mRemainingLoopForAnim;
 
     gl::Texture     mGlobeTexture, mWallTexture;
 };
