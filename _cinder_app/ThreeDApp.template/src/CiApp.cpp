@@ -8,6 +8,7 @@
 #include "cinder/params/Params.h"
 
 #include "../../../_common/MiniConfig.h"
+#include "../../../_common/AssetManager.h"
 
 using namespace ci;
 using namespace ci::app;

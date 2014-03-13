@@ -176,6 +176,14 @@
 	</References>
 	<Files>
 		<File
+			RelativePath="..\..\..\_common\AssetManager.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\..\_common\AssetManager.h"
+			>
+		</File>
+		<File
 			RelativePath="..\src\CiApp.cpp"
 			>
 		</File>
