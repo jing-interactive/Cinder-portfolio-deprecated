@@ -505,6 +505,11 @@ struct CiApp : public AppBasic
             DEBUG_ANIM = constrain(DEBUG_ANIM, 0, AnimConfig::kKinect - 1);
             ANIMATION = DEBUG_ANIM;
             mRemainingLoopForAnim = 1;
+
+            if (time > duration - FLT_EPSILON)
+            {
+                mCurrentAnim = -1;  // manually invalidate
+            }
         }
         else
         {
@@ -523,8 +528,6 @@ struct CiApp : public AppBasic
             }
         }
 
-        mLedColor = mCurrentConfig->animConfigs[mCurrentAnim].getColor();
-
         if (mCurrentAnim != ANIMATION)
         {
             mCurrentAnim = ANIMATION;
@@ -538,6 +541,8 @@ struct CiApp : public AppBasic
                 }
             }
         }
+
+        mLedColor = mCurrentConfig->animConfigs[mCurrentAnim].getColor();
     }
 
     void update()
