@@ -196,6 +196,13 @@ bool InterfaceGl::isVisible() const
 	return visibleInt != 0;
 }
 
+void InterfaceGl::setPosition( const Vec2i& pos )
+{
+    char optionsStr[1024];
+    sprintf(optionsStr, "%d %d", pos.x, pos.y);
+    TwSetParam( mBar.get(), NULL, "position", TW_PARAM_CSTRING, 1, &optionsStr );
+}
+
 void InterfaceGl::implAddParam( const std::string &name, void *param, int type, const std::string &optionsStr, bool readOnly )
 {
 	if( readOnly )

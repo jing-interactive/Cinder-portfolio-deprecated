@@ -42,6 +42,7 @@ class InterfaceGl {
 	void	show( bool visible = true );
 	void	hide();
 	bool	isVisible() const;
+    void    setPosition( const Vec2i& pos );
 	
     void	removeParam( const std::string &name );
 
