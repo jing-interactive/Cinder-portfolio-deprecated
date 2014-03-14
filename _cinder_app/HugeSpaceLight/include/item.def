@@ -5,15 +5,18 @@ ITEM_DEF(bool, WORLD_VISIBLE, true)
 ITEM_DEF(float, RANDOM_COLOR_SPEED, 0.001)
 ITEM_DEF(bool, DEBUG_MODE, false)
 ITEM_DEF(int, DEBUG_ANIM, 0)
+
+GROUP_DEF(Kinect)
+ITEM_DEF_MINMAX(float, KINECT_ANGLE, 0, -28, 28)
 ITEM_DEF(float, BULLET_SPEED, 0.01)
 
 GROUP_DEF(Offset)
-ITEM_DEF(float, GLOBE_X, 0)
+ITEM_DEF(float, GLOBE_X, 1)
 ITEM_DEF(float, GLOBE_Y, 0)
-ITEM_DEF(float, WALL_X, 280)
-ITEM_DEF(float, WALL_Y, 0)
+ITEM_DEF(float, WALL_X, 263)
+ITEM_DEF(float, WALL_Y, 6)
 
 GROUP_DEF(VirtualWorld)
-ITEM_DEF(Quatf, CAM_ROTATION, Quatf());
+ITEM_DEF(Quatf, CAM_ROTATION, Quatf(1, 1, 1));
 ITEM_DEF(int,   PROBE_CONFIG, 0)
 

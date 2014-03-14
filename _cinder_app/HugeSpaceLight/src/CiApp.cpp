@@ -14,8 +14,8 @@
 
 #include "cinder/qtime/QuickTime.h"
 
-#include "cinder/tuio/TuioClient.h"
 #include "cinder/osc/OscSender.h"
+#include "cinder/osc/OscListener.h"
 
 #include "../../../_common/MiniConfig.h"
 #include <fstream>
@@ -23,6 +23,7 @@
 #include <boost/make_shared.hpp>
 
 #include "../../../_common/AssetManager.h"
+#include "../../../_common/Kinect/Kinect.h"
 
 #pragma warning(disable: 4244)
 
@@ -31,7 +32,6 @@ using namespace ci::app;
 using namespace std;
 
 const float kCamFov = 60.0f;
-const int kTuioKinectPort = 3333;
 const int kOscPort = 4444;
 const int kPadPort = 5555;
 const float kLedOffset = 225.0f;
@@ -52,6 +52,7 @@ int             mRemainingLoopForAnim;
 float           mRandomColorIndex;
 int             mHour;
 int             mCurrentHour;
+int             mKinectAngle;
 
 fs::directory_iterator kEndIt;
 
@@ -235,7 +236,16 @@ struct CiApp : public AppBasic
         setupConfigUI(&mMainGUI);
         mMainGUI.setPosition(Vec2i(10, 100));
 
-        mKinectChan = loadImage(getAssetPath("black-for-kinect.jpg"));
+        try
+        {
+            mDevice.start(nui::DeviceOptions().enableColor(false).enableDepth(false));
+            mKinectAngle = mDevice.getTilt();
+        }
+        catch (...)
+        {
+            console() << "Kinect device start error." << endl;
+        }
+
         mHour = -1;
         mProbeConfig = -1;
 
@@ -292,8 +302,6 @@ struct CiApp : public AppBasic
         // osc setup
         mPadListener.setup(kOscPort);
         mPadListener.registerMessageReceived(this, &CiApp::onOscMessage);
-
-        mTuioClient.connect(kTuioKinectPort);
 
         // parse leds.txt
         ifstream ifs(getAssetPath("leds.txt").string().c_str());
@@ -497,7 +505,7 @@ struct CiApp : public AppBasic
     void updateAnim()
     {
         // calculate ANIMATION
-        const float time = mAnims[0][ANIMATION].getCurrentTime();
+        float time = mAnims[0][ANIMATION].getCurrentTime();
         const float duration = mAnims[0][ANIMATION].getDuration();
 
         if (DEBUG_MODE)
@@ -506,14 +514,15 @@ struct CiApp : public AppBasic
             ANIMATION = DEBUG_ANIM;
             mRemainingLoopForAnim = 1;
 
-            if (time > duration - FLT_EPSILON)
+            if (time >= duration - FLT_EPSILON)
             {
                 mCurrentAnim = -1;  // manually invalidate
             }
         }
         else
         {
-            if (time > duration - FLT_EPSILON || mRemainingLoopForAnim <= 0)
+            int counter = 0;
+            while (time >= duration - FLT_EPSILON || mRemainingLoopForAnim <= 0)
             {
                 if (mRemainingLoopForAnim > 1)
                 {
@@ -522,6 +531,8 @@ struct CiApp : public AppBasic
                 }
                 else
                 {
+                    time = 0; // to make the first condition of while loop pass
+                    counter++;
                     ANIMATION = (ANIMATION + 1) % AnimConfig::kKinect;
                     mRemainingLoopForAnim = mCurrentConfig->animConfigs[ANIMATION].loopCount;
                 }
@@ -562,14 +573,34 @@ struct CiApp : public AppBasic
             return;
         }
 
-        vector<tuio::Cursor> cursors;
-        const AnimConfig& kinectCfg = mCurrentConfig->animConfigs[AnimConfig::kKinect];
-        if (kinectCfg.loopCount > 0)
+        if (mKinectAngle != KINECT_ANGLE)
         {
-            cursors = mTuioClient.getCursors();
+            mKinectAngle = KINECT_ANGLE;
+            mDevice.setTilt(mKinectAngle);
         }
 
+        const NUI_SKELETON_POSITION_INDEX kJoints[] = 
+        {
+            NUI_SKELETON_POSITION_HAND_LEFT,
+            NUI_SKELETON_POSITION_HAND_RIGHT
+        };
+
+        const AnimConfig& kinectCfg = mCurrentConfig->animConfigs[AnimConfig::kKinect];
+        if (kinectCfg.loopCount > 0 && mDevice.checkNewSkeletons())
+        {
+            BOOST_FOREACH(const nui::Skeleton& skel, mDevice.getSkeletons())
+            {
+                if (skel.empty()) continue;
+
+                for (int i=0; i<_countof(kJoints); i++)
+                {
+                    const nui::Bone& bone = skel.at(kJoints[i]);
+                    Vec3f pos		 = bone.getPosition();
+                }
+            }
+        }
         const Surface* pSurface = NULL;
+#if 0
         if (cursors.size() == 2)
         {
             Color8u clr = kinectCfg.getColor();
@@ -594,6 +625,7 @@ struct CiApp : public AppBasic
             }
         }
         else
+#endif
         {
             updateAnim();
             pSurface = &mAnims[0][mCurrentAnim].getSurface();
@@ -761,8 +793,8 @@ private:
 
     osc::Listener   mPadListener;
     osc::Sender     mPadSender;
-    tuio::Client    mTuioClient;
-    Surface         mKinectChan;
+
+    nui::Device     mDevice;
 
     vector<Led>     mLeds;
     int             mCurrentCamDistance;
@@ -770,6 +802,8 @@ private:
     CameraPersp     mCamera;
 
     vector<qtime::MovieSurface>    mAnims[2];
+
+    vector<qtime::MovieSurface>    mKinectAnims;
 
     int             mCurrentAnim;
     int             ANIMATION;
