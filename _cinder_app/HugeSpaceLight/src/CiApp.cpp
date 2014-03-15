@@ -6,7 +6,6 @@
 #include "cinder/Rand.h"
 #include "cinder/ip/Fill.h"
 
-#include "cinder/gl/Fbo.h"
 #include "cinder/params/Params.h"
 
 #include "cinder/Utilities.h"
@@ -23,9 +22,14 @@
 #include <boost/make_shared.hpp>
 
 #include "../../../_common/AssetManager.h"
-#include "../../../_common/Kinect/Kinect.h"
+#include "../../../_common/StateMachine.h"
+
+#include "GestureDetector.h"
 
 #pragma warning(disable: 4244)
+
+#pragma comment(lib, "CVClient.lib")
+#pragma comment(lib, "QTMLClient.lib")
 
 using namespace ci;
 using namespace ci::app;
@@ -34,6 +38,7 @@ using namespace std;
 const float kCamFov = 60.0f;
 const int kOscPort = 4444;
 const int kPadPort = 5555;
+const int kKinectPort = 7001;
 const float kLedOffset = 225.0f;
 const int kThreadCount = 10;
 const Vec2i kGlobePhysicsSize(257, 18);
@@ -47,12 +52,20 @@ const float CAM_DISTANCE =   9.0f;
 const float REFERENCE_OFFSET_Y = -620.0f;
 const bool LINES_VISIBLE = false;
 
-// to save key strokes
+// 
 int             mRemainingLoopForAnim;
 float           mRandomColorIndex;
 int             mHour;
 int             mCurrentHour;
-int             mKinectAngle;
+
+float           mGlobalAlpha = 1; // for fade-in / fade-out
+float           mLastKinectMsgSeconds;
+
+int mPrevAnim = 0;
+
+static int toRealIndex(int animIndex);
+
+struct CiApp;
 
 fs::directory_iterator kEndIt;
 
@@ -63,16 +76,6 @@ static void updateTextureFromSurface(gl::Texture& tex, const Surface& surf)
     else
         tex = gl::Texture(surf);
 }
-
-size_t gIdCount = 0;
-struct Led
-{
-    Led(const Vec3f& aPos, float aValue = 1.0f): pos(aPos), value(aValue), id(gIdCount++){}
-    Vec3f pos;
-    Vec2i pos2d;
-    float value;
-    size_t id;
-};
 
 static int getHour()
 {
@@ -159,12 +162,109 @@ struct Config
 const string kProgSettingFileName = "ProgramSettings.xml";
 const int kHourCount = 24; // valid hours for G9 are [10~23; 00; 01]
 
-struct CiApp : public AppBasic
+// to save key strokes
+
+params::InterfaceGl mMainGUI;
+params::InterfaceGl mProgramGUI;
+
+osc::Listener   mPadListener;
+osc::Listener   mKinectListener;
+osc::Sender     mPadSender;
+
+GestureDetector mGestures[2];
+
+size_t gIdCount = 0;
+struct Led
+{
+    Led(const Vec3f& aPos, float aValue = 1.0f): pos(aPos), value(aValue), id(gIdCount++){}
+    Vec3f pos;
+    Vec2i pos2d;
+    float value;
+    size_t id;
+};
+
+vector<Led>     mLeds;
+int             mCurrentCamDistance;
+AxisAlignedBox3f mAABB;
+CameraPersp     mCamera;
+
+vector<qtime::MovieSurface>    mAnims[2];
+
+vector<qtime::MovieSurface>    mKinectAnims;
+
+int             mCurrentAnim;
+int             ANIMATION;
+
+gl::VboMesh     mVboWall;
+
+int             mProbeConfig;
+struct Config*         mCurrentConfig;
+
+Color           mLedColor;
+
+gl::Texture     mGlobeTexture, mWallTexture;
+
+int mKinectAnimIndex;
+
+struct StateIdle : public State<CiApp>
+{
+    GET_SINGLETON_IMPL(StateIdle);
+
+    void enter(CiApp* host)
+    {
+        mGlobalAlpha = 1;
+        console() << "idle" << endl;
+    }
+
+    void update(CiApp* host);
+};
+
+State<CiApp>::Ref sFadeOutNextState;
+
+struct StateFadeOut : public State<CiApp>
+{
+    GET_SINGLETON_IMPL(StateFadeOut);
+
+    void enter(CiApp* host);
+
+    void update(CiApp* host);
+
+    void exit(CiApp* host)
+    {
+        mGlobalAlpha = 0.0f;
+    }
+};
+
+struct StateInteractive : public State<CiApp>
+{
+    GET_SINGLETON_IMPL(StateInteractive);
+
+    void enter(CiApp* host)
+    {
+        console() << "interactive" << endl;
+        mPrevAnim = mCurrentAnim;
+        
+        //    mRemainingLoopForAnim = mCurrentConfig->animConfigs[ANIMATION].loopCount;
+
+    }
+
+    void update(CiApp* host);
+
+    void exit(CiApp* host)
+    {
+        mCurrentAnim = -1;
+        ANIMATION = mPrevAnim;
+    }
+};
+
+bool mIsAlive = true;
+
+struct CiApp : public AppBasic, StateMachine<CiApp>
 {
     Config mConfigs[Config::kCount];
     int mConfigIds[kHourCount];
 
-    CiApp()
+    CiApp() : StateMachine<CiApp>(this)
     {
         for (int i=0; i<kHourCount; i++)
         {
@@ -236,18 +336,13 @@ struct CiApp : public AppBasic
         setupConfigUI(&mMainGUI);
         mMainGUI.setPosition(Vec2i(10, 100));
 
-        try
-        {
-            mDevice.start(nui::DeviceOptions().enableColor(false).enableDepth(false));
-            mKinectAngle = mDevice.getTilt();
-        }
-        catch (...)
-        {
-            console() << "Kinect device start error." << endl;
-        }
+        mGestures[0] = GestureDetector(-Vec3f::zAxis());
+        mGestures[1] = GestureDetector(-Vec3f::zAxis());
 
         mHour = -1;
         mProbeConfig = -1;
+        mCurrentConfig = NULL;
+        mKinectAnimIndex = 0;
 
         mCurrentCamDistance = -1;
 
@@ -301,7 +396,10 @@ struct CiApp : public AppBasic
 
         // osc setup
         mPadListener.setup(kOscPort);
-        mPadListener.registerMessageReceived(this, &CiApp::onOscMessage);
+        mPadListener.registerMessageReceived(this, &CiApp::onOscPadMessage);
+
+        mKinectListener.setup(kKinectPort);
+        mKinectListener.registerMessageReceived(this, &CiApp::onOscKinectMessage);
 
         // parse leds.txt
         ifstream ifs(getAssetPath("leds.txt").string().c_str());
@@ -367,16 +465,100 @@ struct CiApp : public AppBasic
             mVboWall = gl::VboMesh(kNumVertices, 0, layout, GL_QUADS);
             mVboWall.bufferPositions(positions);
             mVboWall.bufferTexCoords2d(0, texCoords);
-            //mVboWall.bufferColorsRGB(colors);
         }
+
+        changeToState(StateIdle::getSingleton());
     }
 
     void shutdown()
     {
+        mIsAlive = false;
         writeProgramSettings();
     }
 
-    void onOscMessage(const osc::Message* msg)
+    void onOscKinectMessage(const osc::Message* msg)
+    {
+        if (!mIsAlive) return;
+
+        mLastKinectMsgSeconds = getElapsedSeconds();
+
+        if (mCurrentConfig == NULL) return;
+
+        const AnimConfig& kinectCfg = mCurrentConfig->animConfigs[AnimConfig::kKinect];
+        if (kinectCfg.loopCount == 0) return;
+
+        const string& addr = msg->getAddress();
+        if (addr != "/kinect") return;
+
+        if (mCurrentState == StateIdle::getSingleton())
+        {
+            sFadeOutNextState = StateInteractive::getSingleton();
+            changeToState(StateFadeOut::getSingleton());
+        }
+
+        const int SHOULDER_CENTER = 3;
+        const int HAND_LEFT = 8;
+        const int HAND_RIGHT = 12;
+        const int ids[3] = {SHOULDER_CENTER, HAND_LEFT, HAND_RIGHT};
+        Vec3f poses[3];
+
+        for (int i=0; i<3; i++)
+        {
+            string str = msg->getArgAsString(ids[i]);
+            vector<string> xyzw = ci::split(str, ",");
+            poses[i].set(fromString<float>(xyzw[0]), fromString<float>(xyzw[1]), fromString<float>(xyzw[2]));
+        }
+
+        for (int i=0; i<2; i++)
+        {
+            mGestures[i].update(poses[0], poses[i + 1]);
+            float speed = 0;
+            if (mGestures[i].isDetected(KINECT_DISTANCE, &speed))
+            {
+                float time = mAnims[0][toRealIndex(ANIMATION)].getCurrentTime();
+                float duration = mAnims[0][toRealIndex(ANIMATION)].getDuration();
+
+                if (mCurrentAnim != AnimConfig::kKinect)
+                {
+                    for (int k=0; k<2; k++)
+                    {
+                        if (mCurrentAnim != -1)
+                        {
+                            mAnims[i][toRealIndex(mCurrentAnim)].stop();
+                            mAnims[i][toRealIndex(mCurrentAnim)].seekToStart();
+                        }
+                    }
+                }
+
+                if (mCurrentAnim != AnimConfig::kKinect || time >= duration - FLT_EPSILON)
+                {
+                    mCurrentAnim = ANIMATION = AnimConfig::kKinect; // HACK
+                    mRemainingLoopForAnim = 0; // refer to updateAnim()
+                    mPlayrate = speed * KINECT_MOVIE_SPEED;
+                    // TODO:
+                    mKinectAnimIndex = rand() % 3;
+
+                    for (int k=0; k<2; k++)
+                    {
+                        mAnims[k][toRealIndex(mCurrentAnim)].seekToStart();
+                        mAnims[k][toRealIndex(mCurrentAnim)].play();
+
+                        while (!mAnims[k][toRealIndex(mCurrentAnim)].checkNewFrame())
+                        {
+                            sleep(30);
+                        }
+                    }
+                }
+                mGlobalAlpha = 1.0f;
+
+                console() << "Hit " << i << " speed " << speed << endl;
+            }
+        }
+    }
+
+    float mPlayrate;
+
+    void onOscPadMessage(const osc::Message* msg)
     {
         const string& addr = msg->getAddress();
 
@@ -505,52 +687,23 @@ struct CiApp : public AppBasic
     void updateAnim()
     {
         // calculate ANIMATION
-        float time = mAnims[0][ANIMATION].getCurrentTime();
-        const float duration = mAnims[0][ANIMATION].getDuration();
-
-        if (DEBUG_MODE)
-        {
-            DEBUG_ANIM = constrain(DEBUG_ANIM, 0, AnimConfig::kKinect - 1);
-            ANIMATION = DEBUG_ANIM;
-            mRemainingLoopForAnim = 1;
-
-            if (time >= duration - FLT_EPSILON)
-            {
-                mCurrentAnim = -1;  // manually invalidate
-            }
-        }
-        else
-        {
-            int counter = 0;
-            while (time >= duration - FLT_EPSILON || mRemainingLoopForAnim <= 0)
-            {
-                if (mRemainingLoopForAnim > 1)
-                {
-                    mCurrentAnim = -1;  // manually invalidate
-                    mRemainingLoopForAnim--;
-                }
-                else
-                {
-                    time = 0; // to make the first condition of while loop pass
-                    counter++;
-                    ANIMATION = (ANIMATION + 1) % AnimConfig::kKinect;
-                    mRemainingLoopForAnim = mCurrentConfig->animConfigs[ANIMATION].loopCount;
-                }
-            }
-        }
-
         if (mCurrentAnim != ANIMATION)
         {
-            mCurrentAnim = ANIMATION;
             for (size_t i=0; i<2; i++)
             {
-                mAnims[i][mCurrentAnim].seekToStart();
-                mAnims[i][mCurrentAnim].play();
-                while (!mAnims[i][mCurrentAnim].checkNewFrame())
+                if (mCurrentAnim != -1)
+                {
+                    mAnims[i][toRealIndex(mCurrentAnim)].stop();
+                    mAnims[i][toRealIndex(mCurrentAnim)].seekToStart();
+                }
+                mAnims[i][toRealIndex(ANIMATION)].play();
+
+                while (!mAnims[i][toRealIndex(ANIMATION)].checkNewFrame())
                 {
                     sleep(30);
                 }
             }
+            mCurrentAnim = ANIMATION;
         }
 
         mLedColor = mCurrentConfig->animConfigs[mCurrentAnim].getColor();
@@ -558,7 +711,6 @@ struct CiApp : public AppBasic
 
     void update()
     {
-        static float sPrevSec = getElapsedSeconds();
         mRandomColorIndex += RANDOM_COLOR_SPEED;
 
         mCurrentHour = getHour();
@@ -573,63 +725,14 @@ struct CiApp : public AppBasic
             return;
         }
 
-        if (mKinectAngle != KINECT_ANGLE)
-        {
-            mKinectAngle = KINECT_ANGLE;
-            mDevice.setTilt(mKinectAngle);
-        }
+        updateSM();
 
-        const NUI_SKELETON_POSITION_INDEX kJoints[] = 
-        {
-            NUI_SKELETON_POSITION_HAND_LEFT,
-            NUI_SKELETON_POSITION_HAND_RIGHT
-        };
+        updateAnim();
 
-        const AnimConfig& kinectCfg = mCurrentConfig->animConfigs[AnimConfig::kKinect];
-        if (kinectCfg.loopCount > 0 && mDevice.checkNewSkeletons())
-        {
-            BOOST_FOREACH(const nui::Skeleton& skel, mDevice.getSkeletons())
-            {
-                if (skel.empty()) continue;
 
-                for (int i=0; i<_countof(kJoints); i++)
-                {
-                    const nui::Bone& bone = skel.at(kJoints[i]);
-                    Vec3f pos		 = bone.getPosition();
-                }
-            }
-        }
-        const Surface* pSurface = NULL;
-#if 0
-        if (cursors.size() == 2)
-        {
-            Color8u clr = kinectCfg.getColor();
-            ip::fill(&mKinectChan, Color::black());
-            for (int i=0; i<cursors.size(); i++)
-            {
-                Vec2f pos = cursors[i].getPos();
-                int width = (1.0f - pos.y) * mKinectChan.getWidth();
-                const int halfH = mKinectChan.getHeight(); // TODO: global & cache
-                for (int x=0; x<width; x++)
-                {
-                    for (int y=halfH*i; y<(halfH*(i+1)); y++)
-                    {
-                        uint8_t* ptr = mKinectChan.getData(Vec2i(x, y));
-                        ptr[0] = clr.r;
-                        ptr[1] = clr.g;
-                        ptr[2] = clr.b;
-                    }
-                }
-                // TODO: getSpeed()?
-                pSurface = &mKinectChan;
-            }
-        }
-        else
-#endif
-        {
-            updateAnim();
-            pSurface = &mAnims[0][mCurrentAnim].getSurface();
-        }
+        const Surface* pSurface = &mAnims[0][toRealIndex(mCurrentAnim)].getSurface();
+
+        if (pSurface == NULL || *pSurface == NULL) return;
 
         float kW = pSurface->getWidth() / 1029.0f;
         float kH = pSurface->getHeight() / 124.0f;
@@ -659,8 +762,6 @@ struct CiApp : public AppBasic
             mCamera.setPerspective(kCamFov, getWindowAspectRatio(), 0.1f, 1000.0f);
             mCamera.lookAt(Vec3f(- mAABB.getMax().x * mCurrentCamDistance, mAABB.getMax().y * 0.5f, 0.0f), Vec3f::zero());
         }
-
-        sPrevSec = getElapsedSeconds();
     }
 
     void drawLedMapping()
@@ -668,22 +769,18 @@ struct CiApp : public AppBasic
         gl::enableAlphaBlending();
         BOOST_FOREACH(Led& led, mLeds)
         {
-            gl::color(ColorA(mLedColor, led.value));
+            gl::color(ColorA(mLedColor, led.value * mGlobalAlpha));
             gl::drawPoint(Vec2i(GLOBE_X, GLOBE_Y) + (kGlobePhysicsSize - led.pos2d));
         }
-        gl::disableAlphaBlending();
 
-        gl::color(Color(mLedColor));
+        gl::color(ColorA(mLedColor, mGlobalAlpha));
 
-        if (mCurrentAnim != -1)
+        if (mCurrentAnim != -1 && mGlobalAlpha == 1)
         {
-            // TODO: use pSurface
-            if (mAnims[1][mCurrentAnim].checkNewFrame())
-            {
-                updateTextureFromSurface(mWallTexture, mAnims[1][mCurrentAnim].getSurface());
-            }
+            updateTextureFromSurface(mWallTexture, mAnims[1][toRealIndex(mCurrentAnim)].getSurface());
             gl::draw(mWallTexture, Rectf(WALL_X, WALL_Y, WALL_X + kWallPhysicsSize.x, WALL_Y + kWallPhysicsSize.y));
         }
+        gl::disableAlphaBlending();
     }
 
     void draw()
@@ -717,13 +814,13 @@ struct CiApp : public AppBasic
 
     void draw2D() 
     {
-        if (mCurrentAnim != -1)
+        if (mCurrentAnim != -1 && mGlobalAlpha == 1)
         {
             const float kOffY = REFERENCE_OFFSET_Y;
             const Rectf kRefGlobeArea(28, 687 + kOffY, 28 + 636, 687 + 90 + kOffY);
             const Rectf kRefWallArea(689, 631 + kOffY, 689 + 84, 631 + 209 + kOffY);
 
-            updateTextureFromSurface(mGlobeTexture, mAnims[0][mCurrentAnim].getSurface());
+            updateTextureFromSurface(mGlobeTexture, mAnims[0][toRealIndex(mCurrentAnim)].getSurface());
             gl::draw(mGlobeTexture, kRefGlobeArea);
             gl::draw(mWallTexture, kRefWallArea);
         }
@@ -774,11 +871,11 @@ struct CiApp : public AppBasic
             }
             gl::disableAlphaBlending();
 
-            if (mCurrentAnim != -1)
+            if (mCurrentAnim != -1 && mGlobalAlpha == 1)
             {
                 // TODO: state??
                 // wall
-                updateTextureFromSurface(mWallTexture, mAnims[1][mCurrentAnim].getSurface());
+                updateTextureFromSurface(mWallTexture, mAnims[1][toRealIndex(mCurrentAnim)].getSurface());
                 mWallTexture.enableAndBind();
                 gl::draw(mVboWall);
                 mWallTexture.disable();
@@ -786,36 +883,86 @@ struct CiApp : public AppBasic
         }
         gl::popModelView();
     }
-
-private:
-    params::InterfaceGl mMainGUI;
-    params::InterfaceGl mProgramGUI;
-
-    osc::Listener   mPadListener;
-    osc::Sender     mPadSender;
-
-    nui::Device     mDevice;
-
-    vector<Led>     mLeds;
-    int             mCurrentCamDistance;
-    AxisAlignedBox3f mAABB;
-    CameraPersp     mCamera;
-
-    vector<qtime::MovieSurface>    mAnims[2];
-
-    vector<qtime::MovieSurface>    mKinectAnims;
-
-    int             mCurrentAnim;
-    int             ANIMATION;
-
-    gl::VboMesh     mVboWall;
-
-    int             mProbeConfig;
-    Config*         mCurrentConfig;
-
-    Color           mLedColor;
-
-    gl::Texture     mGlobeTexture, mWallTexture;
 };
+
+int toRealIndex(int animIndex)
+{
+    if (animIndex == AnimConfig::kKinect)
+    {
+        return AnimConfig::kKinect + mKinectAnimIndex;
+    }
+    return animIndex;
+}
+
+void StateIdle::update(CiApp* host)
+{
+    float time = 0;
+    float duration = 60;
+    if (mCurrentAnim != -1)
+    {
+        time = mAnims[0][toRealIndex(mCurrentAnim)].getCurrentTime();
+        duration = mAnims[0][toRealIndex(mCurrentAnim)].getDuration();
+    }
+
+    if (DEBUG_MODE)
+    {
+        DEBUG_ANIM = constrain(DEBUG_ANIM, 0, AnimConfig::kKinect);
+        ANIMATION = DEBUG_ANIM;
+        mRemainingLoopForAnim = 1;
+
+        if (time >= duration - FLT_EPSILON)
+        {
+            mCurrentAnim = -1;  // manually invalidate
+        }
+    }
+    else
+    {
+        int counter = 0;
+        while (time >= duration - FLT_EPSILON || mRemainingLoopForAnim <= 0)
+        {
+            if (mRemainingLoopForAnim > 1)
+            {
+                mCurrentAnim = -1;  // manually invalidate
+                mRemainingLoopForAnim--;
+            }
+            else
+            {
+                time = 0; // to make the first condition of while loop pass
+                counter++;
+                ANIMATION = (ANIMATION + 1) % AnimConfig::kKinect;
+                mRemainingLoopForAnim = mCurrentConfig->animConfigs[ANIMATION].loopCount;
+            }
+        }
+    }
+}
+
+void StateFadeOut::enter(CiApp* host)
+{
+    console() << "FadeOut" << endl;
+}
+
+void StateFadeOut::update(CiApp* host)
+{
+    mGlobalAlpha *= FADE_OUT_MULTIPLIER;
+    if (mGlobalAlpha <= 0.01f)
+    {
+        host->changeToState(sFadeOutNextState);
+    }
+}
+
+void StateInteractive::update(CiApp* host)
+{
+    float time = mAnims[0][toRealIndex(mCurrentAnim)].getCurrentTime();
+    float duration = mAnims[0][toRealIndex(mCurrentAnim)].getDuration();
+
+    if (time >= duration - FLT_EPSILON || mGlobalAlpha == 0.0f)
+    {
+        mGlobalAlpha = 0.0f;
+        if (getElapsedSeconds() - mLastKinectMsgSeconds > KINECT_OUTOF_SECONDS)
+        {
+            host->changeToState(StateIdle::getSingleton());
+        }
+    }
+}
 
 CINDER_APP_BASIC(CiApp, RendererGl)
