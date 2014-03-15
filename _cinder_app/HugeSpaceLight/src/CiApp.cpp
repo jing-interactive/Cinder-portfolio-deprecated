@@ -71,6 +71,8 @@ fs::directory_iterator kEndIt;
 
 static void updateTextureFromSurface(gl::Texture& tex, const Surface& surf)
 {
+    if (!surf) return;
+
     if (tex && surf.getSize() == tex.getSize())
         tex.update(surf);
     else
@@ -102,12 +104,22 @@ struct AnimConfig
         float value = 0;
         if (lightValue2 != 0)
         {
-            const float range = math<float>::max(lightValue2 - lightValue, 0.1f);
-            int k = mRandomColorIndex / range;
-            value = (mRandomColorIndex - k * range) / range;
-            if (k % 2 == 1)
+            float lv2 = lightValue2;
+            float lv = lightValue;
+            if (lv2 < lv)
             {
-                value = 1.0f - value;
+                std::swap<float>(lv, lv2);
+            }
+            const float range = math<float>::max(lv2 - lv, 0.001f);
+            int k = mRandomColorIndex / range;
+            value = (mRandomColorIndex - k * range) * range;
+            if (k % 2 == 0)
+            {
+                value = lv + value;
+            }
+            else
+            {
+                value = lv2 - value;
             }
         }
         else
@@ -524,8 +536,8 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
                     {
                         if (mCurrentAnim != -1)
                         {
+                            mAnims[i][toRealIndex(mCurrentAnim)].seekToFrame(0);
                             mAnims[i][toRealIndex(mCurrentAnim)].stop();
-                            mAnims[i][toRealIndex(mCurrentAnim)].seekToStart();
                         }
                     }
                 }
@@ -540,7 +552,7 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
 
                     for (int k=0; k<2; k++)
                     {
-                        mAnims[k][toRealIndex(mCurrentAnim)].seekToStart();
+                        mAnims[k][toRealIndex(mCurrentAnim)].seekToFrame(0);
                         mAnims[k][toRealIndex(mCurrentAnim)].play();
 
                         while (!mAnims[k][toRealIndex(mCurrentAnim)].checkNewFrame())
@@ -693,9 +705,10 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
             {
                 if (mCurrentAnim != -1)
                 {
+                    mAnims[i][toRealIndex(mCurrentAnim)].seekToFrame(0);
                     mAnims[i][toRealIndex(mCurrentAnim)].stop();
-                    mAnims[i][toRealIndex(mCurrentAnim)].seekToStart();
                 }
+                mAnims[i][toRealIndex(ANIMATION)].seekToFrame(0);
                 mAnims[i][toRealIndex(ANIMATION)].play();
 
                 while (!mAnims[i][toRealIndex(ANIMATION)].checkNewFrame())
@@ -772,15 +785,18 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
             gl::color(ColorA(mLedColor, led.value * mGlobalAlpha));
             gl::drawPoint(Vec2i(GLOBE_X, GLOBE_Y) + (kGlobePhysicsSize - led.pos2d));
         }
+        gl::disableAlphaBlending();
 
-        gl::color(ColorA(mLedColor, mGlobalAlpha));
+        gl::color(Color(mLedColor * mGlobalAlpha));
 
-        if (mCurrentAnim != -1 && mGlobalAlpha == 1)
+        if (mCurrentAnim != -1 && mGlobalAlpha != 0)
         {
-            updateTextureFromSurface(mWallTexture, mAnims[1][toRealIndex(mCurrentAnim)].getSurface());
+            if (mAnims[1][toRealIndex(mCurrentAnim)].checkNewFrame())
+            {
+                updateTextureFromSurface(mWallTexture, mAnims[1][toRealIndex(mCurrentAnim)].getSurface());
+            }
             gl::draw(mWallTexture, Rectf(WALL_X, WALL_Y, WALL_X + kWallPhysicsSize.x, WALL_Y + kWallPhysicsSize.y));
         }
-        gl::disableAlphaBlending();
     }
 
     void draw()
@@ -873,8 +889,6 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
 
             if (mCurrentAnim != -1 && mGlobalAlpha == 1)
             {
-                // TODO: state??
-                // wall
                 updateTextureFromSurface(mWallTexture, mAnims[1][toRealIndex(mCurrentAnim)].getSurface());
                 mWallTexture.enableAndBind();
                 gl::draw(mVboWall);
