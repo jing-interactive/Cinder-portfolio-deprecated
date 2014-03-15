@@ -527,41 +527,39 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
             float speed = 0;
             if (mGestures[i].isDetected(KINECT_DISTANCE, &speed))
             {
-                float time = mAnims[0][toRealIndex(ANIMATION)].getCurrentTime();
-                float duration = mAnims[0][toRealIndex(ANIMATION)].getDuration();
+                float time = mAnims[0][toRealIndex(AnimConfig::kKinect)].getCurrentTime();
+                float duration = mAnims[0][toRealIndex(AnimConfig::kKinect)].getDuration();
 
-                if (mCurrentAnim != AnimConfig::kKinect)
+                if (mCurrentAnim != -1)
                 {
                     for (int k=0; k<2; k++)
                     {
-                        if (mCurrentAnim != -1)
-                        {
-                            mAnims[i][toRealIndex(mCurrentAnim)].seekToFrame(0);
-                            mAnims[i][toRealIndex(mCurrentAnim)].stop();
-                        }
+                        mAnims[i][toRealIndex(mCurrentAnim)].seekToStart();
+                        mAnims[i][toRealIndex(mCurrentAnim)].getSurface();
                     }
                 }
 
-                if (mCurrentAnim != AnimConfig::kKinect || time >= duration - FLT_EPSILON)
+                if (mCurrentAnim != AnimConfig::kKinect || // idle -> interactive
+                    time >= duration - FLT_EPSILON) // interactive.end -> interactive.start
                 {
                     mCurrentAnim = ANIMATION = AnimConfig::kKinect; // HACK
                     mRemainingLoopForAnim = 0; // refer to updateAnim()
                     mPlayrate = speed * KINECT_MOVIE_SPEED;
-                    // TODO:
                     mKinectAnimIndex = rand() % 3;
 
                     for (int k=0; k<2; k++)
                     {
-                        mAnims[k][toRealIndex(mCurrentAnim)].seekToFrame(0);
+                        mAnims[k][toRealIndex(mCurrentAnim)].seekToStart();
                         mAnims[k][toRealIndex(mCurrentAnim)].play();
 
                         while (!mAnims[k][toRealIndex(mCurrentAnim)].checkNewFrame())
                         {
                             sleep(30);
                         }
+                        mAnims[k][toRealIndex(mCurrentAnim)].getSurface();
                     }
+                    mGlobalAlpha = 1.0f;
                 }
-                mGlobalAlpha = 1.0f;
 
                 console() << "Hit " << i << " speed " << speed << endl;
             }
@@ -705,16 +703,18 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
             {
                 if (mCurrentAnim != -1)
                 {
-                    mAnims[i][toRealIndex(mCurrentAnim)].seekToFrame(0);
-                    mAnims[i][toRealIndex(mCurrentAnim)].stop();
+                    mAnims[i][toRealIndex(mCurrentAnim)].seekToStart();
+                    mAnims[i][toRealIndex(mCurrentAnim)].getSurface();
                 }
-                mAnims[i][toRealIndex(ANIMATION)].seekToFrame(0);
+
+                mAnims[i][toRealIndex(ANIMATION)].seekToStart();
                 mAnims[i][toRealIndex(ANIMATION)].play();
 
                 while (!mAnims[i][toRealIndex(ANIMATION)].checkNewFrame())
                 {
                     sleep(30);
                 }
+                mAnims[i][toRealIndex(ANIMATION)].getSurface();
             }
             mCurrentAnim = ANIMATION;
         }
@@ -741,7 +741,6 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
         updateSM();
 
         updateAnim();
-
 
         const Surface* pSurface = &mAnims[0][toRealIndex(mCurrentAnim)].getSurface();
 
