@@ -61,9 +61,12 @@ int             mCurrentHour;
 float           mGlobalAlpha = 1; // for fade-in / fade-out
 float           mLastKinectMsgSeconds;
 
-int mPrevAnim = 0;
+Surface         mKinectSurfaces[2];
 
-static int toRealIndex(int animIndex);
+Surface* pWallSurface;
+Surface* pGlobeSurface;
+
+int mPrevAnim = 0;
 
 struct CiApp;
 
@@ -202,7 +205,8 @@ CameraPersp     mCamera;
 
 vector<qtime::MovieSurface>    mAnims[2];
 
-vector<qtime::MovieSurface>    mKinectAnims;
+const int kKinectMovieCount = 10;
+qtime::MovieSurface    mKinectAnims[2][kKinectMovieCount];
 
 int             mCurrentAnim;
 int             ANIMATION;
@@ -215,8 +219,6 @@ struct Config*         mCurrentConfig;
 Color           mLedColor;
 
 gl::Texture     mGlobeTexture, mWallTexture;
-
-int mKinectAnimIndex;
 
 struct StateIdle : public State<CiApp>
 {
@@ -255,7 +257,7 @@ struct StateInteractive : public State<CiApp>
     {
         console() << "interactive" << endl;
         mPrevAnim = mCurrentAnim;
-        
+
         //    mRemainingLoopForAnim = mCurrentConfig->animConfigs[ANIMATION].loopCount;
 
     }
@@ -351,10 +353,12 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
         mGestures[0] = GestureDetector(-Vec3f::zAxis());
         mGestures[1] = GestureDetector(-Vec3f::zAxis());
 
+        mKinectSurfaces[0] = Surface(1028, 124, false, SurfaceChannelOrder::RGB);
+        mKinectSurfaces[1] = Surface(126, 336, false, SurfaceChannelOrder::RGB);
+
         mHour = -1;
         mProbeConfig = -1;
         mCurrentConfig = NULL;
-        mKinectAnimIndex = 0;
 
         mCurrentCamDistance = -1;
 
@@ -382,6 +386,25 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
                     {
                         console() << e.what() << endl;
                     }
+                }
+            }
+
+            const char* kKinectAnimFiles[] = 
+            {
+                "ani_globe11.mp4",
+                "ani_wallBlank11.mp4"
+            };
+
+            for (int k=0; k<kKinectMovieCount; k++)
+            {
+                try
+                {
+                    mKinectAnims[id][k] = qtime::MovieSurface(getAssetPath(kKinectAnimFiles[id]));
+                    mKinectAnims[id][k].setLoop(false);
+                }
+                catch (const exception& e)
+                {
+                    console() << e.what() << endl;
                 }
             }
         }
@@ -525,48 +548,49 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
         {
             mGestures[i].update(poses[0], poses[i + 1]);
             float speed = 0;
-            if (mGestures[i].isDetected(KINECT_DISTANCE, &speed))
+            if (!mGestures[i].isDetected(KINECT_DISTANCE, &speed))
             {
-                float time = mAnims[0][toRealIndex(AnimConfig::kKinect)].getCurrentTime();
-                float duration = mAnims[0][toRealIndex(AnimConfig::kKinect)].getDuration();
+                continue;
+            }
 
-                if (mCurrentAnim != -1)
+            if (mCurrentAnim != AnimConfig::kKinect && mCurrentAnim != -1)
+            {
+                for (int k=0; k<2; k++)
                 {
-                    for (int k=0; k<2; k++)
-                    {
-                        mAnims[i][toRealIndex(mCurrentAnim)].seekToStart();
-                        mAnims[i][toRealIndex(mCurrentAnim)].getSurface();
-                    }
+                    mAnims[i][mCurrentAnim].seekToStart();
+                    mAnims[i][mCurrentAnim].getSurface();
                 }
+            }
 
-                if (mCurrentAnim != AnimConfig::kKinect || // idle -> interactive
-                    time >= duration - FLT_EPSILON) // interactive.end -> interactive.start
+            for (int mov=0; mov<kKinectMovieCount; mov++)
+            {
+                float time = mKinectAnims[0][mov].getCurrentTime();
+                float duration = mKinectAnims[0][mov].getDuration();
+
+                if (time == 0 || time == duration) // interactive.end -> interactive.start
                 {
                     mCurrentAnim = ANIMATION = AnimConfig::kKinect; // HACK
                     mRemainingLoopForAnim = 0; // refer to updateAnim()
-                    mPlayrate = speed * KINECT_MOVIE_SPEED;
-                    mKinectAnimIndex = rand() % 3;
 
                     for (int k=0; k<2; k++)
                     {
-                        mAnims[k][toRealIndex(mCurrentAnim)].seekToStart();
-                        mAnims[k][toRealIndex(mCurrentAnim)].play();
+                        mKinectAnims[k][mov].seekToStart();
+                        mKinectAnims[k][mov].play();
+                        mKinectAnims[k][mov].setRate(speed * KINECT_MOVIE_SPEED);
 
-                        while (!mAnims[k][toRealIndex(mCurrentAnim)].checkNewFrame())
+                        while (!mKinectAnims[k][mov].checkNewFrame())
                         {
                             sleep(30);
                         }
-                        mAnims[k][toRealIndex(mCurrentAnim)].getSurface();
+                        //mKinectAnims[k][mov].getSurface();
                     }
                     mGlobalAlpha = 1.0f;
+                    console() << "Hit " << i << " speed " << speed << "mov: " << mov << endl;
+                    break;
                 }
-
-                console() << "Hit " << i << " speed " << speed << endl;
             }
         }
     }
-
-    float mPlayrate;
 
     void onOscPadMessage(const osc::Message* msg)
     {
@@ -696,27 +720,33 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
 
     void updateAnim()
     {
-        // calculate ANIMATION
-        if (mCurrentAnim != ANIMATION)
+        if (mCurrentState == StateInteractive::getSingleton())
         {
-            for (size_t i=0; i<2; i++)
+
+        }
+        else
+        {
+            if (mCurrentAnim != ANIMATION)
             {
-                if (mCurrentAnim != -1)
+                for (size_t i=0; i<2; i++)
                 {
-                    mAnims[i][toRealIndex(mCurrentAnim)].seekToStart();
-                    mAnims[i][toRealIndex(mCurrentAnim)].getSurface();
-                }
+                    if (mCurrentAnim != -1)
+                    {
+                        mAnims[i][mCurrentAnim].seekToStart();
+                        mAnims[i][mCurrentAnim].getSurface();
+                    }
 
-                mAnims[i][toRealIndex(ANIMATION)].seekToStart();
-                mAnims[i][toRealIndex(ANIMATION)].play();
+                    mAnims[i][ANIMATION].seekToStart();
+                    mAnims[i][ANIMATION].play();
 
-                while (!mAnims[i][toRealIndex(ANIMATION)].checkNewFrame())
-                {
-                    sleep(30);
+                    while (!mAnims[i][ANIMATION].checkNewFrame())
+                    {
+                        sleep(30);
+                    }
+                    mAnims[i][ANIMATION].getSurface();
                 }
-                mAnims[i][toRealIndex(ANIMATION)].getSurface();
+                mCurrentAnim = ANIMATION;
             }
-            mCurrentAnim = ANIMATION;
         }
 
         mLedColor = mCurrentConfig->animConfigs[mCurrentAnim].getColor();
@@ -742,12 +772,26 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
 
         updateAnim();
 
-        const Surface* pSurface = &mAnims[0][toRealIndex(mCurrentAnim)].getSurface();
+        if (mCurrentAnim == -1 || mGlobalAlpha == 0) return;
 
-        if (pSurface == NULL || *pSurface == NULL) return;
+        if (mCurrentAnim == AnimConfig::kKinect)
+        {
+            pGlobeSurface = &mKinectSurfaces[0];
+            pWallSurface = &mKinectSurfaces[1];
+        }
+        else
+        {
+            pGlobeSurface = &mAnims[0][mCurrentAnim].getSurface();
+            pWallSurface = &mAnims[1][mCurrentAnim].getSurface();
+        }
 
-        float kW = pSurface->getWidth() / 1029.0f;
-        float kH = pSurface->getHeight() / 124.0f;
+        updateTextureFromSurface(mGlobeTexture, *pGlobeSurface);
+        updateTextureFromSurface(mWallTexture, *pWallSurface);
+
+        if (pGlobeSurface == NULL || !*pGlobeSurface) return;
+
+        float kW = pGlobeSurface->getWidth() / 1029.0f;
+        float kH = pGlobeSurface->getHeight() / 124.0f;
         BOOST_FOREACH(Led& led, mLeds)
         {
             // online solver
@@ -762,9 +806,9 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
             float cy = 0.031372549019608f * led.pos.x / REAL_TO_VIRTUAL - 5.686274509803920f;
 
             Vec2i sample2D(kW * cx, kH * cy);
-            uint8_t value = *pSurface->getData(sample2D);
+            uint8_t value = *pGlobeSurface->getData(sample2D);
 
-            led.pos2d = sample2D * kGlobePhysicsSize / pSurface->getSize();
+            led.pos2d = sample2D * kGlobePhysicsSize / pGlobeSurface->getSize();
             led.value = value / 255.f;
         }
 
@@ -790,10 +834,6 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
 
         if (mCurrentAnim != -1 && mGlobalAlpha != 0)
         {
-            if (mAnims[1][toRealIndex(mCurrentAnim)].checkNewFrame())
-            {
-                updateTextureFromSurface(mWallTexture, mAnims[1][toRealIndex(mCurrentAnim)].getSurface());
-            }
             gl::draw(mWallTexture, Rectf(WALL_X, WALL_Y, WALL_X + kWallPhysicsSize.x, WALL_Y + kWallPhysicsSize.y));
         }
     }
@@ -829,13 +869,12 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
 
     void draw2D() 
     {
-        if (mCurrentAnim != -1 && mGlobalAlpha == 1)
+        if (mCurrentAnim != -1 && mGlobalAlpha != 0)
         {
             const float kOffY = REFERENCE_OFFSET_Y;
             const Rectf kRefGlobeArea(28, 687 + kOffY, 28 + 636, 687 + 90 + kOffY);
             const Rectf kRefWallArea(689, 631 + kOffY, 689 + 84, 631 + 209 + kOffY);
 
-            updateTextureFromSurface(mGlobeTexture, mAnims[0][toRealIndex(mCurrentAnim)].getSurface());
             gl::draw(mGlobeTexture, kRefGlobeArea);
             gl::draw(mWallTexture, kRefWallArea);
         }
@@ -886,9 +925,8 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
             }
             gl::disableAlphaBlending();
 
-            if (mCurrentAnim != -1 && mGlobalAlpha == 1)
+            if (mCurrentAnim != -1 && mGlobalAlpha != 0)
             {
-                updateTextureFromSurface(mWallTexture, mAnims[1][toRealIndex(mCurrentAnim)].getSurface());
                 mWallTexture.enableAndBind();
                 gl::draw(mVboWall);
                 mWallTexture.disable();
@@ -898,23 +936,14 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
     }
 };
 
-int toRealIndex(int animIndex)
-{
-    if (animIndex == AnimConfig::kKinect)
-    {
-        return AnimConfig::kKinect + mKinectAnimIndex;
-    }
-    return animIndex;
-}
-
 void StateIdle::update(CiApp* host)
 {
     float time = 0;
     float duration = 60;
     if (mCurrentAnim != -1)
     {
-        time = mAnims[0][toRealIndex(mCurrentAnim)].getCurrentTime();
-        duration = mAnims[0][toRealIndex(mCurrentAnim)].getDuration();
+        time = mAnims[0][mCurrentAnim].getCurrentTime();
+        duration = mAnims[0][mCurrentAnim].getDuration();
     }
 
     if (DEBUG_MODE)
@@ -965,12 +994,58 @@ void StateFadeOut::update(CiApp* host)
 
 void StateInteractive::update(CiApp* host)
 {
-    float time = mAnims[0][toRealIndex(mCurrentAnim)].getCurrentTime();
-    float duration = mAnims[0][toRealIndex(mCurrentAnim)].getDuration();
+    int aliveMovieCount = 0;
 
-    if (time >= duration - FLT_EPSILON || mGlobalAlpha == 0.0f)
+    for (int id=0; id<2; id++)
     {
-        mGlobalAlpha = 0.0f;
+        ip::fill(&mKinectSurfaces[id], Color::black());
+    }
+
+    for (int mov=0; mov<kKinectMovieCount; mov++)
+    {
+        float time = mKinectAnims[0][mov].getCurrentTime();
+        float duration = mKinectAnims[0][mov].getDuration();
+
+        if (time == 0 || time >= duration - FLT_EPSILON)
+        {
+            continue;
+        }
+
+        aliveMovieCount++;
+
+        for (int id=0; id<2; id++)
+        {
+            const Surface src = mKinectAnims[id][mov].getSurface();
+            if (!src)
+            {
+                continue;
+            }
+            //mKinectSurfaces[id].copyFrom(src, src.getBounds());
+
+            for (int y=0; y<mKinectAnims[id][mov].getHeight(); y++)
+            {
+                for (int x=0; x<mKinectAnims[id][mov].getWidth(); x++)
+                {
+                    const uint8_t* pSrcRGB = src.getData(Vec2i(x, y));
+                    uint8_t* pDstRGB = mKinectSurfaces[id].getData(Vec2i(x, y));
+                    for (int ch=0; ch<3; ch++)
+                    {
+                        if ((int)pDstRGB[ch] + pSrcRGB[ch] > 255)
+                        {
+                            pDstRGB[ch] = 255;
+                        }
+                        else
+                        {
+                            pDstRGB[ch] += pSrcRGB[ch];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (aliveMovieCount == 0)
+    {
         if (getElapsedSeconds() - mLastKinectMsgSeconds > KINECT_OUTOF_SECONDS)
         {
             host->changeToState(StateIdle::getSingleton());
