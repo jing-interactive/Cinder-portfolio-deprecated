@@ -221,6 +221,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\..\_common\SequenceAnim.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\..\_common\StateMachine.h"
 			>
 		</File>
