@@ -19,6 +19,7 @@ private:
 
     ci::Vec3f mStartPos;
     ci::Vec3f mEndPos;
+    float mLastMessageSecond;
 
     bool mIsTracking;
 };

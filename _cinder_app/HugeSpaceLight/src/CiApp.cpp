@@ -184,7 +184,7 @@ osc::Listener   mPadListener;
 osc::Listener   mKinectListener;
 osc::Sender     mPadSender;
 
-GestureDetector mGestures[2];
+GestureDetector mGestures[24]; // TODO:
 
 size_t gIdCount = 0;
 struct Led
@@ -266,7 +266,7 @@ struct StateIdle : public State<CiApp>
 
     void enter(CiApp* host)
     {
-        timeline().apply(&mGlobalAlpha, 1.0f, 2.0f);
+        timeline().apply(&mGlobalAlpha, 1.0f, 4.0f);
         console() << "StateIdle: " << mCurrentAnim << endl;
     }
 
@@ -298,7 +298,7 @@ struct StateInteractive : public State<CiApp>
 
     void exit(CiApp* host)
     {
-        mCurrentAnim = -1;
+        //mCurrentAnim = -1;
         mGlobalAlpha = MIN_GLOBAL_ALPHA;
     }
 };
@@ -382,14 +382,17 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
         setupConfigUI(&mMainGUI);
         mMainGUI.setPosition(Vec2i(10, 100));
 
-        mGestures[0] = GestureDetector(-Vec3f::zAxis());
-        mGestures[1] = GestureDetector(-Vec3f::zAxis());
+        for (int i=0; i<24; i++)
+        {
+            mGestures[i] = GestureDetector(-Vec3f::zAxis());
+        }
 
         mHour = -1;
         mProbeConfig = -1;
         mCurrentConfig = NULL;
 
         mCurrentCamDistance = -1;
+        mCurrentAnim = -1;
 
         for (int id=0; id<2; id++)
         {
@@ -427,7 +430,14 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
             {
                 BOOST_FOREACH(string file, am::files(kKinectAnimFiles[k*2 + id]))
                 {
-                    mKinectAnimSequences[k].seqs[id].push_back(loadImage(file));
+                    try
+                    {
+                        Channel surf = loadImage(file);
+                        mKinectAnimSequences[k].seqs[id].push_back(surf);
+                    }
+                    catch (...)
+                    {
+                    }
                 }
             }
             mKinectSurfs[id] = Channel(mKinectAnimSequences[0].seqs[id][0].getWidth(), mKinectAnimSequences[0].seqs[id][0].getHeight());
@@ -547,9 +557,11 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
         const string& addr = msg->getAddress();
         if (addr != "/kinect") return;
 
-        const int SHOULDER_CENTER = 3;
-        const int HAND_LEFT = 8;
-        const int HAND_RIGHT = 12;
+        int PLAYER_ID = msg->getArgAsInt32(1);
+
+        const int SHOULDER_CENTER = 4;
+        const int HAND_LEFT = 9;
+        const int HAND_RIGHT = 13;
         const int ids[3] = {SHOULDER_CENTER, HAND_LEFT, HAND_RIGHT};
         Vec3f poses[3];
 
@@ -578,20 +590,29 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
             return;
         }
 
-        float wavingSpeed = 0;
-        for (int i=0; i<2; i++)
-        {
-            mGestures[i].update(poses[0], poses[i + 1]);
-            if (mGestures[i].isDetected(KINECT_DISTANCE, &wavingSpeed))
-            {
-                break;
-            }
-        }
-
-        if (wavingSpeed == 0)
+        static float sLastHitSeconds = getElapsedSeconds();
+        if (getElapsedSeconds() - sLastHitSeconds < 2.0f)
         {
             return;
         }
+
+        float wavingSpeed = 0;
+        bool isDetected = false;
+        for (int i=0; i<2; i++)
+        {
+            mGestures[PLAYER_ID*2+i].update(poses[0], poses[i + 1]);
+            if (mGestures[PLAYER_ID*2+i].isDetected(KINECT_DISTANCE, &wavingSpeed))
+            {
+                isDetected = true;
+            }
+        }
+
+        if (!isDetected)
+        {
+            return;
+        }
+
+        sLastHitSeconds = getElapsedSeconds();
 
         mKinectAnims.push_back(KinectAnim(wavingSpeed));
         console() << "Hit " << " speed " << wavingSpeed << endl;
@@ -675,17 +696,21 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
 
     void updateProgram()
     {
+        mCurrentHour = getHour();
+
         // current program
         if (mHour != mCurrentHour)
         {
             mHour = mCurrentHour;
-            ANIMATION = 0;
-            mCurrentAnim = -1;
+            //ANIMATION = 0;
+            //mCurrentAnim = -1;
             if (mConfigIds[mHour] != -1)
             {
                 int progId = constrain(mConfigIds[mHour], 0, Config::kCount - 1);
                 mCurrentConfig = &mConfigs[progId];
-                mElapsedLoopCount = 0;
+                mElapsedLoopCount = mCurrentConfig->animConfigs[ANIMATION].loopCount - 1;
+                //timeline().apply(&mGlobalAlpha, 0.0f, 1.0f);
+                //timeline().appendTo(&mGlobalAlpha, 1.0f, 1.0f).delay(1.0f);
             }
             else
             {
@@ -722,8 +747,6 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
     void update()
     {
         mRandomColorIndex += RANDOM_COLOR_SPEED;
-
-        mCurrentHour = getHour();
 
         updateProgram();
         if (mCurrentConfig == NULL)
@@ -832,10 +855,10 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
         }
         else if (WORLD_VISIBLE == 2)
         {
-            gl::color(Color(0, 1, 0));
+            gl::color(FULL_COLOR);
             gl::setMatricesWindow(getWindowSize());
-            gl::drawSolidRect(Rectf(GLOBE_X, GLOBE_Y, GLOBE_X + kGlobePhysicsSize.x, GLOBE_Y + kGlobePhysicsSize.y));
-            gl::drawSolidRect(Rectf(WALL_X, WALL_Y, WALL_X + kWallPhysicsSize.x, WALL_Y + kWallPhysicsSize.y));
+            gl::drawSolidRect(Rectf(GLOBE_X, GLOBE_Y, GLOBE_X + kGlobePhysicsSize.x, GLOBE_Y + kGlobePhysicsSize.y + 1));
+            gl::drawSolidRect(Rectf(WALL_X, WALL_Y, WALL_X + kWallPhysicsSize.x, WALL_Y + kWallPhysicsSize.y + 1));
         }
 
         if (GUI_VISIBLE)
@@ -908,7 +931,7 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
             gl::enableDepthWrite();
             BOOST_FOREACH(const Led& led, mLeds)
             {
-                gl::color(ColorA(mLedColor, constrain(led.value, SPHERE_MIN_ALPHA, 1.0f) * mGlobalAlpha.value()));
+                gl::color(ColorA(mLedColor, constrain(led.value, SPHERE_MIN_ALPHA, 1.0f) * mGlobalAlpha));
                 gl::drawSphere(led.pos, SPHERE_RADIUS);
             }
             gl::disableAlphaBlending();
@@ -988,7 +1011,7 @@ void StateIdle::update(CiApp* host)
 void StateFadeOut::enter(CiApp* host)
 {
     console() << "StateFadeOut: " << mCurrentAnim << endl;
-    timeline().apply(&mGlobalAlpha, 1.0f, MIN_GLOBAL_ALPHA, FADE_OUT_SECONDS);
+    timeline().apply(&mGlobalAlpha, MIN_GLOBAL_ALPHA, FADE_OUT_SECONDS);
 }
 
 void StateFadeOut::update(CiApp* host)
