@@ -652,6 +652,7 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
                 }
                 mConfigIds[hour] = prog;
             }
+            writeProgramSettings();
             return;
         }
 
@@ -668,6 +669,7 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
                 animConfig.lightValue = msg->getArgAsFloat(idx++);
                 animConfig.lightValue2 = msg->getArgAsFloat(idx++);
             }
+            writeProgramSettings();
             return;
         }
 
