@@ -60,6 +60,9 @@ using ci::uint8_t;
 class Bone
 {
 public:
+    Bone(){}
+    Bone(const Vector4& position, const _NUI_SKELETON_BONE_ORIENTATION& bone);
+
 	//! Returns rotation of the bone relative to camera coordinates.
 	const ci::Quatf&		getAbsoluteRotation() const;
 	//! Returns rotation matrix of the bone relative to camera coordinates.
@@ -75,7 +78,6 @@ public:
 	//! Returns index of start joint.
 	NUI_SKELETON_POSITION_INDEX     getStartJoint() const;
 private:
-	Bone(const Vector4& position, const _NUI_SKELETON_BONE_ORIENTATION& bone);
 	ci::Matrix44f	mAbsRotMat;
 	ci::Quatf		mAbsRotQuat;
 	NUI_SKELETON_POSITION_INDEX		mJointStart;
@@ -83,8 +85,6 @@ private:
 	ci::Vec3f		mPosition;
 	ci::Matrix44f	mRotMat;
 	ci::Quatf		mRotQuat;
-
-	friend class	Device;
 };
 typedef std::vector<Bone>	Skeleton;
 
@@ -245,12 +245,6 @@ protected:
 
     typedef ci::ColorT<uint16_t>	Color16u;
 
-	struct Point
-	{
-		long						x;
-		long						y;
-	};
-
 	void							init(bool reset = false);
 
 	bool							mCapture;
@@ -287,7 +281,6 @@ protected:
 	double							mTiltRequestTime;
 
 	bool							mIsSkeletonDevice;
-	Point							mPoints[ NUI_SKELETON_POSITION_COUNT ];
 
 	long							openColorStream();
 	long							openDepthStream();

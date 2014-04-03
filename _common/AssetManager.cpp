@@ -111,7 +111,9 @@ namespace am
         {
             if (fs::is_regular_file(*it) && it->path().extension() != ".db")
             {
+#ifdef _DEBUG
                 console() << it->path() << endl;
+#endif
                 files.push_back(it->path().generic_string());
             }
         }
@@ -121,25 +123,5 @@ namespace am
     vector<string> files(const string& relativeFolderName)
     {
         return getAssetResource<vector<string>>(relativeFolderName, loadFiles);
-    }
-
-    static qtime::MovieSurface loadMovieSurface(const string& absoluteName, const string&)
-    {
-        return qtime::MovieSurface(absoluteName);
-    }
-
-    qtime::MovieSurface& movieSurface(const std::string& relativeName)
-    {
-        return getAssetResource<qtime::MovieSurface>(relativeName, loadMovieSurface);
-    }
-
-    static qtime::MovieGl loadMovieGl(const string& absoluteName, const string&)
-    {
-        return qtime::MovieGl(absoluteName);
-    }
-
-    qtime::MovieGl& movieGl(const std::string& relativeName)
-    {
-        return getAssetResource<qtime::MovieGl>(relativeName, loadMovieGl);
     }
 }

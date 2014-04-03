@@ -166,7 +166,7 @@ namespace
 
 int getConfigUIHeight()
 {
-    int height = kPODItemHeight * 2; // top + bottom
+    int height = kPODItemHeight * 4; // top + bottom
 
 #define GROUP_DEF(grp)                  height += kPODItemHeight;
 #define ITEM_DEF(type, var, default)    height += getItemHeight(var);

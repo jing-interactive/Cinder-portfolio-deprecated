@@ -300,6 +300,10 @@ namespace nui
         NuiSetDeviceStatusCallback(&nui::deviceStatus, this);
         init();
         mSkeletons.resize(NUI_SKELETON_COUNT);
+        for (int i=0; i<NUI_SKELETON_COUNT; i++)
+        {
+            mSkeletons[i].resize(NUI_SKELETON_POSITION_COUNT);
+        }
 
         //App::get()->getSignalUpdate().connect(boost::bind(&Device::update, this));
     }
@@ -714,10 +718,12 @@ namespace nui
                         bool foundSkeleton = false;
                         for (int32_t i = 0; i < NUI_SKELETON_COUNT; ++i) {
 
-                            mSkeletons.at(i).clear();
+                            //mSkeletons.at(i).clear();
 
                             NUI_SKELETON_TRACKING_STATE trackingState = frameSkeleton.SkeletonData[ i ].eTrackingState;
                             if (trackingState == NUI_SKELETON_TRACKED || trackingState == NUI_SKELETON_POSITION_ONLY) {
+
+                                mNewSkeletons = true;
 
                                 if (!foundSkeleton) {
                                     NUI_TRANSFORM_SMOOTH_PARAMETERS transform = kTransformParams[ mTransform ];
@@ -743,13 +749,11 @@ namespace nui
 
                                 for (int32_t j = 0; j < (int32_t)NUI_SKELETON_POSITION_COUNT; ++j) {
                                     Bone bone(*((frameSkeleton.SkeletonData + i)->SkeletonPositions + j), *(bones + j));
-                                    (mSkeletons.begin() + i)->push_back(bone);
+                                    mSkeletons[i][j] = bone;
+                                    //(mSkeletons.begin() + i)->push_back(bone);
                                 }
-
                             }
-
                         }
-                        mNewSkeletons = true;
                     }
 
                     mFrameRate	= (float)(1.0 / (time - mReadTime));
@@ -982,10 +986,7 @@ namespace nui
                 mIsSkeletonDevice = true;
             }
 
-            mSkeletons.clear();
-            for (int32_t i = 0; i < NUI_SKELETON_COUNT; ++i) {
-                mSkeletons.push_back(Skeleton());
-            }
+            //mSkeletons.resize(NUI_SKELETON_COUNT);
 
             // Start threads
             mCapture = true;

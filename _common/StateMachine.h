@@ -1,5 +1,36 @@
 #pragma once
 
+/* usage
+
+struct CiApp;
+
+struct StateIdle : public State<CiApp>
+{
+    GET_SINGLETON_IMPL(StateIdle);
+
+    void enter(CiApp* app);
+    void update(CiApp* host);
+    void draw(CiApp* host);
+};
+
+struct StatePlay : public State<CiApp>
+{
+    GET_SINGLETON_IMPL(StatePlay);
+
+    void enter(CiApp* app);
+    void update(CiApp* host);
+    void draw(CiApp* host);
+};
+
+struct CiApp : public AppBasic, StateMachine<CiApp>
+{
+    CiApp() : StateMachine<CiApp>(this)
+    {
+
+    }
+}
+*/
+
 template <typename ObjT>
 struct State
 {
@@ -24,7 +55,6 @@ struct StateMachine
     typedef typename State<ObjT>::Ref StateRef;
     StateRef mCurrentState;
     StateRef mPrevState;
-    StateRef mGlobalState;
 
     ObjT*   mHost;
 
@@ -33,18 +63,14 @@ struct StateMachine
         mHost = host;
     }
 
-    void updateIt()
+    void updateSM()
     {
-        if (mGlobalState)
-            mGlobalState->update(mHost);
         if (mCurrentState)
             mCurrentState->update(mHost);
     }
 
-    void drawIt()
+    void drawSM()
     {
-        if (mGlobalState)
-            mGlobalState->draw(mHost);
         if (mCurrentState)
             mCurrentState->draw(mHost);
     }
@@ -56,6 +82,9 @@ struct StateMachine
 
     void changeToState(const StateRef& newState)
     {
+        if (mCurrentState == newState)
+            return;
+
         if (mCurrentState)
         {
             mPrevState = mCurrentState;
