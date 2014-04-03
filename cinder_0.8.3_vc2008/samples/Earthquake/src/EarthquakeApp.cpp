@@ -136,15 +136,15 @@ void EarthquakeApp::keyDown( KeyEvent event )
 		mPov.adjustDist( 10.0f );
 	}
 	else if( event.getChar() == ' ' ) {
-		gl::TileRender tr( 5000, 5000 );
-		CameraPersp cam;
-		cam.lookAt( mPov.mEye, mPov.mCenter );
-		cam.setPerspective( 60.0f, tr.getImageAspectRatio(), 1, 20000 );
-		tr.setMatrices( cam );
-		while( tr.nextTile() ) {
-			draw();
-		}
-		writeImage( getHomeDirectory() / "output.png", tr.getSurface() );
+// 		gl::TileRender tr( 5000, 5000 );
+// 		CameraPersp cam;
+// 		cam.lookAt( mPov.mEye, mPov.mCenter );
+// 		cam.setPerspective( 60.0f, tr.getImageAspectRatio(), 1, 20000 );
+// 		tr.setMatrices( cam );
+// 		while( tr.nextTile() ) {
+// 			draw();
+// 		}
+// 		writeImage( getHomeDirectory() / "output.png", tr.getSurface() );
 	}
 }
 

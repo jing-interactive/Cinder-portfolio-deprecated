@@ -89,9 +89,13 @@ class Texture {
 	void			update( const Surface &surface, const Area &area );
 	//! Replaces the pixels of a texture with contents of \a channel. Expects \a channel's size to match the Texture's.
 	void			update( const Channel32f &channel );
-	//! Replaces the pixels of a texture with contents of \a channel. Expects \a area's size to match the Texture's.
-	void			update( const Channel8u &channel, const Area &area );
-	
+    //! Replaces the pixels of a texture with contents of \a channel. Expects \a area's size to match the Texture's.
+    void			update( const Channel32f &channel, const Area &area );
+    //! Replaces the pixels of a texture with contents of \a channel. Expects \a channel's size to match the Texture's.
+    void			update( const Channel8u &channel );
+    //! Replaces the pixels of a texture with contents of \a channel. Expects \a area's size to match the Texture's.
+    void			update( const Channel8u &channel, const Area &area );
+
 	//! the width of the texture in pixels
 	GLint			getWidth() const;
 	//! the height of the texture in pixels

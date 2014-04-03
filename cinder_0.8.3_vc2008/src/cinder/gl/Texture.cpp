@@ -471,13 +471,18 @@ void Texture::update( const Surface &surface, const Area &area )
 	glTexSubImage2D( mObj->mTarget, 0, area.getX1(), area.getY1(), area.getWidth(), area.getHeight(), dataFormat, type, surface.getData( area.getUL() ) );
 }
 
-void Texture::update( const Channel32f &channel )
+void Texture::update( const Channel32f &channel, const Area &area )
 {
 	if( ( channel.getWidth() != getWidth() ) || ( channel.getHeight() != getHeight() ) )
 		throw TextureDataExc( "Invalid Texture::update() channel dimensions" );
 
 	glBindTexture( mObj->mTarget, mObj->mTextureID );
-	glTexSubImage2D( mObj->mTarget, 0, 0, 0, getWidth(), getHeight(), GL_LUMINANCE, GL_FLOAT, channel.getData() );
+	glTexSubImage2D( mObj->mTarget, 0, area.getX1(), area.getY1(), area.getWidth(), area.getHeight(), GL_LUMINANCE, GL_FLOAT, channel.getData() );
+}
+
+void Texture::update( const Channel32f &channel)
+{
+    update(channel, getBounds());    
 }
 
 void Texture::update( const Channel8u &channel, const Area &area )
@@ -501,6 +506,11 @@ void Texture::update( const Channel8u &channel, const Area &area )
 	}
 	else
 		glTexSubImage2D( mObj->mTarget, 0, area.getX1(), area.getY1(), area.getWidth(), area.getHeight(), GL_LUMINANCE, GL_UNSIGNED_BYTE, channel.getData( area.getUL() ) );
+}
+
+void Texture::update( const Channel8u &channel)
+{
+    update(channel, getBounds());    
 }
 
 void Texture::SurfaceChannelOrderToDataFormatAndType( const SurfaceChannelOrder &sco, GLint *dataFormat, GLenum *type )
