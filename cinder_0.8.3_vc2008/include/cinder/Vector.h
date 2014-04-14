@@ -1291,7 +1291,7 @@ Vec2<T> toPolar( Vec2<T> car )
 		else theta = math<T>::atan( car.y / car.x );
 	}
 	else // car.x < 0
-		theta = (math<T>::atan( car.y / car.x ) + M_PI );
+		theta = (math<T>::atan( car.y / car.x ) + (T)M_PI );
 
 	return Vec2<T>( car.length(), theta );
 }
