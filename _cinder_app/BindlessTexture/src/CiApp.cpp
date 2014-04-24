@@ -31,21 +31,6 @@ struct CiApp : public AppBasic
         mParams = params::InterfaceGl("params", Vec2i(300, getConfigUIHeight()));
         setupConfigUI(&mParams);
 
-#if 0
-        shader.vertexShader(glsl(
-            attribute vec2 vertex;
-            varying vec2 coord;
-            void main() {
-                coord = vertex * 0.5 + 0.5;
-                gl_Position = vec4(vertex, 0.0, 1.0);
-            }
-        )).fragmentShader(glsl(
-            varying vec2 coord;
-            void main() {
-                gl_FragColor = vec4(coord, 0.0, 1.0);
-            }
-        )).link();
-#else
         shader.vertexShader(RAW_STRING(
             #version 400\n
 
@@ -58,15 +43,22 @@ struct CiApp : public AppBasic
             }
         )).fragmentShader(RAW_STRING(
             #version 400\n
+            #extension GL_NV_bindless_texture : require\n
 
+            uniform sampler2D diffuse;
             in vec2 coord;
             layout(location = 0) out vec4 fragColor;
 
             void main() {
-                fragColor = vec4(coord, 0.0, 1.0);
+                fragColor = texture(diffuse, coord.st);
             }
         )).link();
-#endif
+
+        mTexture = am::texture("body.JPG");
+        mTextureHandle = glGetTextureHandleNV(mTexture.getId());
+        glMakeTextureHandleResidentNV(mTextureHandle);
+        glProgramUniformHandleui64NV(shader.id, shader.uniform("diffuse"), mTextureHandle);
+
         quad << Vec2f(-1, -1) << Vec2f(1, -1) << Vec2f(-1, 1) << Vec2f(1, 1);
         quad.upload();
         layout.create(shader, quad).attribute<float>("vertex", 2).check();
@@ -78,11 +70,6 @@ struct CiApp : public AppBasic
         {
             quit();
         }
-    }
-
-    void update()
-    {
-    
     }
 
     void draw()
@@ -102,6 +89,9 @@ private:
     glplus::Shader shader;
     glplus::Buffer<Vec2f> quad;
     glplus::VAO layout;
+
+    gl::Texture mTexture;
+    GLuint64 mTextureHandle;
 };
 
 CINDER_APP_BASIC(CiApp, RendererGl)
