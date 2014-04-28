@@ -26,6 +26,8 @@
 #include <set>
 using namespace std;
 
+// HACK
+videoInput* gVideoInput;
 
 namespace cinder {
 
@@ -53,6 +55,7 @@ int							CaptureMgr::sTotalDevices = 0;
 CaptureMgr::CaptureMgr()
 {
 	mVideoInput = new videoInput;
+    gVideoInput = mVideoInput;
 	mVideoInput->setUseCallback( true );
 }
 
