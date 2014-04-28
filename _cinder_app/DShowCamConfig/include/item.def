@@ -1,0 +1,11 @@
+GROUP_DEF(Basic)
+ITEM_DEF(int, DEVICE_ID, 0)
+ITEM_DEF(int, Exposure, -5)
+ITEM_DEF(int, Gain, 160)
+ITEM_DEF(int, Brightness, 130)
+ITEM_DEF(int, Contrast, 130)
+ITEM_DEF(int, Saturation, 110)
+ITEM_DEF(int, WhiteBalance, 4000)
+ITEM_DEF(int, Focus, 16)
+
+
