@@ -43,6 +43,13 @@ void resetValues()
     Focus = 16;
 }
 
+enum Mode
+{
+    LoadMode,
+    SaveMode,
+    RunningMode,
+};
+
 struct CiApp : public AppBasic 
 {
     void prepareSettings(Settings *settings)
@@ -82,7 +89,22 @@ struct CiApp : public AppBasic
 
         mDeviceId = -1;
 
-        mIsOneShot = getArgs().size() > 1;
+        if (getArgs().size() > 1)
+        {
+            string str = getArgs()[1];
+            if (str == "load")
+            {
+                mMode = LoadMode;
+            }
+            else
+            {
+                mMode = SaveMode;
+            }
+        }
+        else
+        {
+            mMode = RunningMode;
+        }
     }
 
     void keyUp(KeyEvent event)
@@ -108,7 +130,7 @@ struct CiApp : public AppBasic
             CAM_W = mCapture.getWidth();
             CAM_H = mCapture.getHeight();
 
-            if (!mIsOneShot)
+            if (mMode != LoadMode)
             {
                 long a, b, c, d, e, f;
                 gVideoInput->getVideoSettingFilter(DEVICE_ID, VideoProcAmp_Brightness, a, b, c, f, d, e);Brightness = f;
@@ -119,6 +141,13 @@ struct CiApp : public AppBasic
 
                 gVideoInput->getVideoSettingCamera(DEVICE_ID, CameraControl_Exposure, a, b, c, f, d, e);Exposure = f;
                 gVideoInput->getVideoSettingCamera(DEVICE_ID, CameraControl_Focus, a, b, c, f, d, e);Focus = f;
+
+                if (mMode == SaveMode)
+                {
+                    writeConfig();
+                    quit();
+                    return;
+                }
             }
             // TODO: placeholder text
             mCaptureTex = gl::Texture();
@@ -166,9 +195,8 @@ struct CiApp : public AppBasic
             mCaptureTex = mCapture.getSurface();
         }
 
-        if (mIsOneShot)
+        if (mMode == LoadMode)
         {
-            console() << "Quit" << endl;
             quit();
         }
     }
@@ -195,7 +223,7 @@ private:
     Capture                     mCapture;
     gl::Texture                 mCaptureTex;
 
-    bool                        mIsOneShot;
+    Mode                        mMode;
 };
 
 CINDER_APP_BASIC(CiApp, RendererGl)
