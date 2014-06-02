@@ -201,18 +201,6 @@
 			>
 		</File>
 		<File
-			RelativePath="..\..\..\_common\Kinect\Kinect.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\..\..\_common\Kinect\Kinect.h"
-			>
-		</File>
-		<File
-			RelativePath="..\..\..\_common\Kinect\Kinect10.lib"
-			>
-		</File>
-		<File
 			RelativePath="..\..\..\_common\MiniConfig.cpp"
 			>
 		</File>

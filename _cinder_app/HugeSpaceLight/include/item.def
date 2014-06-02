@@ -1,6 +1,5 @@
 GROUP_DEF(RealWorld)
 ITEM_DEF(bool, GUI_VISIBLE, true)
-ITEM_DEF(bool, REFERENCE_VISIBLE, true)
 ITEM_DEF(int, WORLD_VISIBLE, 0)
 ITEM_DEF(float, RANDOM_COLOR_SPEED, 0.001f)
 ITEM_DEF(bool, DEBUG_MODE, false)
@@ -24,6 +23,5 @@ ITEM_DEF(float, WALL_X, 263)
 ITEM_DEF(float, WALL_Y, 6)
 
 GROUP_DEF(VirtualWorld)
-ITEM_DEF(Quatf, CAM_ROTATION, Quatf(1, 1, 1));
 ITEM_DEF(int,   PROBE_CONFIG, 0)
 

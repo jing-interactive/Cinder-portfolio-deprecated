@@ -18,7 +18,6 @@
 #include "../../../_common/MiniConfig.h"
 #include <fstream>
 #include <boost/foreach.hpp>
-#include <boost/make_shared.hpp>
 #include <list>
 
 #include "../../../_common/AssetManager.h"
@@ -42,14 +41,6 @@ const int kKinectPort = 7001;
 const float kLedOffset = 225.0f;
 const Vec2i kGlobePhysicsSize(257, 18);
 const Vec2i kWallPhysicsSize(21, 56);
-
-const float SPHERE_RADIUS = 0.9f;        // m
-const float REAL_TO_VIRTUAL = 0.01f;   // mm -> m
-const float CEILING_HEIGHT = 104.0f;      // m
-const float SPHERE_MIN_ALPHA = 0.03f;    // alpha of dark spheres 
-const float CAM_DISTANCE =   9.0f;
-const float REFERENCE_OFFSET_Y = -620.0f;
-const bool LINES_VISIBLE = false;
 
 // 
 int             mElapsedLoopCount;
@@ -196,11 +187,6 @@ struct Led
     size_t id;
 };
 
-vector<Led>     mLeds;
-int             mCurrentCamDistance;
-AxisAlignedBox3f mAABB;
-CameraPersp     mCamera;
-
 vector<qtime::MovieSurface>    mIdleAnims[2];
 
 const size_t kKinectAnimTypeCount = 3;
@@ -250,15 +236,12 @@ Channel         mKinectSurfs[2]; // sum of mKinectAnims
 int             mCurrentAnim;
 int             ANIMATION;
 
-gl::VboMesh     mVboWall;
-
 int             mProbeConfig;
 struct Config*  mCurrentConfig;
 
 Color           mLedColor;
 
 gl::Texture     mGlobeTexture, mWallTexture;
-gl::Texture     mKGlobeTexture, mKWallTexture;
 
 struct StateIdle : public State<CiApp>
 {
@@ -391,7 +374,6 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
         mProbeConfig = -1;
         mCurrentConfig = NULL;
 
-        mCurrentCamDistance = -1;
         mCurrentAnim = -1;
 
         for (int id=0; id<2; id++)
@@ -421,9 +403,9 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
 
             const char* kKinectAnimFiles[] = 
             {
-                "ani_globe11", "ani_wall11",
-                "ani_globe12", "ani_wall12",
-                "ani_globe13", "ani_wall13",
+                "aniGlobe11", "aniWall11",
+                "aniGlobe12", "aniWall12",
+                "aniGlobe13", "aniWall13",
             };
 
             for (int k=0; k<kKinectAnimTypeCount; k++)
@@ -469,72 +451,6 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
 
         mKinectListener.setup(kKinectPort);
         mKinectListener.registerMessageReceived(this, &CiApp::onOscKinectMessage);
-
-        // parse leds.txt
-        ifstream ifs(getAssetPath("leds.txt").string().c_str());
-        int id;
-        float x, y, z;
-
-        Vec3f maxBound = Vec3f::zero();
-        Vec3f minBound = Vec3f(FLT_MAX, FLT_MAX, FLT_MAX);
-
-        int ledRadius = kLedOffset * REAL_TO_VIRTUAL / 2;
-        while (ifs >> id >> x >> z >> y)
-        {
-            //x -= (245 - ledRadius);
-            Vec3f pos(x, y, z);
-            pos *= REAL_TO_VIRTUAL;
-            mLeds.push_back(Led(pos));
-
-            minBound.x = min<float>(minBound.x, pos.x - ledRadius);
-            minBound.y = min<float>(minBound.y, pos.y);
-            minBound.z = min<float>(minBound.z, pos.z - ledRadius);
-
-            maxBound.x = max<float>(maxBound.x, pos.x + ledRadius);
-            maxBound.y = max<float>(maxBound.y, pos.y);
-            maxBound.z = max<float>(maxBound.z, pos.z + ledRadius);
-        }
-
-        mAABB = AxisAlignedBox3f(minBound, maxBound);
-
-        // wall
-        {   
-            gl::VboMesh::Layout layout;
-            layout.setStaticTexCoords2d();
-            layout.setStaticPositions();
-            //layout.setStaticColorsRGB();
-
-            const size_t kNumVertices = 4;
-            vector<Vec3f> positions(kNumVertices);
-            // CCW
-            // #3: -271.0, 9748.0 ---- #2: 4129.0, 9748.0
-            //
-            // #1: -271.0, -1452.0 ---- #0: 4129.0, -1452.0 
-            positions[0] = Vec3f(4129.0, -1452.0, 33626);
-            positions[1] = Vec3f(-271.0, -1452.0, 33626);
-            positions[2] = Vec3f(-271.0, 9748.0, 33626);
-            positions[3] = Vec3f(4129.0, 9748.0, 33626);
-            for (size_t i=0; i<kNumVertices; i++)
-            {
-                positions[i] *= REAL_TO_VIRTUAL;
-            }
-
-            vector<Vec2f> texCoords(kNumVertices);
-            texCoords[0] = Vec2f(1, 1);
-            texCoords[1] = Vec2f(0, 1);
-            texCoords[2] = Vec2f(0, 0);
-            texCoords[3] = Vec2f(1, 0);
-
-            vector<Color> colors(kNumVertices);
-            colors[0] = Color(1, 0, 0);
-            colors[1] = Color(0, 1, 0);
-            colors[2] = Color(0, 0, 1);
-            colors[3] = Color(1, 1, 1);
-
-            mVboWall = gl::VboMesh(kNumVertices, 0, layout, GL_QUADS);
-            mVboWall.bufferPositions(positions);
-            mVboWall.bufferTexCoords2d(0, texCoords);
-        }
 
         changeToState(StateIdle::getSingleton());
     }
@@ -753,10 +669,7 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
         updateProgram();
         if (mCurrentConfig == NULL)
         {
-            BOOST_FOREACH(Led& led, mLeds)
-            {
-                led.value = 0; // TODO: black color?
-            }
+            // TODO: black texture
             return;
         }
 
@@ -773,9 +686,6 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
 
             pGlobeChannel = &mKinectSurfs[0];
             pWallChannel = &mKinectSurfs[1];
-
-            updateTextureFrom(mKGlobeTexture, *pGlobeChannel);
-            updateTextureFrom(mKWallTexture, *pWallChannel);
         }
         else
         {
@@ -783,72 +693,21 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
 
             pGlobeChannel = &mIdleChannels[0];
             pWallChannel = &mIdleChannels[1];
-
-            updateTextureFrom(mGlobeTexture, *pGlobeChannel);
-            updateTextureFrom(mWallTexture, *pWallChannel);
         }
-
-        if (pGlobeChannel == NULL || !*pGlobeChannel) return;
-
-        float kW = pGlobeChannel->getWidth() / 1029.0f;
-        float kH = pGlobeChannel->getHeight() / 124.0f;
-        BOOST_FOREACH(Led& led, mLeds)
-        {
-            // online solver
-            // http://www.bluebit.gr/matrix-calculator/linear_equations.aspx
-
-            //3321  1  103
-            //32936 1  1023
-            float cx = 0.031065338510890f * led.pos.z / REAL_TO_VIRTUAL - 0.167989194664881f;
-
-            //245  1  2
-            //4070 1  122
-            float cy = 0.031372549019608f * led.pos.x / REAL_TO_VIRTUAL - 5.686274509803920f;
-
-            Vec2i sample2D(kW * cx, kH * cy);
-            uint8_t value = *pGlobeChannel->getData(sample2D);
-
-            led.pos2d = sample2D * kGlobePhysicsSize / pGlobeChannel->getSize();
-            led.value = value / 255.f;
-        }
-
-        if (mCurrentCamDistance != CAM_DISTANCE)
-        {
-            mCurrentCamDistance = CAM_DISTANCE;
-            mCamera.setPerspective(kCamFov, getWindowAspectRatio(), 0.1f, 1000.0f);
-            mCamera.lookAt(Vec3f(- mAABB.getMax().x * mCurrentCamDistance, mAABB.getMax().y * 0.5f, 0.0f), Vec3f::zero());
-        }
+        updateTextureFrom(mGlobeTexture, *pGlobeChannel);
+        updateTextureFrom(mWallTexture, *pWallChannel);
     }
 
     void drawLedMapping()
     {
-        gl::enableAlphaBlending();
-        BOOST_FOREACH(Led& led, mLeds)
-        {
-            gl::color(ColorA(mLedColor, led.value * mGlobalAlpha));
-            gl::drawPoint(Vec2i(GLOBE_X, GLOBE_Y) + (kGlobePhysicsSize - led.pos2d));
-        }
-        gl::disableAlphaBlending();
-
         gl::color(Color(mLedColor * mGlobalAlpha));
-        gl::draw(mCurrentState == StateInteractive::getSingleton() ? mKWallTexture : mWallTexture, Rectf(WALL_X, WALL_Y, WALL_X + kWallPhysicsSize.x, WALL_Y + kWallPhysicsSize.y));
+        gl::draw(mGlobeTexture, Vec2f(GLOBE_X, GLOBE_Y));
+        gl::draw(mWallTexture, Vec2f(WALL_X, WALL_Y));
     }
 
     void draw()
     {
-        gl::enableDepthRead();
-        gl::enableDepthWrite();
-
         gl::clear(ColorA::black());
-
-        if (REFERENCE_VISIBLE)
-        {
-            gl::setMatrices(mCamera);
-            draw3D();
-
-            gl::setMatricesWindow(getWindowSize());
-            draw2D();
-        }
 
         if (WORLD_VISIBLE == 0)
         {
@@ -868,82 +727,6 @@ struct CiApp : public AppBasic, StateMachine<CiApp>
             mMainGUI.draw();
             mProgramGUI.draw();
         }
-    }
-
-    void draw2D()
-    {
-        const float kOffY = REFERENCE_OFFSET_Y;
-        const Rectf kRefGlobeArea(28, 687 + kOffY, 28 + 636, 687 + 90 + kOffY);
-        const Rectf kRefWallArea(689, 631 + kOffY, 689 + 84, 631 + 209 + kOffY);
-
-        gl::enableAlphaBlending();
-        gl::color(ColorA(mLedColor, mGlobalAlpha));
-        if (mCurrentState == StateInteractive::getSingleton())
-        {
-            gl::draw(mKGlobeTexture, kRefGlobeArea);
-            gl::draw(mKWallTexture, kRefWallArea);
-        }
-        else
-        {
-            gl::draw(mGlobeTexture, kRefGlobeArea);
-            gl::draw(mWallTexture, kRefWallArea);
-        }
-        gl::disableAlphaBlending();
-
-        gl::drawString(toString(mCurrentMovieTime), Vec2f(10, 200));
-    }
-
-    void draw3D()
-    {
-        if (mCurrentConfig == NULL)
-        {
-            if (GUI_VISIBLE)
-            {
-                mMainGUI.draw();
-                mProgramGUI.draw();
-            }
-            return;
-        }
-
-        float kSceneOffsetY = 0;//SCENE_OFFSET_Y * REAL_TO_VIRTUAL;
-
-        gl::pushModelView();
-        {
-            Vec3f trans = mAABB.getSize() * -0.5f;
-            trans.x *= -1;
-            trans.y += kSceneOffsetY;
-            gl::rotate(CAM_ROTATION);
-            gl::translate(trans);
-
-            gl::scale(-1, 1, 1);
-
-            // lines
-            gl::enableAlphaBlending();
-            if (LINES_VISIBLE)
-            {
-                gl::disableDepthWrite();
-                gl::color(ColorA::gray(76 / 255.f, 76 / 255.f));
-                BOOST_FOREACH(const Led& led, mLeds)
-                {
-                    gl::drawLine(led.pos, Vec3f(led.pos.x, CEILING_HEIGHT, led.pos.z));
-                }
-            }
-
-            // spheres
-            gl::enableDepthWrite();
-            BOOST_FOREACH(const Led& led, mLeds)
-            {
-                gl::color(ColorA(mLedColor, constrain(led.value, SPHERE_MIN_ALPHA, 1.0f) * mGlobalAlpha));
-                gl::drawSphere(led.pos, SPHERE_RADIUS);
-            }
-            gl::disableAlphaBlending();
-
-            gl::Texture tex = (mCurrentState == StateInteractive::getSingleton()) ? mKWallTexture : mWallTexture;
-            tex.enableAndBind();
-            gl::draw(mVboWall);
-            tex.disable();
-        }
-        gl::popModelView();
     }
 };
 
@@ -1041,7 +824,7 @@ void StateInteractive::update(CiApp* host)
         ip::fill(&mKinectSurfs[id], (uint8_t)0);
     }
 
-    mKinectAnims.remove_if(bind(&KinectAnim::isFinished, std::_1));
+    mKinectAnims.remove_if(tr1::mem_fn(&KinectAnim::isFinished));
 
     BOOST_FOREACH(KinectAnim& anim, mKinectAnims)
     {
