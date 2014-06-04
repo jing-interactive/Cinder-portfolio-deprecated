@@ -62,6 +62,14 @@ void StateIdle::update(LightApp* host)
     }
 }
 
+void StateIdle::enter( LightApp* host )
+{
+    mIdleFrameIdx = 0;
+    timeline().apply(&mGlobalAlpha, 1.0f, 4.0f);
+    console() << "StateIdle: " << mCurrentAnim << endl;
+}
+
+
 void StateFadeOut::enter(LightApp* host)
 {
     console() << "StateFadeOut: " << mCurrentAnim << endl;
@@ -125,4 +133,16 @@ void StateInteractive::update(LightApp* host)
             host->changeToState(StateIdle::getSingleton());
         }
     }
+}
+
+void StateInteractive::exit( LightApp* host )
+{
+    //mCurrentAnim = -1;
+    mGlobalAlpha = MIN_GLOBAL_ALPHA;
+}
+
+void StateInteractive::enter( LightApp* host )
+{
+    timeline().apply(&mGlobalAlpha, 1.0f, 2.0f);
+    console() << "StateInteractive: " << mCurrentAnim << endl;
 }

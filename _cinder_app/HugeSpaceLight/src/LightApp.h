@@ -5,9 +5,6 @@
 
 #include "../../../_common/MiniConfig.h"
 
-#include "cinder/osc/OscSender.h"
-#include "cinder/osc/OscListener.h"
-
 #include "../../../_common/StateMachine.h"
 
 #pragma warning(disable: 4244)
@@ -24,8 +21,8 @@ struct LightApp : public AppBasic, StateMachine<LightApp>
 
     void setup();
     void shutdown();
-    void onOscKinectMessage(const osc::Message* msg);
-    void onOscPadMessage(const osc::Message* msg);
+
+    void setupOsc();
 
     void keyUp(KeyEvent event);
 

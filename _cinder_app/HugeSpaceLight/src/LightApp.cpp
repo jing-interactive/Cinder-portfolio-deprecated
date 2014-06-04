@@ -2,18 +2,10 @@
 #include "States.h"
 #include "Config.h"
 
-#include "cinder/app/AppBasic.h"
 #include "cinder/ImageIo.h"
-#include "cinder/Camera.h"
-#include "cinder/Xml.h"
 #include "cinder/CinderMath.h"
-
 #include "cinder/params/Params.h"
-
 #include "cinder/Utilities.h"
-
-#include "cinder/osc/OscSender.h"
-#include "cinder/osc/OscListener.h"
 
 #include <fstream>
 #include <boost/foreach.hpp>
@@ -21,19 +13,6 @@
 
 #include "../../../_common/AssetManager.h"
 
-#include "GestureDetector.h"
-
-#pragma warning(disable: 4244)
-
-using namespace ci;
-using namespace ci::app;
-using namespace std;
-
-const float kCamFov = 60.0f;
-const int kOscPort = 4444;
-const int kPadPort = 5555;
-const int kKinectPort = 7001;
-const float kLedOffset = 225.0f;
 const Vec2i kGlobePhysicsSize(257, 18);
 const Vec2i kWallPhysicsSize(21, 56);
 
@@ -58,11 +37,6 @@ static int getHour()
 params::InterfaceGl mMainGUI;
 params::InterfaceGl mProgramGUI;
 
-osc::Listener   mPadListener;
-osc::Listener   mKinectListener;
-osc::Sender     mPadSender;
-
-GestureDetector mGestures[24]; // TODO:
 
 gl::Texture     mGlobeTexture, mWallTexture;
 
@@ -71,7 +45,6 @@ Color           mLedColor;
 AnimSquence mKinectAnims[kKinectAnimCount];
 AnimSquence mIdleAnims[kIdleAnimCount];
 
-list<KinectBullet> mKinectBullets;
 Channel         mKinectSurfs[2]; // sum of mKinectBullets
 
 int             mCurrentAnim;
@@ -127,8 +100,6 @@ void loadImages()
         717
     };
 
-    const size_t targetFrameCount = 100;
-
     for (int id=0; id<2; id++)
     {
         for (int k=0; k<kIdleAnimCount; k++)
@@ -137,7 +108,7 @@ void loadImages()
             const vector<string>& files = am::files(folderName);
             for (int i=0; i<files.size(); i++ )
             {
-                if (i == targetFrameCount) break;
+                if (TARGET_FRAME_COUNT > 0 && i == TARGET_FRAME_COUNT) break;
 
                 if (fs::file_size(files[i]) <= kBlankFileSizes[id])
                 {
@@ -157,7 +128,7 @@ void loadImages()
             const vector<string>& files = am::files(folderName);
             for (int i=0; i<files.size(); i++ )
             {
-                if (i == targetFrameCount) break;
+                if (TARGET_FRAME_COUNT > 0 && i == TARGET_FRAME_COUNT) break;
 
                 if (fs::file_size(files[i]) <= kBlankFileSizes[id])
                 {
@@ -175,14 +146,11 @@ void loadImages()
 
 void LightApp::setup()
 {
+    mGlobalAlpha = 1.0f;
+
     mMainGUI = params::InterfaceGl("params - press F1 to hide", Vec2i(300, getWindowHeight()));
     setupConfigUI(&mMainGUI);
     mMainGUI.setPosition(Vec2i(10, 100));
-
-    for (int i=0; i<24; i++)
-    {
-        mGestures[i] = GestureDetector(-Vec3f::zAxis());
-    }
 
     mHour = -1;
     mProbeConfig = -1;
@@ -212,12 +180,7 @@ void LightApp::setup()
         mMainGUI.addParam("hour# " + toString(i % kHourCount), &mConfigIds[i % kHourCount], "min=-1 max=5");
     }
 
-    // osc setup
-    mPadListener.setup(kOscPort);
-    mPadListener.registerMessageReceived(this, &LightApp::onOscPadMessage);
-
-    mKinectListener.setup(kKinectPort);
-    mKinectListener.registerMessageReceived(this, &LightApp::onOscKinectMessage);
+    setupOsc();
 
     changeToState(StateIdle::getSingleton());
 }
@@ -226,140 +189,6 @@ void LightApp::shutdown()
 {
     mIsAlive = false;
     writeProgramSettings();
-}
-
-void LightApp::onOscKinectMessage(const osc::Message* msg)
-{
-    if (!mIsAlive) return;
-
-    if (mCurrentConfig == NULL) return;
-
-    const AnimConfig& kinectCfg = mCurrentConfig->animConfigs[AnimConfig::kKinect];
-    if (kinectCfg.loopCount == 0) return;
-
-    const string& addr = msg->getAddress();
-    if (addr != "/kinect") return;
-
-    int playerId = msg->getArgAsInt32(1);
-
-    const int SHOULDER_CENTER = 4;
-    const int HAND_LEFT = 9;
-    const int HAND_RIGHT = 13;
-    const int ids[3] = {SHOULDER_CENTER, HAND_LEFT, HAND_RIGHT};
-    Vec3f poses[3];
-
-    for (int i=0; i<3; i++)
-    {
-        string str = msg->getArgAsString(ids[i]);
-        vector<string> xyzw = ci::split(str, ",");
-        poses[i].set(fromString<float>(xyzw[0]), fromString<float>(xyzw[1]), fromString<float>(xyzw[2]));
-
-        if (poses[0].z > KINECT_FAR || poses[0].z < KINECT_NEAR)
-        {
-            return;
-        }
-    }
-
-    mLastKinectMsgSeconds = getElapsedSeconds();
-
-    if (mCurrentState == StateIdle::getSingleton())
-    {
-        sFadeOutNextState = StateInteractive::getSingleton();
-        changeToState(StateFadeOut::getSingleton());
-    }
-
-    if (mCurrentState != StateInteractive::getSingleton())
-    {
-        return;
-    }
-
-    static float sLastHitSeconds = getElapsedSeconds();
-    if (getElapsedSeconds() - sLastHitSeconds < 2.0f)
-    {
-        return;
-    }
-
-    float wavingSpeed = 0;
-    bool isDetected = false;
-    for (int i=0; i<2; i++)
-    {
-        mGestures[playerId*2+i].update(poses[0], poses[i + 1]);
-        if (mGestures[playerId*2+i].isDetected(KINECT_DISTANCE, &wavingSpeed))
-        {
-            isDetected = true;
-        }
-    }
-
-    if (!isDetected)
-    {
-        return;
-    }
-
-    sLastHitSeconds = getElapsedSeconds();
-
-    mKinectBullets.push_back(KinectBullet(wavingSpeed));
-    console() << "Hit " << " speed " << wavingSpeed << endl;
-}
-
-void LightApp::onOscPadMessage(const osc::Message* msg)
-{
-    const string& addr = msg->getAddress();
-
-    static bool sIsFirst = true;
-    if (sIsFirst)
-    {
-        console() << "Remote IP: " << msg->getRemoteIp() << endl;
-        sIsFirst = false;
-        mPadSender.setup(msg->getRemoteIp(), kPadPort);
-    }
-
-    if (addr == "/ACK")
-    {
-        osc::Message msg;
-        msg.setAddress("/msgBox");
-        msg.addStringArg("Message received.");
-        mPadSender.sendMessage(msg);
-    }
-
-    if (addr == "/schedule")
-    {
-        int hour = msg->getArgAsInt32(0);
-        int prog = msg->getArgAsInt32(1);
-        if (hour >=0 && hour < kHourCount 
-            && prog >= -1 && prog < Config::kCount)
-        {
-            if (mCurrentHour == hour && mConfigIds[hour] != prog)
-            {
-                // invalidate current hour, refer to updateProgram()
-                mHour = -1;
-            }
-            mConfigIds[hour] = prog;
-        }
-        writeProgramSettings();
-        return;
-    }
-
-    if (addr == "/anim")
-    {
-        int idx = 0;
-        const int cfg = msg->getArgAsInt32(idx++);
-        Config& config = mConfigs[cfg];
-        for (int i=0; i<AnimConfig::kCount; i++)
-        {
-            AnimConfig& animConfig = config.animConfigs[i];
-            int loopCount = msg->getArgAsInt32(idx++);
-            animConfig.loopCount = loopCount;
-            animConfig.lightValue = msg->getArgAsFloat(idx++);
-            animConfig.lightValue2 = msg->getArgAsFloat(idx++);
-        }
-        writeProgramSettings();
-        return;
-    }
-
-    if (addr == "/WORLD_VISIBLE")
-    {
-        WORLD_VISIBLE = msg->getArgAsInt32(0);
-    }
 }
 
 void LightApp::keyUp(KeyEvent event)
@@ -494,31 +323,6 @@ void LightApp::draw()
         mMainGUI.draw();
         mProgramGUI.draw();
     }
-}
-
-KinectBullet::KinectBullet(float wavingSpeed)
-{
-    mIsFinished = false;
-    kinectSeq = &mKinectAnims[rand() % kKinectAnimCount];
-
-    wavingSpeed = 24 * constrain(wavingSpeed * KINECT_MOVIE_SPEED, 1.0f, KINECT_MAX_SPEED);
-    length = (float)kinectSeq->seqs[0].size() - 1;
-    float duration = length / wavingSpeed;
-
-    timeline().apply(&index, 0.0f, length, duration);
-}
-
-void KinectBullet::get(Channel* globe, Channel* wall)
-{
-    if (mIsFinished) return;
-
-    *globe = kinectSeq->seqs[0][static_cast<int>(index)];
-    *wall = kinectSeq->seqs[1][static_cast<int>(index)];
-}
-
-bool KinectBullet::isFinished() const
-{
-    return index.value() >= length;
 }
 
 CINDER_APP_BASIC(LightApp, RendererGl)
