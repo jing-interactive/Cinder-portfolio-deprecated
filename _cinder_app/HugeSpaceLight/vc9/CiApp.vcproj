@@ -185,7 +185,11 @@
 			>
 		</File>
 		<File
-			RelativePath="..\src\CiApp.cpp"
+			RelativePath="..\src\Config.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\src\Config.h"
 			>
 		</File>
 		<File
@@ -198,6 +202,14 @@
 		</File>
 		<File
 			RelativePath="..\include\item.def"
+			>
+		</File>
+		<File
+			RelativePath="..\src\LightApp.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\src\LightApp.h"
 			>
 		</File>
 		<File
@@ -214,6 +226,14 @@
 		</File>
 		<File
 			RelativePath="..\..\..\_common\StateMachine.h"
+			>
+		</File>
+		<File
+			RelativePath="..\src\States.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\src\States.h"
 			>
 		</File>
 	</Files>
