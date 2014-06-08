@@ -205,6 +205,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\src\Kinect.cpp"
+			>
+		</File>
+		<File
 			RelativePath="..\src\LightApp.cpp"
 			>
 		</File>

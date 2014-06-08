@@ -17,12 +17,13 @@ Channel         mIdleChannels[2];
 
 void StateIdle::update(LightApp* host)
 {
-    const int duration = mIdleAnims[0].seqs[0].size() - 1;
+    mCurrentFrame = (int)mIdleFrameIdx;
+    const float duration = mIdleAnims[0].seqs[0].size(); // HACK
     if (mCurrentAnim != -1)
     {
         for (int id=0; id<2; id++)
         {
-            mIdleChannels[id] = mIdleAnims[mCurrentAnim].seqs[id][mIdleFrameIdx];
+            mIdleChannels[id] = mIdleAnims[mCurrentAnim].seqs[id][mCurrentFrame];
         }
     }
 
@@ -32,14 +33,14 @@ void StateIdle::update(LightApp* host)
         ANIMATION = DEBUG_ANIM;
         mElapsedLoopCount = 0;
 
-        if (mIdleFrameIdx >= duration)
+        if (mIdleFrameIdx >= duration - 1)
         {
             mCurrentAnim = -1;  // manually invalidate
         }
     }
     else
     {
-        while (mIdleFrameIdx >= duration || mElapsedLoopCount >= mCurrentConfig->animConfigs[ANIMATION].loopCount)
+        while (mIdleFrameIdx >= duration - 1 || mElapsedLoopCount >= mCurrentConfig->animConfigs[ANIMATION].loopCount)
         {
             mIdleFrameIdx = 0; // to make the first condition of while loop fail
             if (mElapsedLoopCount < mCurrentConfig->animConfigs[ANIMATION].loopCount)
@@ -57,14 +58,13 @@ void StateIdle::update(LightApp* host)
 
     if (mCurrentAnim != ANIMATION)
     {
-        timeline().apply(&mIdleFrameIdx, 0.0f, mIdleAnims[0].seqs[0].size() - 1, 60);
+        timeline().apply(&mIdleFrameIdx, 0.0f, duration - 1, duration / 24.0f);
         mCurrentAnim = ANIMATION;
     }
 }
 
 void StateIdle::enter( LightApp* host )
 {
-    mIdleFrameIdx = 0;
     timeline().apply(&mGlobalAlpha, 1.0f, 4.0f);
     console() << "StateIdle: " << mCurrentAnim << endl;
 }

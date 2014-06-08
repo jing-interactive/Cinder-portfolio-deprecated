@@ -6,6 +6,7 @@
 #include "cinder/CinderMath.h"
 #include "cinder/params/Params.h"
 #include "cinder/Utilities.h"
+#include "cinder/Thread.h"
 
 #include <fstream>
 #include <boost/foreach.hpp>
@@ -49,6 +50,7 @@ Channel         mKinectSurfs[2]; // sum of mKinectBullets
 
 int             mCurrentAnim;
 int             ANIMATION;
+int             mCurrentFrame;
 
 int             mProbeConfig;
 struct Config*  mCurrentConfig;
@@ -79,7 +81,12 @@ void LightApp::prepareSettings(Settings *settings)
     settings->setWindowSize(Display::getMainDisplay()->getWidth(), Display::getMainDisplay()->getHeight());
 }
 
-void loadImages()
+enum LoadImageStage
+{
+    SetupStage,
+    UpdateStage
+};
+void loadImages(LoadImageStage stage)
 {
     char folderName[256];
     const char* kIdleFolders[] = 
@@ -108,15 +115,13 @@ void loadImages()
             const vector<string>& files = am::files(folderName);
             for (int i=0; i<files.size(); i++ )
             {
-                if (TARGET_FRAME_COUNT > 0 && i == TARGET_FRAME_COUNT) break;
-
-                if (fs::file_size(files[i]) <= kBlankFileSizes[id])
+                if (stage == SetupStage)
                 {
                     mIdleAnims[k].seqs[id].push_back(blankChannels[id]);
                 }
-                else
+                else if (fs::file_size(files[i]) > kBlankFileSizes[id])
                 {
-                    mIdleAnims[k].seqs[id].push_back(loadImage(files[i]));
+                    mIdleAnims[k].seqs[id][i] = loadImage(files[i]);
                 }
             }
         }
@@ -128,15 +133,13 @@ void loadImages()
             const vector<string>& files = am::files(folderName);
             for (int i=0; i<files.size(); i++ )
             {
-                if (TARGET_FRAME_COUNT > 0 && i == TARGET_FRAME_COUNT) break;
-
-                if (fs::file_size(files[i]) <= kBlankFileSizes[id])
+                if (stage == SetupStage)
                 {
                     mKinectAnims[k].seqs[id].push_back(blankChannels[id]);
                 }
-                else
+                else if (fs::file_size(files[i]) > kBlankFileSizes[id])
                 {
-                    mKinectAnims[k].seqs[id].push_back(loadImage(files[i]));
+                    mKinectAnims[k].seqs[id][i] = loadImage(files[i]);
                 }
             }
         }
@@ -144,8 +147,13 @@ void loadImages()
     }
 }
 
+thread imageThread;
+
 void LightApp::setup()
 {
+    loadImages(SetupStage);
+    imageThread = thread(bind(loadImages, UpdateStage));
+
     mGlobalAlpha = 1.0f;
 
     mMainGUI = params::InterfaceGl("params - press F1 to hide", Vec2i(300, getWindowHeight()));
@@ -158,9 +166,8 @@ void LightApp::setup()
 
     mCurrentAnim = -1;
 
-    loadImages();
-
     mMainGUI.addParam("ANIMATION", &ANIMATION, "", true);
+    mMainGUI.addParam("FRMAE", &mCurrentFrame, "", true);
     {
         mMainGUI.addSeparator();
         vector<string> names;
@@ -273,25 +280,19 @@ void LightApp::update()
 
     if (mCurrentAnim == -1) return;
 
-    Channel* pGlobeChannel = NULL;
-    Channel* pWallChannel = NULL;
-
     if (mCurrentState == StateInteractive::getSingleton())
     {
         mLedColor = mCurrentConfig->animConfigs[AnimConfig::kKinect].getColor();
 
-        pGlobeChannel = &mKinectSurfs[0];
-        pWallChannel = &mKinectSurfs[1];
+        updateTextureFrom(mGlobeTexture, mKinectSurfs[0]);
+        updateTextureFrom(mWallTexture, mKinectSurfs[1]);
     }
     else
     {
         mLedColor = mCurrentConfig->animConfigs[mCurrentAnim].getColor();
-
-        pGlobeChannel = &mIdleChannels[0];
-        pWallChannel = &mIdleChannels[1];
+        updateTextureFrom(mGlobeTexture, mIdleChannels[0]);
+        updateTextureFrom(mWallTexture, mIdleChannels[1]);
     }
-    updateTextureFrom(mGlobeTexture, *pGlobeChannel);
-    updateTextureFrom(mWallTexture, *pWallChannel);
 }
 
 void drawLedMapping()

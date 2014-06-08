@@ -70,6 +70,7 @@ extern Channel         mKinectSurfs[2]; // sum of mKinectBullets
 
 extern int             mCurrentAnim;
 extern int             ANIMATION;
+extern int             mCurrentFrame;
 
 extern int             mProbeConfig;
 extern struct Config*  mCurrentConfig;
