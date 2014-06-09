@@ -2,6 +2,7 @@
 #include "Config.h"
 #include "cinder/ip/Fill.h"
 #include <boost/foreach.hpp>
+#include "arduino.h"
 
 State<LightApp>::Ref sFadeOutNextState;
 
@@ -13,17 +14,15 @@ int             mCurrentHour;
 Anim<float>     mGlobalAlpha; // for fade-in / fade-out
 float           mLastKinectMsgSeconds;
 
-Channel         mIdleChannels[2];
-
 void StateIdle::update(LightApp* host)
 {
     mCurrentFrame = (int)mIdleFrameIdx;
-    const float duration = mIdleAnims[0].seqs[0].size(); // HACK
+    const float duration = mAnims[0].seqs[0].size(); // HACK
     if (mCurrentAnim != -1)
     {
         for (int id=0; id<2; id++)
         {
-            mIdleChannels[id] = mIdleAnims[mCurrentAnim].seqs[id][mCurrentFrame];
+            mFinalChannels[id] = mAnims[mCurrentAnim].seqs[id][mCurrentFrame];
         }
     }
 
@@ -73,12 +72,12 @@ void StateIdle::enter( LightApp* host )
 void StateFadeOut::enter(LightApp* host)
 {
     console() << "StateFadeOut: " << mCurrentAnim << endl;
-    timeline().apply(&mGlobalAlpha, MIN_GLOBAL_ALPHA, FADE_OUT_SECONDS);
+    timeline().apply(&mGlobalAlpha, 0.0f, FADE_OUT_SECONDS);
 }
 
 void StateFadeOut::update(LightApp* host)
 {
-    if (mGlobalAlpha <= MIN_GLOBAL_ALPHA)
+    if (mGlobalAlpha <= 0.0f)
     {
         // TODO: finishFn
         host->changeToState(sFadeOutNextState);
@@ -92,13 +91,34 @@ void StateFadeOut::update(LightApp* host)
     StateIdle::getSingleton()->update(host); // HACK
 }
 
-void StateInteractive::update(LightApp* host)
+void StateInteractive::enter( LightApp* host )
+{
+    timeline().apply(&mGlobalAlpha, 1.0f, 2.0f);
+    console() << "StateInteractive: " << mCurrentAnim << endl;
+    mIsInteractive = true;
+}
+
+void StateInteractive::exit( LightApp* host )
+{
+    mCurrentAnim = -1;
+    mGlobalAlpha = 0.0f;
+    mIsInteractive = false;
+
+    sendArduinoMsg(0);
+}
+
+void StatePusher::enter( LightApp* host )
+{
+    sendArduinoMsg(1);
+}
+
+void StatePusher::update(LightApp* host)
 {
     int aliveMovieCount = 0;
 
     for (int id=0; id<2; id++)
     {
-        ip::fill(&mKinectSurfs[id], (uint8_t)0);
+        ip::fill(&mFinalChannels[id], (uint8_t)0);
     }
 
     mKinectBullets.remove_if(tr1::mem_fn(&KinectBullet::isFinished));
@@ -114,12 +134,12 @@ void StateInteractive::update(LightApp* host)
         {
             AnimSquence& kinectSeq = *anim.kinectSeq;
 
-            for (int y=0; y<kinectSeq.seqs[id][0].getHeight(); y++)
+            for (int y=0; y<mFinalChannels[id].getHeight(); y++)
             {
-                for (int x=0; x<kinectSeq.seqs[id][0].getWidth(); x++)
+                for (int x=0; x<mFinalChannels[id].getWidth(); x++)
                 {
                     const uint8_t* pSrcRGB = surfs[id].getData(Vec2i(x, y));
-                    uint8_t* pDstRGB = mKinectSurfs[id].getData(Vec2i(x, y));
+                    uint8_t* pDstRGB = mFinalChannels[id].getData(Vec2i(x, y));
                     pDstRGB[0] = min<int>((int)pDstRGB[0] + pSrcRGB[0], 255);
                 }
             }
@@ -135,14 +155,36 @@ void StateInteractive::update(LightApp* host)
     }
 }
 
-void StateInteractive::exit( LightApp* host )
+void StateLooper::enter( LightApp* host )
 {
-    //mCurrentAnim = -1;
-    mGlobalAlpha = MIN_GLOBAL_ALPHA;
+    sendArduinoMsg(2);
 }
 
-void StateInteractive::enter( LightApp* host )
+void StateLooper::update(LightApp* host)
 {
-    timeline().apply(&mGlobalAlpha, 1.0f, 2.0f);
-    console() << "StateInteractive: " << mCurrentAnim << endl;
+    if (getElapsedSeconds() - mLastKinectMsgSeconds > KINECT_OUTOF_SECONDS)
+    {
+        host->changeToState(StateIdle::getSingleton());
+    }
+}
+
+void StateScaler::enter( LightApp* host )
+{
+    sendArduinoMsg(3);
+}
+
+void StateScaler::update(LightApp* host)
+{
+    if (getElapsedSeconds() - mLastKinectMsgSeconds > KINECT_OUTOF_SECONDS)
+    {
+        host->changeToState(StateIdle::getSingleton());
+    }
+}
+
+State<LightApp>::Ref StateInteractive::getRandomState()
+{
+    int num = rand() % 3;
+    if (num == 0) return StatePusher::getSingleton();
+    else if (num == 1) return StateLooper::getSingleton();
+    else return StateScaler::getSingleton();
 }

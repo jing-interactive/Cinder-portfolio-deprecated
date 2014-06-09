@@ -17,7 +17,7 @@ GestureDetector::GestureDetector(const Vec3f& direction)
 void GestureDetector::update(const Vec3f& refPos, const Vec3f& pos)
 {
     mEndPos = pos;
-    console() << pos << ", " << refPos << endl;
+    //console() << pos << ", " << refPos << endl;
 
     //if (getElapsedSeconds() - mLastMessageSecond > 0.5f)
     //{
@@ -38,7 +38,7 @@ void GestureDetector::update(const Vec3f& refPos, const Vec3f& pos)
     }
     else
     {
-        if (pos.z > mStartPos.z) //mDirection.dot(pos - mStartPos) <= 0)
+        if (mDirection.dot(pos - mStartPos) <= 0)
         {
             mIsTracking = false;
             //console() << "end" << endl;

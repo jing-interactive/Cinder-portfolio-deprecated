@@ -26,12 +26,29 @@ struct StateFadeOut : public State<LightApp>
 
 struct StateInteractive : public State<LightApp>
 {
-    GET_SINGLETON_IMPL(StateInteractive);
+    static State<LightApp>::Ref getRandomState();
 
     void enter(LightApp* host);
-
-    void update(LightApp* host);
-
     void exit(LightApp* host);
 };
 
+struct StatePusher : public StateInteractive
+{
+    GET_SINGLETON_IMPL(StatePusher);
+    void enter(LightApp* host);
+    void update(LightApp* host);
+};
+
+struct StateLooper : public StateInteractive
+{
+    GET_SINGLETON_IMPL(StateLooper);
+    void enter(LightApp* host);
+    void update(LightApp* host);
+};
+
+struct StateScaler : public StateInteractive
+{
+    GET_SINGLETON_IMPL(StateScaler);
+    void enter(LightApp* host);
+    void update(LightApp* host);
+};

@@ -8,7 +8,6 @@
 #include "cinder/Utilities.h"
 #include "cinder/Thread.h"
 
-#include <fstream>
 #include <boost/foreach.hpp>
 #include <list>
 
@@ -38,15 +37,13 @@ static int getHour()
 params::InterfaceGl mMainGUI;
 params::InterfaceGl mProgramGUI;
 
-
 gl::Texture     mGlobeTexture, mWallTexture;
 
 Color           mLedColor;
 
-AnimSquence mKinectAnims[kKinectAnimCount];
-AnimSquence mIdleAnims[kIdleAnimCount];
+AnimSquence mAnims[kTotalAnimCount];
 
-Channel         mKinectSurfs[2]; // sum of mKinectBullets
+Channel         mFinalChannels[2]; // sum of mKinectBullets
 
 int             mCurrentAnim;
 int             ANIMATION;
@@ -54,6 +51,7 @@ int             mCurrentFrame;
 
 int             mProbeConfig;
 struct Config*  mCurrentConfig;
+bool            mIsInteractive;
 
 bool mIsAlive = true;
 
@@ -117,33 +115,15 @@ void loadImages(LoadImageStage stage)
             {
                 if (stage == SetupStage)
                 {
-                    mIdleAnims[k].seqs[id].push_back(blankChannels[id]);
+                    mAnims[k].seqs[id].push_back(blankChannels[id]);
                 }
                 else if (fs::file_size(files[i]) > kBlankFileSizes[id])
                 {
-                    mIdleAnims[k].seqs[id][i] = loadImage(files[i]);
+                    mAnims[k].seqs[id][i] = loadImage(files[i]);
                 }
             }
         }
-        mIdleChannels[id] = Channel(mIdleAnims[0].seqs[id][0].getWidth(), mIdleAnims[0].seqs[id][0].getHeight());
-
-        for (int k=0; k<kKinectAnimCount; k++)
-        {
-            sprintf(folderName, "%s%02d", kIdleFolders[id], 11+k);
-            const vector<string>& files = am::files(folderName);
-            for (int i=0; i<files.size(); i++ )
-            {
-                if (stage == SetupStage)
-                {
-                    mKinectAnims[k].seqs[id].push_back(blankChannels[id]);
-                }
-                else if (fs::file_size(files[i]) > kBlankFileSizes[id])
-                {
-                    mKinectAnims[k].seqs[id][i] = loadImage(files[i]);
-                }
-            }
-        }
-        mKinectSurfs[id] = Channel(mKinectAnims[0].seqs[id][0].getWidth(), mKinectAnims[0].seqs[id][0].getHeight());
+        mFinalChannels[id] = Channel(mAnims[0].seqs[id][0].getWidth(), mAnims[0].seqs[id][0].getHeight());
     }
 }
 
@@ -280,19 +260,11 @@ void LightApp::update()
 
     if (mCurrentAnim == -1) return;
 
-    if (mCurrentState == StateInteractive::getSingleton())
-    {
-        mLedColor = mCurrentConfig->animConfigs[AnimConfig::kKinect].getColor();
+    int cfg = mIsInteractive ? AnimConfig::kKinect : mCurrentAnim;
+    mLedColor = mCurrentConfig->animConfigs[cfg].getColor();
 
-        updateTextureFrom(mGlobeTexture, mKinectSurfs[0]);
-        updateTextureFrom(mWallTexture, mKinectSurfs[1]);
-    }
-    else
-    {
-        mLedColor = mCurrentConfig->animConfigs[mCurrentAnim].getColor();
-        updateTextureFrom(mGlobeTexture, mIdleChannels[0]);
-        updateTextureFrom(mWallTexture, mIdleChannels[1]);
-    }
+    updateTextureFrom(mGlobeTexture, mFinalChannels[0]);
+    updateTextureFrom(mWallTexture, mFinalChannels[1]);
 }
 
 void drawLedMapping()

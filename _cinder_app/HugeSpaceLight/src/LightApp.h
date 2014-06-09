@@ -40,16 +40,17 @@ extern int             mCurrentHour;
 extern Anim<float>     mGlobalAlpha; // for fade-in / fade-out
 extern float           mLastKinectMsgSeconds;
 
-extern Channel         mIdleChannels[2];
-
 struct AnimSquence
 {
     vector<Channel> seqs[2];
 };
-const size_t kIdleAnimCount = 10;
-const size_t kKinectAnimCount = 3;
-extern AnimSquence mKinectAnims[kKinectAnimCount];
-extern AnimSquence mIdleAnims[kIdleAnimCount];
+enum
+{
+    kIdleAnimCount = 10,
+    kKinectAnimCount = 3,
+    kTotalAnimCount = kIdleAnimCount + kKinectAnimCount
+};
+extern AnimSquence mAnims[kTotalAnimCount];
 
 struct KinectBullet
 {
@@ -66,7 +67,8 @@ struct KinectBullet
 };
 
 extern list<KinectBullet> mKinectBullets;
-extern Channel         mKinectSurfs[2]; // sum of mKinectBullets
+extern Channel         mFinalChannels[2];
+extern bool            mIsInteractive;
 
 extern int             mCurrentAnim;
 extern int             ANIMATION;

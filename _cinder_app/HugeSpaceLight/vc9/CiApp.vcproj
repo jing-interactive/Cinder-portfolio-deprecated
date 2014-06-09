@@ -177,6 +177,14 @@
 	</References>
 	<Files>
 		<File
+			RelativePath="..\src\Arduino.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\src\Arduino.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\..\_common\AssetManager.cpp"
 			>
 		</File>
@@ -222,10 +230,6 @@
 		</File>
 		<File
 			RelativePath="..\..\..\_common\MiniConfig.h"
-			>
-		</File>
-		<File
-			RelativePath="..\..\..\_common\SequenceAnim.h"
 			>
 		</File>
 		<File

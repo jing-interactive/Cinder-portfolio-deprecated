@@ -5,6 +5,7 @@
 #include "cinder/osc/OscListener.h"
 #include "cinder/Utilities.h"
 #include "GestureDetector.h"
+#include "Arduino.h"
 
 const int kOscPort = 4444;
 const int kPadPort = 5555;
@@ -83,6 +84,31 @@ void onOscPadMessage(const osc::Message* msg)
     }
 }
 
+void updatePusher( int playerId, Vec3f * poses/*, float &sLastHitSeconds */) 
+{
+    float wavingSpeed = 0;
+    bool isDetected = false;
+    for (int i=0; i<2; i++)
+    {
+        mGestures[playerId*2+i].update(poses[0], poses[i + 1]);
+        if (mGestures[playerId*2+i].isDetected(KINECT_DISTANCE, &wavingSpeed))
+        {
+            isDetected = true;
+        }
+    }
+
+    if (!isDetected)
+    {
+        return;
+    }
+
+    //sLastHitSeconds = getElapsedSeconds();
+
+    mKinectBullets.push_back(KinectBullet(wavingSpeed));
+    console() << "Hit " << " speed " << wavingSpeed << endl;
+}
+
+
 void onOscKinectMessage(const osc::Message* msg)
 {
     if (!mIsAlive) return;
@@ -119,41 +145,22 @@ void onOscKinectMessage(const osc::Message* msg)
 
     if (self->mCurrentState == StateIdle::getSingleton())
     {
-        sFadeOutNextState = StateInteractive::getSingleton();
+        sFadeOutNextState = StatePusher::getSingleton(); // StateInteractive::getRandomState();
         self->changeToState(StateFadeOut::getSingleton());
     }
 
-    if (self->mCurrentState != StateInteractive::getSingleton())
+    if (!mIsInteractive)
     {
         return;
     }
 
-    static float sLastHitSeconds = getElapsedSeconds();
-    if (getElapsedSeconds() - sLastHitSeconds < 2.0f)
-    {
-        return;
-    }
+    //static float sLastHitSeconds = getElapsedSeconds();
+    //if (getElapsedSeconds() - sLastHitSeconds < 2.0f)
+    //{
+    //    return;
+    //}
 
-    float wavingSpeed = 0;
-    bool isDetected = false;
-    for (int i=0; i<2; i++)
-    {
-        mGestures[playerId*2+i].update(poses[0], poses[i + 1]);
-        if (mGestures[playerId*2+i].isDetected(KINECT_DISTANCE, &wavingSpeed))
-        {
-            isDetected = true;
-        }
-    }
-
-    if (!isDetected)
-    {
-        return;
-    }
-
-    sLastHitSeconds = getElapsedSeconds();
-
-    mKinectBullets.push_back(KinectBullet(wavingSpeed));
-    console() << "Hit " << " speed " << wavingSpeed << endl;
+    updatePusher(playerId, poses/*, sLastHitSeconds*/);
 }
 
 void LightApp::setupOsc()
@@ -170,12 +177,14 @@ void LightApp::setupOsc()
 
     mKinectListener.setup(kKinectPort);
     mKinectListener.registerMessageReceived(onOscKinectMessage);
+
+    setupArduino();
 }
 
 KinectBullet::KinectBullet(float wavingSpeed)
 {
     mIsFinished = false;
-    kinectSeq = &mKinectAnims[rand() % kKinectAnimCount];
+    kinectSeq = &mAnims[kIdleAnimCount + rand() % kKinectAnimCount];
 
     wavingSpeed = 24 * constrain(wavingSpeed * KINECT_MOVIE_SPEED, 1.0f, KINECT_MAX_SPEED);
     length = (float)kinectSeq->seqs[0].size() - 1;
