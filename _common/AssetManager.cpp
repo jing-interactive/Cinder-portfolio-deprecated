@@ -109,10 +109,11 @@ namespace am
         fs::directory_iterator kEnd;
         for (fs::directory_iterator it(absoluteFolderName); it != kEnd; ++it)
         {
-            if (fs::is_regular_file(*it) && it->path().extension() != ".db")
+            if (fs::is_regular_file(*it) && it->path().extension() != ".db" 
+                && it->path().extension() != ".DS_Store")
             {
 #ifdef _DEBUG
-                console() << it->path() << endl;
+                //console() << it->path() << endl;
 #endif
                 files.push_back(it->path().generic_string());
             }
