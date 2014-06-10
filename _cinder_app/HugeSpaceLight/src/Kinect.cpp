@@ -84,7 +84,7 @@ void onOscPadMessage(const osc::Message* msg)
     }
 }
 
-void updatePusher( int playerId, Vec3f * poses/*, float &sLastHitSeconds */) 
+void updatePusher( int playerId, Vec3f * poses)
 {
     float wavingSpeed = 0;
     bool isDetected = false;
@@ -101,8 +101,6 @@ void updatePusher( int playerId, Vec3f * poses/*, float &sLastHitSeconds */)
     {
         return;
     }
-
-    //sLastHitSeconds = getElapsedSeconds();
 
     mKinectBullets.push_back(KinectBullet(wavingSpeed));
     console() << "Hit " << " speed " << wavingSpeed << endl;
@@ -154,13 +152,7 @@ void onOscKinectMessage(const osc::Message* msg)
         return;
     }
 
-    //static float sLastHitSeconds = getElapsedSeconds();
-    //if (getElapsedSeconds() - sLastHitSeconds < 2.0f)
-    //{
-    //    return;
-    //}
-
-    updatePusher(playerId, poses/*, sLastHitSeconds*/);
+    updatePusher(playerId, poses);
 }
 
 void LightApp::setupOsc()
@@ -181,27 +173,31 @@ void LightApp::setupOsc()
     setupArduino();
 }
 
+void setFinish(KinectBullet* bullet)
+{
+    bullet->mIsFinished = true;
+}
+
 KinectBullet::KinectBullet(float wavingSpeed)
 {
     mIsFinished = false;
     kinectSeq = &mAnims[kIdleAnimCount + rand() % kKinectAnimCount];
 
-    wavingSpeed = 24 * constrain(wavingSpeed * KINECT_MOVIE_SPEED, 1.0f, KINECT_MAX_SPEED);
-    length = (float)kinectSeq->seqs[0].size() - 1;
-    float duration = length / wavingSpeed;
-
-    timeline().apply(&index, 0.0f, length, duration);
+    //wavingSpeed = 24 * constrain(wavingSpeed * KINECT_MOVIE_SPEED, 1.0f, KINECT_MAX_SPEED);
+    index = 0;
+    float duration = (float)kinectSeq->seqs[0].size();
+    length = duration - 1;
+    timeline().apply(&index, length, duration / 24)
+        .finishFn(bind(setFinish, this));
 }
 
 void KinectBullet::get(Channel* globe, Channel* wall)
 {
-    if (mIsFinished) return;
-
     *globe = kinectSeq->seqs[0][static_cast<int>(index)];
     *wall = kinectSeq->seqs[1][static_cast<int>(index)];
 }
 
 bool KinectBullet::isFinished() const
 {
-    return index.value() >= length;
+    return mIsFinished;
 }

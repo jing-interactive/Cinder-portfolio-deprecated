@@ -107,19 +107,21 @@ void loadImages(LoadImageStage stage)
 
     for (int id=0; id<2; id++)
     {
-        for (int k=0; k<kIdleAnimCount; k++)
+        for (int ani=0; ani<kTotalAnimCount; ani++)
         {
-            sprintf(folderName, "%s%02d", kIdleFolders[id], 1+k);
+            sprintf(folderName, "%s%02d", kIdleFolders[id], 1+ani);
             const vector<string>& files = am::files(folderName);
+            if (stage == SetupStage)
+            {
+                mAnims[ani].seqs[id].resize(files.size(), blankChannels[id]);
+                continue;
+            }
+
             for (int i=0; i<files.size(); i++ )
             {
-                if (stage == SetupStage)
+                if (fs::file_size(files[i]) > kBlankFileSizes[id])
                 {
-                    mAnims[k].seqs[id].push_back(blankChannels[id]);
-                }
-                else if (fs::file_size(files[i]) > kBlankFileSizes[id])
-                {
-                    mAnims[k].seqs[id][i] = loadImage(files[i]);
+                    mAnims[ani].seqs[id][i] = loadImage(files[i]);
                 }
             }
         }

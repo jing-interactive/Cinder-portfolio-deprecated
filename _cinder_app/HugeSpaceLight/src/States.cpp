@@ -72,16 +72,17 @@ void StateIdle::enter( LightApp* host )
 void StateFadeOut::enter(LightApp* host)
 {
     console() << "StateFadeOut: " << mCurrentAnim << endl;
-    timeline().apply(&mGlobalAlpha, 0.0f, FADE_OUT_SECONDS);
+    timeline().apply(&mGlobalAlpha, 0.0f, FADE_OUT_SECONDS)
+        .finishFn(std::bind(&LightApp::changeToState, host, sFadeOutNextState));
 }
 
 void StateFadeOut::update(LightApp* host)
 {
-    if (mGlobalAlpha <= 0.0f)
-    {
-        // TODO: finishFn
-        host->changeToState(sFadeOutNextState);
-    }
+    //if (mGlobalAlpha <= 0.0f)
+    //{
+    //    // TODO: finishFn
+    //    host->changeToState(sFadeOutNextState);
+    //}
 
     if (getElapsedSeconds() - mLastKinectMsgSeconds > 0.5f) // TODO
     {
@@ -109,6 +110,7 @@ void StateInteractive::exit( LightApp* host )
 
 void StatePusher::enter( LightApp* host )
 {
+    StateInteractive::enter(host);
     sendArduinoMsg(1);
 }
 
@@ -157,6 +159,7 @@ void StatePusher::update(LightApp* host)
 
 void StateLooper::enter( LightApp* host )
 {
+    StateInteractive::enter(host);
     sendArduinoMsg(2);
 }
 
@@ -170,6 +173,7 @@ void StateLooper::update(LightApp* host)
 
 void StateScaler::enter( LightApp* host )
 {
+    StateInteractive::enter(host);
     sendArduinoMsg(3);
 }
 
