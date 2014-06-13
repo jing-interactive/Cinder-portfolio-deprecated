@@ -125,7 +125,8 @@ void loadImages(LoadImageStage stage)
                 }
             }
         }
-        mFinalChannels[id] = Channel(mAnims[0].seqs[id][0].getWidth(), mAnims[0].seqs[id][0].getHeight());
+        mFinalChannels[id] = blankChannels[id].clone();
+        //mFinalChannels[id] = Channel(mAnims[0].seqs[id][0].getWidth(), mAnims[0].seqs[id][0].getHeight());
     }
 }
 

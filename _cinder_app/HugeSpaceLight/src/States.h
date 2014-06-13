@@ -39,9 +39,9 @@ struct StatePusher : public StateInteractive
     void update(LightApp* host);
 };
 
-struct StateLooper : public StateInteractive
+struct StateMover : public StateInteractive
 {
-    GET_SINGLETON_IMPL(StateLooper);
+    GET_SINGLETON_IMPL(StateMover);
     void enter(LightApp* host);
     void update(LightApp* host);
 };

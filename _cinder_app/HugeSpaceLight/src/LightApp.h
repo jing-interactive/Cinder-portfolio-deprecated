@@ -48,7 +48,7 @@ enum
 {
     kIdleAnimCount = 10,
     kKinectAnimCount = 3,
-    kTotalAnimCount = kIdleAnimCount + kKinectAnimCount
+    kTotalAnimCount = kIdleAnimCount + kKinectAnimCount + 1
 };
 extern AnimSquence mAnims[kTotalAnimCount];
 

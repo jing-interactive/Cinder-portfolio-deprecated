@@ -72,21 +72,22 @@ void StateIdle::enter( LightApp* host )
 void StateFadeOut::enter(LightApp* host)
 {
     console() << "StateFadeOut: " << mCurrentAnim << endl;
-    timeline().apply(&mGlobalAlpha, 0.0f, FADE_OUT_SECONDS)
-        .finishFn(std::bind(&LightApp::changeToState, host, sFadeOutNextState));
+    timeline().apply(&mGlobalAlpha, 0.0f, FADE_OUT_SECONDS);
+        //.finishFn(std::bind(&LightApp::changeToState, host, sFadeOutNextState));
 }
 
 void StateFadeOut::update(LightApp* host)
 {
-    //if (mGlobalAlpha <= 0.0f)
-    //{
-    //    // TODO: finishFn
-    //    host->changeToState(sFadeOutNextState);
-    //}
-
     if (getElapsedSeconds() - mLastKinectMsgSeconds > 0.5f) // TODO
     {
         host->changeToState(StateIdle::getSingleton());
+        return;
+    }
+
+    if (mGlobalAlpha <= 0.0f)
+    {
+        host->changeToState(sFadeOutNextState);
+        return;
     }
 
     StateIdle::getSingleton()->update(host); // HACK
@@ -101,7 +102,7 @@ void StateInteractive::enter( LightApp* host )
 
 void StateInteractive::exit( LightApp* host )
 {
-    mCurrentAnim = -1;
+    //mCurrentAnim = -1;
     mGlobalAlpha = 0.0f;
     mIsInteractive = false;
 
@@ -153,21 +154,36 @@ void StatePusher::update(LightApp* host)
         if (getElapsedSeconds() - mLastKinectMsgSeconds > KINECT_OUTOF_SECONDS)
         {
             host->changeToState(StateIdle::getSingleton());
+            return;
         }
     }
 }
 
-void StateLooper::enter( LightApp* host )
+
+extern float mMoverFrame;
+extern float mMoverTargetFrame;
+
+void StateMover::enter( LightApp* host )
 {
+    mMoverFrame = 0;
+    mMoverTargetFrame = 0;
     StateInteractive::enter(host);
     sendArduinoMsg(2);
 }
 
-void StateLooper::update(LightApp* host)
+void StateMover::update(LightApp* host)
 {
     if (getElapsedSeconds() - mLastKinectMsgSeconds > KINECT_OUTOF_SECONDS)
     {
         host->changeToState(StateIdle::getSingleton());
+        return;
+    }
+
+    mMoverFrame = lerp(mMoverFrame, mMoverTargetFrame, 0.5f);
+
+    for (int id=0; id<2; id++)
+    {
+        mFinalChannels[id] = mAnims[kTotalAnimCount - 1].seqs[id][int(mMoverFrame)]; // TODO: random anim index
     }
 }
 
@@ -189,6 +205,6 @@ State<LightApp>::Ref StateInteractive::getRandomState()
 {
     int num = rand() % 3;
     if (num == 0) return StatePusher::getSingleton();
-    else if (num == 1) return StateLooper::getSingleton();
+    else if (num == 1) return StateMover::getSingleton();
     else return StateScaler::getSingleton();
 }

@@ -84,8 +84,14 @@ void onOscPadMessage(const osc::Message* msg)
     }
 }
 
-void updatePusher( int playerId, Vec3f * poses)
+void updatePusher(int playerId, Vec3f poses[3])
 {
+    static float sLastHitSeconds = getElapsedSeconds();
+    if (getElapsedSeconds() - sLastHitSeconds < PUSHER_COOLDOWN)
+    {
+        return;
+    }
+
     float wavingSpeed = 0;
     bool isDetected = false;
     for (int i=0; i<2; i++)
@@ -102,10 +108,25 @@ void updatePusher( int playerId, Vec3f * poses)
         return;
     }
 
+    sLastHitSeconds = getElapsedSeconds();
+
     mKinectBullets.push_back(KinectBullet(wavingSpeed));
     console() << "Hit " << " speed " << wavingSpeed << endl;
 }
 
+float mMoverFrame = 0;
+float mMoverTargetFrame = 0;
+
+void updateMover(int playerId, Vec3f poses[3])
+{
+    float distz = poses[0].z - (poses[1].z + poses[2].z) * 0.5;
+    mMoverTargetFrame = lmap<float>(distz, 0.0f, 0.6f, 0, mAnims[kKinectAnimCount].seqs[0].size() - 1);
+}
+
+void updateScaler(int playerId, Vec3f poses[3])
+{
+
+} 
 
 void onOscKinectMessage(const osc::Message* msg)
 {
@@ -152,7 +173,18 @@ void onOscKinectMessage(const osc::Message* msg)
         return;
     }
 
-    updatePusher(playerId, poses);
+    if (self->mCurrentState == StatePusher::getSingleton())
+    {
+        updatePusher(playerId, poses);
+    }
+    else if (self->mCurrentState == StateMover::getSingleton())
+    {
+        updateMover(playerId, poses);
+    }
+    else
+    {
+        updateScaler(playerId, poses);
+    }
 }
 
 void LightApp::setupOsc()
@@ -173,22 +205,22 @@ void LightApp::setupOsc()
     setupArduino();
 }
 
-void setFinish(KinectBullet* bullet)
-{
-    bullet->mIsFinished = true;
-}
+//void setFinish(KinectBullet* bullet)
+//{
+//    bullet->mIsFinished = true;
+//}
 
 KinectBullet::KinectBullet(float wavingSpeed)
 {
-    mIsFinished = false;
+    //mIsFinished = false;
     kinectSeq = &mAnims[kIdleAnimCount + rand() % kKinectAnimCount];
 
     //wavingSpeed = 24 * constrain(wavingSpeed * KINECT_MOVIE_SPEED, 1.0f, KINECT_MAX_SPEED);
     index = 0;
     float duration = (float)kinectSeq->seqs[0].size();
     length = duration - 1;
-    timeline().apply(&index, length, duration / 24)
-        .finishFn(bind(setFinish, this));
+    timeline().apply(&index, length, duration / 24);
+        //.finishFn(bind(setFinish, this));
 }
 
 void KinectBullet::get(Channel* globe, Channel* wall)
@@ -199,5 +231,5 @@ void KinectBullet::get(Channel* globe, Channel* wall)
 
 bool KinectBullet::isFinished() const
 {
-    return mIsFinished;
+    return index >= length;
 }
