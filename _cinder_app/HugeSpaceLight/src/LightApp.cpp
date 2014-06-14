@@ -119,7 +119,7 @@ void loadImages(LoadImageStage stage)
 
             for (int i=0; i<files.size(); i++ )
             {
-                if (fs::file_size(files[i]) > kBlankFileSizes[id])
+                if (true || fs::file_size(files[i]) > kBlankFileSizes[id])
                 {
                     mAnims[ani].seqs[id][i] = loadImage(files[i]);
                 }
@@ -270,10 +270,44 @@ void LightApp::update()
     updateTextureFrom(mWallTexture, mFinalChannels[1]);
 }
 
+void drawFlipTexture(const gl::Texture &texture, const Area &srcArea, const Rectf &destRect)
+{
+    gl::SaveTextureBindState saveBindState(texture.getTarget());
+    gl::BoolState saveEnabledState(texture.getTarget());
+    gl::ClientBoolState vertexArrayState(GL_VERTEX_ARRAY);
+    gl::ClientBoolState texCoordArrayState(GL_TEXTURE_COORD_ARRAY);	
+    texture.enableAndBind();
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    GLfloat verts[8];
+    glVertexPointer(2, GL_FLOAT, 0, verts);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    GLfloat texCoords[8];
+    glTexCoordPointer(2, GL_FLOAT, 0, texCoords);
+
+    verts[0*2+0] = destRect.getX2(); verts[0*2+1] = destRect.getY1();	
+    verts[1*2+0] = destRect.getX1(); verts[1*2+1] = destRect.getY1();	
+    verts[2*2+0] = destRect.getX2(); verts[2*2+1] = destRect.getY2();	
+    verts[3*2+0] = destRect.getX1(); verts[3*2+1] = destRect.getY2();	
+
+    const Rectf srcCoords = texture.getAreaTexCoords(srcArea);
+    texCoords[0*2+0] = srcCoords.getX1(); texCoords[0*2+1] = srcCoords.getY2();	
+    texCoords[1*2+0] = srcCoords.getX2(); texCoords[1*2+1] = srcCoords.getY2();	
+    texCoords[2*2+0] = srcCoords.getX1(); texCoords[2*2+1] = srcCoords.getY1();	
+    texCoords[3*2+0] = srcCoords.getX2(); texCoords[3*2+1] = srcCoords.getY1();	
+
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
+void drawFlipTexture( const gl::Texture &texture, const Vec2f &pos )
+{
+    drawFlipTexture( texture, texture.getCleanBounds(), Rectf( pos.x, pos.y, pos.x + texture.getCleanWidth(), pos.y + texture.getCleanHeight() ) );
+}
+
 void drawLedMapping()
 {
     gl::color(Color(mLedColor * mGlobalAlpha));
-    gl::draw(mGlobeTexture, Vec2f(GLOBE_X, GLOBE_Y));
+    drawFlipTexture(mGlobeTexture, Vec2f(GLOBE_X, GLOBE_Y));
     gl::draw(mWallTexture, Vec2f(WALL_X, WALL_Y));
 }
 
