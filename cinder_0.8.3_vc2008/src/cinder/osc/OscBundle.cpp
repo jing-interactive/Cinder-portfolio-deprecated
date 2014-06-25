@@ -27,11 +27,6 @@
 
 #include "cinder/osc/OscBundle.h"
 
-#ifdef _DEBUG
-#pragma comment(lib, "osc_d.lib")
-#else
-#pragma comment(lib, "osc.lib")
-#endif
 namespace cinder { namespace osc {
 
 Bundle::Bundle(){

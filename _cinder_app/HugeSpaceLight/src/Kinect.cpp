@@ -164,7 +164,8 @@ void onOscKinectMessage(const osc::Message* msg)
 
     if (self->mCurrentState == StateIdle::getSingleton())
     {
-        sFadeOutNextState = StatePusher::getSingleton(); // StateInteractive::getRandomState();
+        // TODO: dependency on global object is too hacky
+        sFadeOutNextState = StateInteractive::getRandomState(); // StatePusher::getRandomState();
         self->changeToState(StateFadeOut::getSingleton());
     }
 
