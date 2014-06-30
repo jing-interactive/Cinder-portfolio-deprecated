@@ -165,7 +165,7 @@ void onOscKinectMessage(const osc::Message* msg)
     if (self->mCurrentState == StateIdle::getSingleton())
     {
         // TODO: dependency on global object is too hacky
-        sFadeOutNextState = StateInteractive::getRandomState(); // StatePusher::getRandomState();
+        sFadeOutNextState = StatePusher::getSingleton(); // StateInteractive::getRandomState();
         self->changeToState(StateFadeOut::getSingleton());
     }
 
@@ -220,8 +220,15 @@ KinectBullet::KinectBullet(float wavingSpeed)
     index = 0;
     float duration = (float)kinectSeq->seqs[0].size();
     length = duration - 1;
-    timeline().apply(&index, length, duration / 24);
+    //timeline().apply(&index, length, duration / 24);
         //.finishFn(bind(setFinish, this));
+}
+
+void KinectBullet::update()
+{
+    index += mElapsedFramesec * 24;
+    if (index >= length)
+        index = length;
 }
 
 void KinectBullet::get(Channel* globe, Channel* wall)

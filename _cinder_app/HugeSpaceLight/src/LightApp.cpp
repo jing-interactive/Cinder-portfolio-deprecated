@@ -53,6 +53,9 @@ int             mProbeConfig;
 struct Config*  mCurrentConfig;
 bool            mIsInteractive;
 
+float           mLastFramesec;
+float           mElapsedFramesec;
+
 bool mIsAlive = true;
 
 LightApp::LightApp() : StateMachine<LightApp>(this)
@@ -173,6 +176,8 @@ void LightApp::setup()
     setupOsc();
 
     changeToState(StateIdle::getSingleton());
+
+    mLastFramesec = getElapsedSeconds();
 }
 
 void LightApp::shutdown()
@@ -251,6 +256,9 @@ void updateProgram()
 void LightApp::update()
 {
     mRandomColorIndex += RANDOM_COLOR_SPEED;
+
+    mElapsedFramesec = getElapsedSeconds() - mLastFramesec;
+    mLastFramesec = getElapsedSeconds();
 
     updateProgram();
     if (mCurrentConfig == NULL)

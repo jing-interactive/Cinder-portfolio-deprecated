@@ -33,6 +33,9 @@ struct LightApp : public AppBasic, StateMachine<LightApp>
 
 // 
 extern int             mElapsedLoopCount;
+extern float            mLastFramesec;
+extern float            mElapsedFramesec;
+
 extern float           mRandomColorIndex;
 extern int             mHour;
 extern int             mCurrentHour;
@@ -56,6 +59,8 @@ struct KinectBullet
 {
     KinectBullet(float wavingSpeed);
 
+    void update();
+
     void get(Channel* globe, Channel* wall);
 
     bool isFinished() const;
@@ -63,7 +68,7 @@ struct KinectBullet
     float length;
     bool mIsFinished;
     AnimSquence* kinectSeq;
-    Anim<float> index;
+    float index;
 };
 
 extern list<KinectBullet> mKinectBullets;

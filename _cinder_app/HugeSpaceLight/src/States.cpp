@@ -16,8 +16,13 @@ float           mLastKinectMsgSeconds;
 
 void StateIdle::update(LightApp* host)
 {
-    mCurrentFrame = (int)mIdleFrameIdx;
+    mIdleFrameIdx += mElapsedFramesec * 24;
     const float duration = mAnims[0].seqs[0].size(); // HACK
+
+    if (mIdleFrameIdx >= duration - 1)
+        mIdleFrameIdx = duration - 1;
+
+    mCurrentFrame = (int)mIdleFrameIdx;
     if (mCurrentAnim != -1)
     {
         for (int id=0; id<2; id++)
@@ -57,7 +62,8 @@ void StateIdle::update(LightApp* host)
 
     if (mCurrentAnim != ANIMATION)
     {
-        timeline().apply(&mIdleFrameIdx, 0.0f, duration - 1, duration / 24.0f);
+        mIdleFrameIdx = 0;
+//        timeline().apply(&mIdleFrameIdx, 0.0f, duration - 1, duration / 24.0f);
         mCurrentAnim = ANIMATION;
     }
 }
@@ -128,6 +134,8 @@ void StatePusher::update(LightApp* host)
 
     BOOST_FOREACH(KinectBullet& anim, mKinectBullets)
     {
+        anim.update();
+
         aliveMovieCount++;
 
         Channel surfs[2];

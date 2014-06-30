@@ -4,7 +4,7 @@
 
 struct StateIdle : public State<LightApp>
 {
-    Anim<float> mIdleFrameIdx;
+    float mIdleFrameIdx;
 
     GET_SINGLETON_IMPL(StateIdle);
 
