@@ -326,7 +326,10 @@ void LightApp::draw()
     if (WORLD_VISIBLE == 0)
     {
         gl::setMatricesWindow(getWindowSize());
-        drawLedMapping();
+        if (mCurrentConfig != NULL)
+        {
+            drawLedMapping();
+        }
     }
     else if (WORLD_VISIBLE == 2)
     {
