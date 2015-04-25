@@ -61,7 +61,6 @@ class Cursor : public ProfileBase {
 		return Cursor( source, sessionId, pos, speed, motionAccel );
 	}
 
-  protected:
 	Vec2f		mPos, mPrevPos;
 	Vec2f		mSpeed;
 	float		mMotionAccel;
